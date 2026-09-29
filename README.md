@@ -7,7 +7,7 @@ Bilingual (Hindi-first + English) online national newspaper with a built-in news
 
 1. **Next.js 16 + TypeScript + Tailwind 4**: fast server-rendered pages, image optimisation, SEO metadata, and `/hi` and `/en` routing, all built in.
 2. **Payload CMS 3** runs *inside* the same Next.js app: login, roles, drafts/versions, per-field Hindi/English, media library and a rich-text editor, with no separate server.
-3. **SQLite (libSQL)**: a single file locally and **Turso** in production, using the same driver. Swap to Postgres by changing one adapter line in `src/payload.config.ts`.
+3. **Database**: a local SQLite file for development and **Supabase Postgres** in production. The adapter is picked automatically from `DATABASE_URL` (`postgres://…` → Postgres).
 4. The public site reads content **only** through `src/lib/data.ts`, so the content source can be replaced without touching pages.
 5. Deploys to **Vercel** as one project. Media goes to Vercel Blob, email to any SMTP server, and spam protection uses Cloudflare Turnstile (optional).
 
@@ -108,18 +108,81 @@ This deletes the demo/sample articles, their corrections, demo breaking-news ite
 
 Demo news are our own short summaries of real reports from 4–28 Sep 2026, each linked to its source. Images are hotlinked from Wikimedia Commons with the author and licence shown under the image (CC BY-SA / CC BY / GODL-India). Stories without a suitable free image use a branded placeholder.
 
-## Deploy (Vercel + Turso)
+## Deploy (Vercel + Supabase), as set up for this project
 
-1. **Database**: create a Turso database (`turso db create prahari`) and note the URL (`libsql://…`) and an auth token.
-2. **Vercel**: import the repo. Set these environment variables:
-   `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL=https://your-domain`, `DATABASE_URL=libsql://…`, `DATABASE_AUTH_TOKEN`,
-   `BLOB_READ_WRITE_TOKEN` (create a Blob store under Storage; Vercel's disk is not persistent),
-   and optionally `SMTP_*`, `NOTIFY_EMAIL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`.
-3. Deploy. Database migrations in `src/migrations` run automatically on startup in production.
-4. Open `https://your-domain/admin` and create the first (Admin) account. Optionally run the seed once against the production DB from your machine (`DATABASE_URL=… DATABASE_AUTH_TOKEN=… npm run seed`), then `npm run demo:remove` when you're ready.
-5. **Schema changes later**: edit a collection, run `npm run payload migrate:create <name>`, commit the new file in `src/migrations`, and deploy.
+- **Code**: private GitHub repo . Every push to  deploys automatically on Vercel.
+- **Vercel project**  (functions in Mumbai, ). It is protected by Vercel login until a custom domain is added or protection is switched off.
+- **Database**: Supabase project  (Mumbai). Use the **Transaction pooler** connection string (port 6543).
+- **Media**: Vercel Blob store . Vercel sets  on the project automatically.
+- **Vercel environment variables**: , , , , plus optionally ,  and Turnstile keys.
+  The production secrets live locally in the git-ignored ; never commit it.
+- **Migrations** in  run automatically in production. After changing a collection:
+  , commit, push.
+- **Seeding or running scripts against production** from your machine (PowerShell):
+  [⣷] Pulling schema from database...
+[2K[1G[✓] Pulling schema from database...
+[10:34:43] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+• sections: 33
+• pages: 9
+• demo news: 12
+• samples: 10
+• done ✔
+- **Supabase security**: every table has Row Level Security on with no policies, and the / roles have no grants (this also applies to future tables). Supabase's public REST API therefore cannot read the site's data. The site connects as the table owner and is unaffected. Keep it this way.
 
-Other hosts (Railway, Render, a VPS with `npm run build && npm start`) work the same way. On a VPS you can keep `DATABASE_URL=file:./prahari.db` and skip Blob, and local uploads are stored in `media/` and `private-files/`.
+Other hosts (Railway, Render, a VPS with ▲ Next.js 16.3.6 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 176ms
+- Experiments (use with caution):
+  · serverActions
+  ⨯ turbopackServerFastRefresh
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 55s
+  Running TypeScript ...
+  Finished TypeScript in 12.4s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/7) ...
+  Generating static pages using 11 workers (1/7) 
+  Generating static pages using 11 workers (3/7) 
+  Generating static pages using 11 workers (5/7) 
+✓ Generating static pages using 11 workers (7/7) in 736ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├ ● /[lang]
+├ ● /[lang]/[slug]
+├ ● /[lang]/appointment
+├ ƒ /[lang]/author/[slug]
+├ ● /[lang]/contact
+├ ● /[lang]/corrections
+├ ƒ /[lang]/feed.xml
+├ ● /[lang]/news/[slug]
+├ ● /[lang]/search
+├ ƒ /[lang]/section/[slug]
+├ ● /[lang]/submit-issue
+├ ƒ /[lang]/tag/[slug]
+├ ƒ /admin/[[...segments]]
+├ ƒ /api/[...slug]
+├ ƒ /api/graphql
+├ ƒ /api/graphql-playground
+├ ○ /apple-icon.png
+├ ○ /icon.png
+├ ○ /robots.txt
+└ ƒ /sitemap.xml
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+Unknown command: "start"
+
+
+Did you mean this?
+  npm start # Start a package
+To see a list of supported npm commands, run:
+  npm help) also work. On a VPS you can keep  and skip Blob; uploads are then stored in  and .
 
 ## Security and privacy notes
 

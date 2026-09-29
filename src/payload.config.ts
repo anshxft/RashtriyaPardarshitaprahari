@@ -46,7 +46,8 @@ export default buildConfig({
   // Postgres: schema changes ship as migrations (src/migrations), applied automatically in production.
   db: /^postgres(ql)?:\/\//.test(env.DATABASE_URL || '')
     ? postgresAdapter({
-        pool: { connectionString: env.DATABASE_URL },
+        // ponytail: encrypted but unverified TLS (Supabase CA isn't in Node's store); pin their CA cert if you need verification.
+        pool: { connectionString: env.DATABASE_URL, ssl: { rejectUnauthorized: false } },
         prodMigrations: env.RUN_MIGRATIONS === 'false' ? undefined : migrations,
       })
     : sqliteAdapter({ client: { url: env.DATABASE_URL || 'file:./prahari.db' } }),

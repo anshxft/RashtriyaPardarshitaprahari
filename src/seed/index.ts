@@ -145,7 +145,10 @@ for (const a of DEMO) {
 log('demo news:', DEMO.length)
 
 // ── Sample documents (fictional) for Documents Speak
+// Against a production DB, uploads must go to Vercel Blob; without its token we skip the sample files.
+const canUpload = !/^postgres/.test(process.env.DATABASE_URL || '') || Boolean(process.env.BLOB_READ_WRITE_TOKEN)
 async function sampleMedia(name: string, mimetype: string, data: Buffer, alt: string) {
+  if (!canUpload) return undefined
   const existing = await payload.find({ collection: 'media', where: { filename: { equals: name } }, limit: 1 })
   if (existing.docs[0]) return existing.docs[0].id
   return (await payload.create({ collection: 'media', locale: 'hi', data: { alt, credit: 'Sample / नमूना (fictional)', license: 'Own' }, file: { data, mimetype, name, size: data.length } })).id
@@ -185,7 +188,7 @@ const pngId = await sampleMedia(
 // ── Sample formats
 const sampleIds: Record<string, number> = {}
 for (const s of SAMPLES) {
-  const docs = s.withDocuments
+  const docs = s.withDocuments && pdfId && pngId
     ? [
         { file: pdfId, title: 'RTI जवाब (नमूना)', source: 'RTI जवाब — काल्पनिक नगर पालिका', reference: 'SMP/RTI/0000/2026' },
         { file: pngId, title: 'भुगतान रजिस्टर (नमूना)', source: 'नगर पालिका रिकॉर्ड — काल्पनिक', reference: 'Register p. 14' },
