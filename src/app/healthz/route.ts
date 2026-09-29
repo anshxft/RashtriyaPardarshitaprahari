@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const url = process.env.DATABASE_URL || ''
   const out: Record<string, unknown> = {
-    dbUrlStartsWith: url.slice(0, 13),
+    dbUrlIsPostgres: /^postgres(ql)?:\/\//.test(url),
     dbUrlHasWhitespace: /\s/.test(url),
     dbUrlLength: url.length,
     payloadSecretLength: (process.env.PAYLOAD_SECRET || '').length,
