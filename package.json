@@ -14,7 +14,8 @@
     "demo:remove": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/remove-demo.ts",
     "create-admin": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/create-admin.ts",
     "typecheck": "tsc --noEmit",
-    "check": "node scripts/check.ts"
+    "check": "node scripts/check.ts",
+    "db-url": "node scripts/db-url.mjs"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
