@@ -110,79 +110,23 @@ Demo news are our own short summaries of real reports from 4–28 Sep 2026, each
 
 ## Deploy (Vercel + Supabase), as set up for this project
 
-- **Code**: private GitHub repo . Every push to  deploys automatically on Vercel.
-- **Vercel project**  (functions in Mumbai, ). It is protected by Vercel login until a custom domain is added or protection is switched off.
-- **Database**: Supabase project  (Mumbai). Use the **Transaction pooler** connection string (port 6543).
-- **Media**: Vercel Blob store . Vercel sets  on the project automatically.
-- **Vercel environment variables**: , , , , plus optionally ,  and Turnstile keys.
-  The production secrets live locally in the git-ignored ; never commit it.
-- **Migrations** in  run automatically in production. After changing a collection:
-  , commit, push.
-- **Seeding or running scripts against production** from your machine (PowerShell):
-  [⣷] Pulling schema from database...
-[2K[1G[✓] Pulling schema from database...
-[10:34:43] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
-• sections: 33
-• pages: 9
-• demo news: 12
-• samples: 10
-• done ✔
-- **Supabase security**: every table has Row Level Security on with no policies, and the / roles have no grants (this also applies to future tables). Supabase's public REST API therefore cannot read the site's data. The site connects as the table owner and is unaffected. Keep it this way.
+- **Code**: private GitHub repo `anshxft/rashtriya-pardarshita-prahari`. Every push to `main` deploys automatically on Vercel.
+- **Vercel project** `rashtriya-pardarshita-prahari` (functions in Mumbai, `bom1`). It is protected by Vercel login until a custom domain is added or protection is switched off.
+- **Database**: Supabase project `rashtriya-pardarshita-prahari` (Mumbai). Use the **Transaction pooler** connection string (port 6543).
+- **Media**: Vercel Blob store `prahari-media`. Vercel sets `BLOB_READ_WRITE_TOKEN` on the project automatically.
+- **Vercel environment variables**: `DATABASE_URL`, `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `BLOB_READ_WRITE_TOKEN`, plus optionally `SMTP_*`, `NOTIFY_EMAIL` and Turnstile keys.
+  The production secrets live locally in the git-ignored `.env.vercel`; never commit it.
+- **Migrations** in `src/migrations` run automatically in production. After changing a collection, generate a new one (no database needed), then commit and push:
+  ```bash
+  DATABASE_URL=postgres://offline@127.0.0.1:1/x npx payload migrate:create <name>
+  ```
+- **Seeding or running scripts against production** from your machine (PowerShell; paste `DATABASE_URL` from `.env.vercel`):
+  ```powershell
+  $env:NODE_ENV='production'; $env:RUN_MIGRATIONS='true'; $env:DATABASE_URL='<value from .env.vercel>'; npx payload run src/seed/index.ts
+  ```
+- **Supabase security**: every table has Row Level Security on with no policies, and the `anon`/`authenticated` roles have no grants (this also applies to future tables). Supabase's public REST API therefore cannot read the site's data. The site connects as the table owner and is unaffected. Keep it this way.
 
-Other hosts (Railway, Render, a VPS with ▲ Next.js 16.3.6 (Turbopack)
-- Environments: .env
-✓ Running next.config.ts took 176ms
-- Experiments (use with caution):
-  · serverActions
-  ⨯ turbopackServerFastRefresh
-
-  Creating an optimized production build ...
-✓ Compiled successfully in 55s
-  Running TypeScript ...
-  Finished TypeScript in 12.4s ...
-  Collecting page data using 11 workers ...
-  Generating static pages using 11 workers (0/7) ...
-  Generating static pages using 11 workers (1/7) 
-  Generating static pages using 11 workers (3/7) 
-  Generating static pages using 11 workers (5/7) 
-✓ Generating static pages using 11 workers (7/7) in 736ms
-  Finalizing page optimization ...
-
-Route (app)
-┌ ○ /_not-found
-├ ● /[lang]
-├ ● /[lang]/[slug]
-├ ● /[lang]/appointment
-├ ƒ /[lang]/author/[slug]
-├ ● /[lang]/contact
-├ ● /[lang]/corrections
-├ ƒ /[lang]/feed.xml
-├ ● /[lang]/news/[slug]
-├ ● /[lang]/search
-├ ƒ /[lang]/section/[slug]
-├ ● /[lang]/submit-issue
-├ ƒ /[lang]/tag/[slug]
-├ ƒ /admin/[[...segments]]
-├ ƒ /api/[...slug]
-├ ƒ /api/graphql
-├ ƒ /api/graphql-playground
-├ ○ /apple-icon.png
-├ ○ /icon.png
-├ ○ /robots.txt
-└ ƒ /sitemap.xml
-
-
-○  (Static)   prerendered as static content
-●  (SSG)      prerendered as static HTML (uses generateStaticParams)
-ƒ  (Dynamic)  server-rendered on demand
-
-Unknown command: "start"
-
-
-Did you mean this?
-  npm start # Start a package
-To see a list of supported npm commands, run:
-  npm help) also work. On a VPS you can keep  and skip Blob; uploads are then stored in  and .
+Other hosts (Railway, Render, a VPS with `npm run build && npm start`) also work. On a VPS you can keep `DATABASE_URL=file:./prahari.db` and skip Blob; uploads are then stored in `media/` and `private-files/`.
 
 ## Security and privacy notes
 
