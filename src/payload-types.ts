@@ -146,7 +146,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Reporters save drafts and set Review status → "Submitted". Only Editors/Admins can publish. Future publish date = scheduled.
+ * Tip: the Desk (/desk) is the fast way to add news. Reporters save drafts and set Review status → "Submitted". Only Editors/Admins can publish. Future publish date = scheduled.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles".
@@ -154,6 +154,10 @@ export interface UserAuthOperations {
 export interface Article {
   id: number;
   title: string;
+  /**
+   * Optional second line under the headline
+   */
+  subheadline?: string | null;
   /**
    * 1–2 line summary for cards and SEO
    */
@@ -362,13 +366,81 @@ export interface Article {
       }[]
     | null;
   /**
+   * External news-portal item. Shown as a clearly marked "related news portal" card.
+   */
+  linkCard?: {
+    url?: string | null;
+    siteName?: string | null;
+    description?: string | null;
+    /**
+     * Leave empty for a text-only card
+     */
+    imageUrl?: string | null;
+  };
+  /**
+   * Newspaper layout. The Desk sets this from the template; change only to fix a layout.
+   */
+  layout?: {
+    template?: ('1' | '2' | '3' | '4' | '5' | '6') | null;
+    /**
+     * Text columns in the e-paper (1–4). Blank = template default.
+     */
+    columns?: number | null;
+    inEpaper?: boolean | null;
+    /**
+     * Pin to a page. Blank = automatic.
+     */
+    epaperPage?: number | null;
+    /**
+     * Order inside the edition (lower = earlier). Blank = automatic.
+     */
+    epaperOrder?: number | null;
+    autoFit?: boolean | null;
+    /**
+     * Body text size in %. Auto Fit may lower it slightly, never below 90%.
+     */
+    bodyScale?: number | null;
+    headlineSize?: ('sm' | 'md' | 'lg' | 'xl') | null;
+    headlineInk?: ('default' | 'black' | 'navy' | 'red' | 'saffron' | 'green' | 'gray') | null;
+    subheadlineSize?: ('sm' | 'md' | 'lg' | 'xl') | null;
+    subheadlineInk?: ('default' | 'black' | 'navy' | 'red' | 'saffron' | 'green' | 'gray') | null;
+    reporterSize?: ('sm' | 'md' | 'lg' | 'xl') | null;
+    reporterInk?: ('default' | 'black' | 'navy' | 'red' | 'saffron' | 'green' | 'gray') | null;
+    align?: ('left' | 'center' | 'justify') | null;
+    photoSize?: ('s' | 'm' | 'l' | 'full') | null;
+    photoPos?: ('top' | 'left' | 'right') | null;
+  };
+  /**
    * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
    */
   slug?: string | null;
-  format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion';
+  format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion' | 'link';
   category: number | Category;
   tags?: (number | Tag)[] | null;
+  /**
+   * Legacy byline (use Reporter below)
+   */
   author?: (number | null) | Author;
+  /**
+   * Reporter / correspondent shown in the byline
+   */
+  reporterName?: string | null;
+  /**
+   * Optional: link to a team profile
+   */
+  reporter?: (number | null) | TeamMember;
+  /**
+   * Dateline, e.g. पटना
+   */
+  location?: string | null;
+  /**
+   * Permanent News ID (auto, at first publish)
+   */
+  newsId?: string | null;
+  /**
+   * Original publish time. Never changes.
+   */
+  firstPublishedAt?: string | null;
   /**
    * Future date = scheduled; goes live automatically.
    */
@@ -391,6 +463,22 @@ export interface Article {
    */
   demoContent?: boolean | null;
   createdBy?: (number | null) | User;
+  /**
+   * Optional public note for this edit (shown as “संशोधित”). Not stored on the story itself.
+   */
+  editNote?: string | null;
+  /**
+   * Public edit log (auto).
+   */
+  revisions?:
+    | {
+        at: string;
+        note?: string | null;
+        locale?: string | null;
+        by?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -943,6 +1031,7 @@ export interface PayloadMigration {
  */
 export interface ArticlesSelect<T extends boolean = true> {
   title?: T;
+  subheadline?: T;
   excerpt?: T;
   content?: T;
   sources?:
@@ -992,11 +1081,44 @@ export interface ArticlesSelect<T extends boolean = true> {
         reference?: T;
         id?: T;
       };
+  linkCard?:
+    | T
+    | {
+        url?: T;
+        siteName?: T;
+        description?: T;
+        imageUrl?: T;
+      };
+  layout?:
+    | T
+    | {
+        template?: T;
+        columns?: T;
+        inEpaper?: T;
+        epaperPage?: T;
+        epaperOrder?: T;
+        autoFit?: T;
+        bodyScale?: T;
+        headlineSize?: T;
+        headlineInk?: T;
+        subheadlineSize?: T;
+        subheadlineInk?: T;
+        reporterSize?: T;
+        reporterInk?: T;
+        align?: T;
+        photoSize?: T;
+        photoPos?: T;
+      };
   slug?: T;
   format?: T;
   category?: T;
   tags?: T;
   author?: T;
+  reporterName?: T;
+  reporter?: T;
+  location?: T;
+  newsId?: T;
+  firstPublishedAt?: T;
   publishedAt?: T;
   heroImage?: T;
   externalImage?:
@@ -1012,6 +1134,16 @@ export interface ArticlesSelect<T extends boolean = true> {
   sample?: T;
   demoContent?: T;
   createdBy?: T;
+  editNote?: T;
+  revisions?:
+    | T
+    | {
+        at?: T;
+        note?: T;
+        locale?: T;
+        by?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

@@ -1,5 +1,6 @@
 import * as migration_20260929_042527_initial from './20260929_042527_initial';
 import * as migration_20260930_053213_round3_stage1 from './20260930_053213_round3_stage1';
+import * as migration_20260930_055159_round3_stage2_articles from './20260930_055159_round3_stage2_articles';
 
 export const migrations = [
   {
@@ -10,6 +11,11 @@ export const migrations = [
   {
     up: migration_20260930_053213_round3_stage1.up,
     down: migration_20260930_053213_round3_stage1.down,
-    name: '20260930_053213_round3_stage1'
+    name: '20260930_053213_round3_stage1',
+  },
+  {
+    up: migration_20260930_055159_round3_stage2_articles.up,
+    down: migration_20260930_055159_round3_stage2_articles.down,
+    name: '20260930_055159_round3_stage2_articles'
   },
 ];

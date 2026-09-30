@@ -14,7 +14,10 @@ export const db = () => getPayload({ config })
 /** Fields needed to render a card — keeps list queries light. */
 const cardSelect = {
   title: true,
+  subheadline: true,
   slug: true,
+  newsId: true,
+  linkCard: true,
   excerpt: true,
   format: true,
   category: true,
@@ -36,7 +39,7 @@ const cardPopulate = {
 
 export type Card = Pick<
   Article,
-  'id' | 'title' | 'slug' | 'excerpt' | 'format' | 'category' | 'author' | 'heroImage' | 'externalImage' | 'publishedAt' | 'factCheck' | 'questionStatus' | 'sample' | 'demoContent' | 'featured'
+  'id' | 'title' | 'subheadline' | 'newsId' | 'linkCard' | 'slug' | 'excerpt' | 'format' | 'category' | 'author' | 'heroImage' | 'externalImage' | 'publishedAt' | 'factCheck' | 'questionStatus' | 'sample' | 'demoContent' | 'featured'
 >
 
 export const getArticles = async (lang: Lang, opts: { where?: Where; limit?: number; page?: number } = {}) => {
@@ -64,6 +67,10 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   })
   return res.docs[0] as Article | undefined
 })
+
+/** Editors only: a draft (or published) story exactly as the public page would render it. */
+export const getArticleForPreview = async (lang: Lang, id: string, user: unknown) =>
+  (await (await db()).findByID({ collection: 'articles', id, draft: true, locale: lang, depth: 2, overrideAccess: false, user: user as never }).catch(() => null)) as Article | null
 
 export const getSettings = cache(async (lang: Lang) =>
   (await (await db()).findGlobal({ slug: 'site-settings', locale: lang, depth: 0 })) as SiteSetting,

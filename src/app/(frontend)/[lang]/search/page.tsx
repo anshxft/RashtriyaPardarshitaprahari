@@ -18,7 +18,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const q = (sp.q || '').trim().slice(0, 100)
   const page = pageNum(sp.page)
   const res = q
-    ? await getArticles(lang, { where: { or: [{ title: { like: q } }, { excerpt: { like: q } }] }, limit: 13, page })
+    ? await getArticles(lang, { where: { or: [{ title: { like: q } }, { excerpt: { like: q } }, { subheadline: { like: q } }, { newsId: { like: q } }] }, limit: 13, page })
     : { docs: [], totalPages: 0 }
   return (
     <Listing lang={lang} title={q ? `${d.resultsFor}: “${q}”` : d.search} docs={res.docs} page={page} totalPages={res.totalPages} base={paths.search(lang, q)}>

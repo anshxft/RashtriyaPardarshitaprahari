@@ -10,6 +10,8 @@ import { rt } from './helpers'
 import { bilingual, findSlug, log, payload, upsertBilingual } from './lib'
 import { PAGES } from './pages'
 import { seedTeam } from './team'
+import { istDate } from '../lib/articleHooks'
+import { NEWS_ID_PREFIX } from '../content/brand'
 
 // ── Sections: only the ones Round 3 touched
 const TOUCHED = ['jan-manch', 'sampadkiya', 'samaj-ka-aina', 'sambandhit-portal']
@@ -51,6 +53,27 @@ for (const [locale, old, next] of [
   const s = await payload.findGlobal({ slug: 'site-settings', locale })
   if (s.editorName === old) await payload.updateGlobal({ slug: 'site-settings', locale, data: { editorName: next } })
 }
+
+// ── Stage 2: give every already-published story its permanent News ID (in publish order) and freeze its original date
+const old = await payload.find({
+  collection: 'articles',
+  where: { and: [{ _status: { equals: 'published' } }, { newsId: { exists: false } }] },
+  sort: 'publishedAt',
+  limit: 5000,
+  depth: 0,
+  pagination: false,
+})
+const seq: Record<string, number> = {}
+for (const a of old.docs) {
+  const day = istDate(a.publishedAt)
+  seq[day] ??= (
+    await payload.find({ collection: 'articles', where: { newsId: { like: `${NEWS_ID_PREFIX}-${day}-` } }, limit: 1, sort: '-newsId', depth: 0, pagination: false })
+  ).docs.map((d) => Number(d.newsId?.slice(-4)) || 0)[0] ?? 0
+  const newsId = `${NEWS_ID_PREFIX}-${day}-${String(++seq[day]).padStart(4, '0')}`
+  // No req.user here = trusted script: the hook keeps the existing publishedAt
+  await payload.update({ collection: 'articles', id: a.id, data: { newsId, firstPublishedAt: a.publishedAt, _status: 'published' } as never, draft: false })
+}
+log('News IDs assigned:', old.docs.length)
 
 await seedTeam()
 log('round 3 content migration done ✔')

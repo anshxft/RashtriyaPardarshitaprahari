@@ -28,8 +28,10 @@
     "@payloadcms/ui": "3.90.2",
     "cross-env": "10.1.0",
     "graphql": "^16.8.1",
+    "html-to-image": "^1.11.13",
     "next": "16.3.6",
     "payload": "3.90.2",
+    "qrcode": "^1.5.4",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "sharp": "0.35.4"
@@ -38,6 +40,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "24.12.3",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "tailwindcss": "^4.3.3",
