@@ -1,5 +1,7 @@
 import { canPublish } from '@/access'
 import type { NewsForm } from '@/components/desk/NewsEditor'
+import type { TeamForm } from '@/components/desk/TeamEditor'
+import type { VideoForm } from '@/components/desk/VideoEditor'
 import type { CategoryOption, TeamOption } from './deskTypes'
 import { istDate } from './articleHooks'
 import { asMedia, db } from './data'
@@ -80,3 +82,7 @@ export async function loadForm(id: string, locale: Lang, user: User): Promise<{ 
 }
 
 export const mayPublish = (user: User) => canPublish({ user } as never)
+
+// Blank forms live here (server-safe): the client editor files can only be rendered, not called, from server pages.
+export const emptyVideo = (): VideoForm => ({ title: '', description: '', location: '', eventDate: new Date().toISOString().slice(0, 10), reporterName: '', reporterId: null, categoryId: null, thumb: { id: null, url: null }, scheduleAt: '', processing: '', processError: '', posterUrl: '', fileName: '', published: false })
+export const emptyTeam = (): TeamForm => ({ name: '', designation: '', tier: 'reporter', workArea: '', state: '', district: '', bureau: '', idNumber: '', bio: '', experience: '', email: '', phone: '', publishContact: false, order: 100, photo: { id: null, url: null }, published: false })

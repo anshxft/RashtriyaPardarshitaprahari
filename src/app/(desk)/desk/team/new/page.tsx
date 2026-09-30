@@ -1,6 +1,6 @@
-import { emptyTeam, TeamEditor } from '@/components/desk/TeamEditor'
+import { TeamEditor } from '@/components/desk/TeamEditor'
 import { currentUser } from '@/lib/auth'
-import { mayPublish } from '@/lib/deskData'
+import { emptyTeam, mayPublish } from '@/lib/deskData'
 
 export const metadata = { title: 'नया सदस्य' }
 
