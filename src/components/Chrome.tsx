@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { getBreaking, getArticles, getFooterPages, getMenu, getSettings } from '@/lib/data'
+import { SPECIAL_COLUMNS, TAGLINE_FULL } from '@/content/brand'
+import { getBreaking, getArticles, getCategories, getFooterPages, getMenu, getSettings } from '@/lib/data'
 import { formatDate, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 import { LangSwitch, Nav, ThemeToggle } from './client'
@@ -27,9 +28,11 @@ export async function Header({ lang }: { lang: Lang }) {
       <div className="bg-navy-950 text-white">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-1.5 text-sm">
           <span className="hidden sm:inline">{formatDate(new Date().toISOString(), lang)}</span>
-          <span className="hidden text-gold-300 md:inline" aria-hidden>
-            {d.values.join('  |  ')}
-          </span>
+          <nav aria-label={d.quickLinks} className="hidden items-center gap-4 text-gold-300 md:flex">
+            <Link href={paths.epaper(lang)} className="hover:underline">{d.epaper}</Link>
+            <Link href={paths.videos(lang)} className="hover:underline">{d.videos}</Link>
+            <Link href={paths.team(lang)} className="hover:underline">{d.team}</Link>
+          </nav>
           <div className="ml-auto flex items-center gap-2">
             <Link href={paths.search(lang)} className="rounded px-2 py-0.5 hover:bg-white/10" aria-label={d.search}>
               <span aria-hidden>⌕</span> <span className="hidden sm:inline">{d.search}</span>
@@ -48,7 +51,7 @@ export async function Header({ lang }: { lang: Lang }) {
               <span className="block truncate font-display text-xl leading-tight font-extrabold text-navy-900 sm:text-2xl md:text-4xl dark:text-gold-300">
                 {settings.siteName || d.siteName}
               </span>
-              <span className="block truncate text-sm font-semibold text-saffron-600 md:text-base">{settings.tagline || d.tagline}</span>
+              <span className="block text-xs leading-snug font-semibold text-saffron-600 sm:text-sm md:text-base">{d.tagline}</span>
             </span>
           </Link>
           <Link
@@ -117,10 +120,12 @@ async function Ticker({ lang }: { lang: Lang }) {
 
 export async function Footer({ lang }: { lang: Lang }) {
   const d = t(lang)
-  const [menu, settings, pages] = await Promise.all([getMenu(lang), getSettings(lang), getFooterPages(lang)])
+  const [menu, settings, pages, cats] = await Promise.all([getMenu(lang), getSettings(lang), getFooterPages(lang), getCategories(lang)])
   const s = settings
   const social = Object.entries(s.social || {}).filter(([k, v]) => k !== 'id' && v) as [string, string][]
-  const subs = menu.flatMap((c) => c.children)
+  const special = SPECIAL_COLUMNS.map((slug) => cats.find((c) => c.slug === slug)).filter((c): c is NonNullable<typeof c> => Boolean(c))
+  const specialSlugs: string[] = [...SPECIAL_COLUMNS]
+  const subs = menu.flatMap((c) => c.children).filter((c) => !specialSlugs.includes(c.slug || ''))
 
   return (
     <footer className="mt-16 bg-navy-950 text-white/85">
@@ -131,7 +136,7 @@ export async function Footer({ lang }: { lang: Lang }) {
             <Image src="/logo-160.webp" alt="" width={64} height={64} />
             <div>
               <p className="font-display text-xl font-bold text-gold-300">{s.siteName || d.siteName}</p>
-              <p className="text-sm">{s.tagline || d.tagline}</p>
+              <p className="text-sm leading-snug">{TAGLINE_FULL}</p>
             </div>
           </div>
           <dl className="mt-4 space-y-1 text-sm">
@@ -190,6 +195,33 @@ export async function Footer({ lang }: { lang: Lang }) {
         <div>
           <p className="mb-3 font-bold text-gold-300">{d.quickLinks}</p>
           <ul className="space-y-1 text-sm">
+            {special.map((c) => (
+              <li key={c.id}>
+                <Link href={paths.category(lang, c.slug)} className="font-semibold text-gold-300 hover:underline">
+                  {c.title}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link href={paths.page(lang, 'editor-in-chief-message')} className="hover:text-gold-300">
+                {d.editorMessage}
+              </Link>
+            </li>
+            <li>
+              <Link href={paths.team(lang)} className="hover:text-gold-300">
+                {d.team}
+              </Link>
+            </li>
+            <li>
+              <Link href={paths.epaper(lang)} className="hover:text-gold-300">
+                {d.epaper}
+              </Link>
+            </li>
+            <li>
+              <Link href={paths.videos(lang)} className="hover:text-gold-300">
+                {d.videos}
+              </Link>
+            </li>
             {subs.map((c) => (
               <li key={c.id}>
                 <Link href={paths.category(lang, c.slug)} className="hover:text-gold-300">

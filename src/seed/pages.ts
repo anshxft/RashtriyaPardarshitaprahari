@@ -24,7 +24,7 @@ export const PAGES: P[] = [
 - ट्रस्ट का नाम: [ट्रस्ट का पूरा नाम]
 - पंजीकरण संख्या: [पंजीकरण संख्या]
 - पंजीकृत पता: [पूरा पता]
-- संपादक: [संपादक का नाम]
+- प्रधान संपादक: [प्रधान संपादक का नाम]
 - प्रकाशक: [प्रकाशक का नाम]
 - शिकायत अधिकारी: [नाम, ईमेल, फोन]
 
@@ -44,11 +44,17 @@ We do not stop at reporting. We carry the public's questions to those responsibl
 - Name of Trust: [Full name of Trust]
 - Registration number: [Registration number]
 - Registered address: [Full address]
-- Editor: [Editor's name]
+- Editor-in-Chief: [Editor-in-Chief's name]
 - Publisher: [Publisher's name]
 - Grievance officer: [Name, email, phone]
 
 These details can also be edited in Admin → Site Settings.`,
+  },
+  {
+    slug: 'editor-in-chief-message',
+    title: { hi: 'प्रधान संपादक का संदेश', en: 'Editor-in-Chief’s Message' },
+    hi: `[प्रधान संपादक का संदेश यहाँ लिखें। Admin → Pages → “प्रधान संपादक का संदेश” में जाकर पाठ बदलें और फोटो जोड़ें। तैयार होने पर “Feature this page as a block on the home page” चुनें।]`,
+    en: `[Write the Editor-in-Chief’s message here. Go to Admin → Pages → “Editor-in-Chief’s Message” to edit the text and add a photo. When it is ready, tick “Feature this page as a block on the home page”.]`,
   },
   {
     slug: 'editorial-policy',
@@ -59,7 +65,7 @@ These details can also be edited in Admin → Site Settings.`,
 ## सत्यापन
 - हर तथ्य को कम से कम दो स्वतंत्र स्रोतों या मूल दस्तावेज़ से सत्यापित किया जाता है।
 - आरोपों वाली हर खबर में संबंधित पक्ष को जवाब देने का उचित अवसर दिया जाता है, और उनका जवाब (या जवाब न देना) खबर में दर्ज किया जाता है।
-- आरोप, जांच या मुकदमे से जुड़ी सामग्री संपादक की स्वीकृति के बिना प्रकाशित नहीं होती।
+- आरोप, जांच या मुकदमे से जुड़ी सामग्री प्रधान संपादक की स्वीकृति के बिना प्रकाशित नहीं होती।
 
 ## स्रोत और गोपनीयता
 हम उपयोग किए गए स्रोतों और दस्तावेज़ों का उल्लेख करते हैं। जहां किसी व्यक्ति की सुरक्षा का प्रश्न हो, वहां स्रोत की पहचान गोपनीय रखी जाती है।
@@ -75,7 +81,7 @@ Our editorial decisions are free from the influence of any political party, gove
 ## Verification
 - Every fact is verified with at least two independent sources or the original document.
 - In every story containing allegations, the concerned party is given a fair opportunity to respond, and their response (or refusal) is recorded in the story.
-- Content involving allegations, investigations or litigation is never published without the Editor's approval.
+- Content involving allegations, investigations or litigation is never published without the Editor-in-Chief's approval.
 
 ## Sources and confidentiality
 We cite the sources and documents we use. Where a person's safety is at stake, the identity of the source is kept confidential.
@@ -133,7 +139,7 @@ A verdict may change if new evidence emerges; every such change is recorded in t
 ## हम क्या करते हैं
 - तथ्यात्मक गलती: खबर में सुधार, और खबर के नीचे तारीख सहित सुधार-नोट।
 - स्पष्टीकरण: जहां तथ्य सही हो पर प्रस्तुति से भ्रम हो।
-- गंभीर गलती: संपादक की समीक्षा के बाद प्रमुखता से सुधार।
+- गंभीर गलती: प्रधान संपादक की समीक्षा के बाद प्रमुखता से सुधार।
 - सभी सुधार सार्वजनिक **सुधार लॉग** पेज पर दर्ज होते हैं।
 
 हम किसी प्रकाशित खबर को चुपचाप नहीं बदलते या हटाते।`,
@@ -145,7 +151,7 @@ Every story has a "Spotted an error? Tell us" link, or choose "Correction reques
 ## What we do
 - Factual error: the story is corrected and a dated correction note is added below it.
 - Clarification: where facts are right but the presentation could mislead.
-- Serious error: corrected prominently after the Editor's review.
+- Serious error: corrected prominently after the Editor-in-Chief's review.
 - All corrections are listed on the public **Corrections log** page.
 
 We never silently change or delete a published story.`,

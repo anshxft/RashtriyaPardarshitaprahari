@@ -71,6 +71,7 @@ export interface Config {
     categories: Category;
     tags: Tag;
     authors: Author;
+    'team-members': TeamMember;
     'breaking-news': BreakingNew;
     corrections: Correction;
     pages: Page;
@@ -91,6 +92,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>;
     'breaking-news': BreakingNewsSelect<false> | BreakingNewsSelect<true>;
     corrections: CorrectionsSelect<false> | CorrectionsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
@@ -541,6 +543,112 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Save as draft → click Preview → then Publish. Only Editors/Admins can add or change profiles.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-members".
+ */
+export interface TeamMember {
+  id: number;
+  name: string;
+  /**
+   * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
+   */
+  slug?: string | null;
+  photo?: (number | null) | Media;
+  /**
+   * As shown publicly, e.g. "राज्य ब्यूरो प्रमुख, बिहार"
+   */
+  designation: string;
+  /**
+   * Decides the group and the order on the Team page.
+   */
+  tier:
+    | 'editor-in-chief'
+    | 'editorial'
+    | 'state-bureau'
+    | 'assistant-bureau'
+    | 'special-correspondent'
+    | 'reporter'
+    | 'photographer'
+    | 'other';
+  /**
+   * कार्यक्षेत्र, e.g. "पटना और आसपास के ज़िले"
+   */
+  workArea?: string | null;
+  state?:
+    | (
+        | 'Andaman and Nicobar Islands'
+        | 'Andhra Pradesh'
+        | 'Arunachal Pradesh'
+        | 'Assam'
+        | 'Bihar'
+        | 'Chandigarh'
+        | 'Chhattisgarh'
+        | 'Dadra and Nagar Haveli and Daman and Diu'
+        | 'Delhi'
+        | 'Goa'
+        | 'Gujarat'
+        | 'Haryana'
+        | 'Himachal Pradesh'
+        | 'Jammu and Kashmir'
+        | 'Jharkhand'
+        | 'Karnataka'
+        | 'Kerala'
+        | 'Ladakh'
+        | 'Lakshadweep'
+        | 'Madhya Pradesh'
+        | 'Maharashtra'
+        | 'Manipur'
+        | 'Meghalaya'
+        | 'Mizoram'
+        | 'Nagaland'
+        | 'Odisha'
+        | 'Puducherry'
+        | 'Punjab'
+        | 'Rajasthan'
+        | 'Sikkim'
+        | 'Tamil Nadu'
+        | 'Telangana'
+        | 'Tripura'
+        | 'Uttar Pradesh'
+        | 'Uttarakhand'
+        | 'West Bengal'
+      )
+    | null;
+  district?: string | null;
+  /**
+   * Bureau / office
+   */
+  bureau?: string | null;
+  /**
+   * Press / ID card number
+   */
+  idNumber?: string | null;
+  bio?: string | null;
+  /**
+   * Experience / specialisation (optional)
+   */
+  experience?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  /**
+   * Off by default. Contact details are shown on the site only if this is ticked.
+   */
+  publishContact?: boolean | null;
+  /**
+   * Lower = earlier within the same group.
+   */
+  order?: number | null;
+  /**
+   * Sample profile (removed by npm run demo:remove)
+   */
+  demoContent?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "breaking-news".
  */
@@ -584,6 +692,10 @@ export interface Page {
    * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
    */
   slug?: string | null;
+  /**
+   * Optional photo (e.g. the Editor-in-Chief for the message page)
+   */
+  image?: (number | null) | Media;
   content?: {
     root: {
       type: string;
@@ -601,6 +713,10 @@ export interface Page {
   } | null;
   legalReviewPending?: boolean | null;
   showInFooter?: boolean | null;
+  /**
+   * Feature this page as a block on the home page (used for the Editor-in-Chief’s message).
+   */
+  showOnHome?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -738,6 +854,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'authors';
         value: number | Author;
+      } | null)
+    | ({
+        relationTo: 'team-members';
+        value: number | TeamMember;
       } | null)
     | ({
         relationTo: 'breaking-news';
@@ -937,6 +1057,32 @@ export interface AuthorsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-members_select".
+ */
+export interface TeamMembersSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  photo?: T;
+  designation?: T;
+  tier?: T;
+  workArea?: T;
+  state?: T;
+  district?: T;
+  bureau?: T;
+  idNumber?: T;
+  bio?: T;
+  experience?: T;
+  email?: T;
+  phone?: T;
+  publishContact?: T;
+  order?: T;
+  demoContent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "breaking-news_select".
  */
 export interface BreakingNewsSelect<T extends boolean = true> {
@@ -967,9 +1113,11 @@ export interface CorrectionsSelect<T extends boolean = true> {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  image?: T;
   content?: T;
   legalReviewPending?: T;
   showInFooter?: T;
+  showOnHome?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1192,9 +1340,6 @@ export interface SiteSetting {
   tagline?: string | null;
   trustName?: string | null;
   trustRegistrationNo?: string | null;
-  /**
-   * Editor / Editor-in-chief
-   */
   editorName?: string | null;
   publisherName?: string | null;
   /**

@@ -20,7 +20,13 @@ const d = (hi: string, en: string): L => ({ hi, en })
 
 export const SECTIONS: Section[] = [
   // ── खबरें / News
-  { slug: 'rashtriya', group: 'news', title: d('राष्ट्रीय', 'National'), description: d('देश की बड़ी खबरें, तथ्य के साथ।', 'Major national news, with facts.') },
+  {
+    slug: 'rashtriya',
+    group: 'news',
+    title: d('राष्ट्रीय', 'National'),
+    description: d('देश की बड़ी खबरें, तथ्य के साथ।', 'Major national news, with facts.'),
+    children: [{ slug: 'sambandhit-portal', title: d('संबंधित न्यूज़ पोर्टल', 'Related News Portals'), description: d('अन्य न्यूज़ पोर्टलों की चुनिंदा खबरों के लिंक।', 'Links to selected stories on other news portals.') }],
+  },
   { slug: 'rajya', group: 'news', title: d('राज्य', 'States'), description: d('राज्यों से जुड़ी खबरें और जनहित के मुद्दे।', 'News and public issues from the states.') },
   {
     slug: 'gaon-shahar',
@@ -66,7 +72,7 @@ export const SECTIONS: Section[] = [
   {
     slug: 'jan-manch',
     group: 'people',
-    title: d('जन मंच', 'Public Forum'),
+    title: d('जनता का मंच', 'Public Forum'),
     description: d('जनता की बात, जनता की ज़ुबानी।', 'The public’s voice, in its own words.'),
     children: [{ slug: 'janta-ki-gawahi', title: d('जनता की गवाही', 'People’s Testimony'), description: d('प्रत्यक्षदर्शियों और प्रभावितों की बात।', 'Accounts from witnesses and those affected.') }],
   },
@@ -89,7 +95,10 @@ export const SECTIONS: Section[] = [
     group: 'people',
     title: d('विचार', 'Opinion'),
     description: d('संपादकीय, विश्लेषण और विचार।', 'Editorials, analysis and opinion.'),
-    children: [{ slug: 'bharat-navnirman-samvad', title: d('भारत नवनिर्माण संवाद', 'Bharat Navnirman Dialogue'), description: d('नए भारत के निर्माण पर संवाद।', 'Dialogue on building a new India.') }],
+    children: [
+      { slug: 'sampadkiya', title: d('संपादकीय', 'Editorial'), description: d('प्रधान संपादक का संपादकीय।', 'The Editor-in-Chief’s editorial.') },
+      { slug: 'samaj-ka-aina', title: d('समाज का आइना', 'Society’s Mirror'), description: d('समाज की सच्ची तस्वीर, बिना लाग-लपेट।', 'A true picture of society, without varnish.') },
+      { slug: 'bharat-navnirman-samvad', title: d('भारत नवनिर्माण संवाद', 'Bharat Navnirman Dialogue'), description: d('नए भारत के निर्माण पर संवाद।', 'Dialogue on building a new India.') }],
   },
 ]
 

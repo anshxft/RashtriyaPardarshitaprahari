@@ -13,6 +13,12 @@ export const paths = {
   submit: (l: Lang) => `/${l}/submit-issue`,
   appointment: (l: Lang) => `/${l}/appointment`,
   contact: (l: Lang) => `/${l}/contact`,
+  team: (l: Lang) => `/${l}/team`,
+  epaper: (l: Lang, date?: string) => `/${l}/epaper${date ? `/${date}` : ''}`,
+  videos: (l: Lang) => `/${l}/videos`,
+  video: (l: Lang, slug?: string | null) => `/${l}/video/${enc(slug)}`,
+  /** Permanent short link (used by QR codes and share links). Language-neutral. */
+  newsShort: (newsId: string) => `/n/${encodeURIComponent(newsId)}`,
 }
 
 /** Route params may arrive percent-encoded (Devanagari slugs). */

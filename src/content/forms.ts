@@ -14,14 +14,8 @@ export type FormField = {
   maxLength?: number
 }
 
-export const STATES: string[] = [
-  'Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh',
-  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir',
-  'Jharkhand', 'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
-  'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-  'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-]
-const stateOptions = STATES.map((s) => ({ value: s, hi: s, en: s }))
+import { STATE_LIST } from './states'
+const stateOptions = STATE_LIST.map((s) => ({ value: s.value, hi: s.hi, en: s.value }))
 
 export const submissionFields: FormField[] = [
   { name: 'name', type: 'text', label: { hi: 'आपका नाम', en: 'Your name' }, required: true, identity: true, maxLength: 120 },
@@ -81,7 +75,7 @@ export const appointmentFields: FormField[] = [
     label: { hi: 'किससे मिलना है', en: 'Meeting with' },
     required: true,
     options: [
-      { value: 'editor', hi: 'संपादक', en: 'Editor' },
+      { value: 'editor', hi: 'प्रधान संपादक', en: 'Editor-in-Chief' },
       { value: 'reporter', hi: 'संवाददाता', en: 'Reporter' },
       { value: 'trust', hi: 'ट्रस्ट प्रतिनिधि', en: 'Trust representative' },
     ],

@@ -5,7 +5,8 @@ import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 import { publicArticleWhere } from '@/collections/Articles'
-import type { Article, Author, Category, Media, Page, SiteSetting, Tag } from '@/payload-types'
+import { TIERS } from '@/collections/TeamMembers'
+import type { Article, Author, Category, Media, Page, SiteSetting, Tag, TeamMember } from '@/payload-types'
 import type { Lang } from './i18n'
 
 export const db = () => getPayload({ config })
@@ -140,6 +141,22 @@ export const getFooterPages = cache(async (lang: Lang) => {
     select: { title: true, slug: true },
   })
   return res.docs as Pick<Page, 'id' | 'title' | 'slug'>[]
+})
+
+/** Published team, sorted by rank (tier) → manual order → name. Small list, so filtering happens in memory. */
+export const getTeam = cache(async (lang: Lang): Promise<TeamMember[]> => {
+  const res = await (await db()).find({
+    collection: 'team-members',
+    locale: lang,
+    where: { _status: { equals: 'published' } },
+    limit: 2000,
+    depth: 1,
+    pagination: false,
+  })
+  const rank = (t?: string | null) => Math.max(0, TIERS.findIndex((x) => x.value === t))
+  return (res.docs as TeamMember[]).sort(
+    (a, b) => rank(a.tier) - rank(b.tier) || (a.order ?? 100) - (b.order ?? 100) || a.name.localeCompare(b.name, lang),
+  )
 })
 
 // ── Helpers for populated relations

@@ -11,6 +11,7 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/index.ts",
+    "seed:round3": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/round3.ts",
     "demo:remove": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/remove-demo.ts",
     "create-admin": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/create-admin.ts",
     "typecheck": "tsc --noEmit",

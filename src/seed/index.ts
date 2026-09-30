@@ -2,31 +2,13 @@
  * npm run seed — idempotent: creates anything missing (matched by slug), never overwrites existing content.
  * Seeds: sections/menu, site settings (placeholders), static pages, authors, tags, DEMO news, SAMPLE formats, breaking news.
  */
-import config from '@payload-config'
-import { getPayload, type CollectionSlug } from 'payload'
 import { SECTIONS } from '../content/site-structure'
 import { DEMO, DEMO_BREAKING } from './demo'
 import { rt, sampleLetterPng, samplePdf } from './helpers'
+import { bilingual, daysAgo, log, payload } from './lib'
 import { PAGES } from './pages'
 import { SAMPLES } from './samples'
-
-const payload = await getPayload({ config })
-const log = (...a: unknown[]) => console.log('•', ...a)
-const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString()
-
-async function findSlug(collection: CollectionSlug, slug: string) {
-  const r = await payload.find({ collection, where: { slug: { equals: slug } }, limit: 1, depth: 0, draft: true })
-  return r.docs[0] as { id: number } | undefined
-}
-
-/** Create in Hindi, then add the English locale. Returns id (existing or new). */
-async function bilingual(collection: CollectionSlug, slug: string, hi: Record<string, unknown>, en: (doc: any) => Record<string, unknown>) {
-  const existing = await findSlug(collection, slug)
-  if (existing) return existing.id
-  const doc = await payload.create({ collection, locale: 'hi', data: { ...hi, slug } as never, draft: false })
-  await payload.update({ collection, id: doc.id, locale: 'en', data: en(doc) as never, draft: false })
-  return doc.id as number
-}
+import { seedTeam } from './team'
 
 // ── Sections (menu)
 const catIds: Record<string, number> = {}
@@ -59,10 +41,9 @@ if (!settings.siteName) {
     locale: 'hi',
     data: {
       siteName: 'राष्ट्रीय पारदर्शिता प्रहरी',
-      tagline: 'खबर से आगे, जवाबदेही तक',
       trustName: 'पारदर्शिता प्रहरी ट्रस्ट',
       trustRegistrationNo: '[ट्रस्ट पंजीकरण संख्या]',
-      editorName: '[संपादक का नाम]',
+      editorName: '[प्रधान संपादक का नाम]',
       publisherName: '[प्रकाशक का नाम]',
       address: '[पूरा पता]\n[शहर, राज्य, पिन कोड]',
       email: 'contact@example.org',
@@ -76,9 +57,8 @@ if (!settings.siteName) {
     locale: 'en',
     data: {
       siteName: 'Rashtriya Pardarshita Prahari',
-      tagline: 'Beyond News. Towards Accountability.',
       trustName: 'Pardarshita Prahari Trust',
-      editorName: '[Editor name]',
+      editorName: '[Editor-in-Chief name]',
       publisherName: '[Publisher name]',
       address: '[Full address]\n[City, State, PIN]',
       grievanceOfficer: { name: '[Grievance officer name]' },
@@ -257,6 +237,8 @@ if ((await payload.count({ collection: 'breaking-news' })).totalDocs === 0) {
   }
   log('breaking news:', DEMO_BREAKING.length)
 }
+
+await seedTeam()
 
 log('done ✔')
 process.exit(0)

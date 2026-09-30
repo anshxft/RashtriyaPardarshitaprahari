@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { ArticleCard } from '@/components/ArticleCard'
 import { SubmitCta } from '@/components/SubmitCta'
 import { SectionTitle, Slot, VerdictBadge } from '@/components/ui'
+import { EditorMessage } from '@/components/EditorMessage'
 import { HOME_BLOCKS } from '@/content/site-structure'
-import { asCat, getArticles, getCategory, getCategoryArticles, type Card } from '@/lib/data'
+import { asCat, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, type Card } from '@/lib/data'
 import { assertLang, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
@@ -24,6 +25,12 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   ])
   const lead = featured.docs[0] || latest.docs[0]
   const rest = latest.docs.filter((a) => a.id !== lead?.id)
+  const [editorPage, settings, aina, sampadkiya] = await Promise.all([
+    getBySlug('pages', lang, 'editor-in-chief-message'),
+    getSettings(lang),
+    getCategoryArticles(lang, 'samaj-ka-aina', 3),
+    getCategoryArticles(lang, 'sampadkiya', 3),
+  ])
   const blocks = await Promise.all(
     HOME_BLOCKS.map(async (slug) => ({ slug, cat: (await getCategory(lang, slug))?.cat, items: (await getCategoryArticles(lang, slug, 4)).docs })),
   )
@@ -104,6 +111,28 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
             </section>
           ))}
       </div>
+
+      {/* Editor-in-Chief's message + the two special columns */}
+      {(editorPage?.showOnHome || aina.docs.length > 0 || sampadkiya.docs.length > 0) && (
+        <section className="grid gap-8 lg:grid-cols-3" aria-label={d.specialColumns}>
+          {editorPage?.showOnHome && <EditorMessage page={editorPage} name={settings.editorName} lang={lang} />}
+          {[
+            { slug: 'sampadkiya', docs: sampadkiya.docs },
+            { slug: 'samaj-ka-aina', docs: aina.docs },
+          ]
+            .filter((c) => c.docs.length)
+            .map((c) => (
+              <div key={c.slug}>
+                <SectionTitle lang={lang} href={paths.category(lang, c.slug)} accent="saffron">
+                  {asCat(c.docs[0].category)?.title}
+                </SectionTitle>
+                {c.docs.map((a) => (
+                  <ArticleCard key={a.id} a={a} lang={lang} variant="compact" />
+                ))}
+              </div>
+            ))}
+        </section>
+      )}
 
       {/* Public forum + submit CTA */}
       <section className="grid gap-8 lg:grid-cols-3">

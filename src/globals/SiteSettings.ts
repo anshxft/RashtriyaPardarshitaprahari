@@ -1,7 +1,7 @@
 import type { GlobalConfig } from 'payload'
 import { isAdmin, isEditorField } from '../access'
 
-/** The one place for contact details, Trust registration, editor name, address and social links. */
+/** The one place for contact details, Trust registration, Editor-in-Chief name, address and social links. */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   admin: { group: 'Admin' },
@@ -14,10 +14,11 @@ export const SiteSettings: GlobalConfig = {
           label: 'Identity',
           fields: [
             { name: 'siteName', type: 'text', localized: true, required: true },
-            { name: 'tagline', type: 'text', localized: true },
+            // The registered tagline lives in code (content/brand.ts) and cannot be edited here.
+            { name: 'tagline', type: 'text', localized: true, admin: { hidden: true } },
             { name: 'trustName', type: 'text', localized: true },
             { name: 'trustRegistrationNo', type: 'text' },
-            { name: 'editorName', type: 'text', localized: true, admin: { description: 'Editor / Editor-in-chief' } },
+            { name: 'editorName', type: 'text', localized: true, label: 'Editor-in-Chief name (प्रधान संपादक)' },
             { name: 'publisherName', type: 'text', localized: true },
             { name: 'registrationNote', type: 'textarea', localized: true, admin: { description: 'Any other legal / registration text for the footer' } },
           ],
