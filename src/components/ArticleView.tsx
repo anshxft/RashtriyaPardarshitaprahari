@@ -186,6 +186,20 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
         </section>
       )}
 
+      {a.format === 'link' && a.linkCard?.url && (
+        <section className="mt-6 rounded-xl border-2 border-dashed border-navy-700/50 bg-surface p-4">
+          <p className="mb-3 inline-block rounded bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-900">
+            {d.externalLink}
+            {a.linkCard.siteName ? ` · ${a.linkCard.siteName}` : ''}
+          </p>
+          {a.linkCard.description && <p className="text-lg">{a.linkCard.description}</p>}
+          <a href={a.linkCard.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-4 inline-block rounded-md bg-navy-900 px-5 py-3 font-bold text-white hover:bg-navy-700">
+            {d.viewRelatedPortal}
+          </a>
+          <p className="mt-3 text-sm text-muted">{d.externalNote}</p>
+        </section>
+      )}
+
       <FactCheckBox a={a} lang={lang} />
       {a.askedTo && (
         <p className="mt-6 rounded-md bg-surface p-3">

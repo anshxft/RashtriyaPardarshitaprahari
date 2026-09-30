@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       section: asCat(a.category)?.title,
       images: img ? [img.src] : ['/og-default.jpg'],
     },
-    robots: a.demoContent ? { index: false } : undefined,
+    robots: a.demoContent || a.format === 'link' ? { index: false } : undefined, // external items are not our own reporting
   }
 }
 
