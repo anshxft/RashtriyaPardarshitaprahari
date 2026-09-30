@@ -12,4 +12,8 @@ await sharp(emblem).resize(256).png().toFile('public/emblem.png')
 await sharp(emblem).resize(64).png().toFile('src/app/icon.png')
 await sharp(src).resize(180).flatten({ background: '#ffffff' }).png().toFile('src/app/apple-icon.png')
 await sharp(src).resize(1200, 630, { fit: 'contain', background: '#0b1f4d' }).jpeg({ quality: 85 }).toFile('public/og-default.jpg')
+// Watermark for videos: the full round badge with the white square corners made transparent.
+const wm = 900
+const round = Buffer.from(`<svg width="${wm}" height="${wm}"><circle cx="${wm / 2}" cy="${wm / 2}" r="${wm / 2 - 6}"/></svg>`)
+await sharp(src).resize(wm).composite([{ input: round, blend: 'dest-in' }]).png().toFile('public/logo-watermark.png')
 console.log('done')

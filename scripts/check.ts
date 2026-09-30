@@ -4,6 +4,8 @@ import { rateLimited, sniffType, validate } from '../src/lib/forms.ts'
 import { slugify } from '../src/lib/slugify.ts'
 import { GEO, pack, pageBottom, variantsFor, type EpStory } from '../src/lib/epaper.ts'
 import { resolveLayout } from '../src/lib/layout.ts'
+import { jwtUserId, passwordProblem, seal, totpAt, totpVerify, twofaIssue, twofaValid, unseal } from '../src/lib/security.ts'
+import { videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
 
 const fields = [
   { name: 'name', type: 'text', label: { hi: '', en: '' }, required: true, identity: true, maxLength: 5 },
@@ -67,5 +69,26 @@ assert.ok(all.filter((a) => a.id.startsWith('huge')).length > 1, 'huge story is 
 assert.ok(all.every((a) => a.variant.scale >= 0.9 - 1e-9), 'font never below 90%')
 assert.equal(variantsFor(story('x', 100, { autoFit: false }))[0].cols, 2)
 assert.ok(variantsFor(story('x', 100)).every((v) => v.cols <= 4), 'widening capped at 4 columns')
+
+// video logo: real-pixel size from video width (14% of 1280 = 180), top-right, never wider than 1080p; phone rotation swaps size
+const g = watermarkArgs('i', 'l', 'o', {}, 1280)[watermarkArgs('i', 'l', 'o', {}, 1280).indexOf('-filter_complex') + 1]
+assert.ok(g.includes('scale=180:-2') && g.includes('overlay=W-w-0.0250*W:0.0250*W'), g)
+assert.ok(watermarkArgs('i', 'l', 'o', { sizePercent: 10 }, 4000).join(' ').includes('scale=192:-2'), 'capped at 1920 wide')
+assert.deepEqual(videoSize('Stream #0:0: Video: h264, yuv420p, 1920x1080 [SAR 1:1]'), { w: 1920, h: 1080 })
+assert.deepEqual(videoSize('Video: h264, 1920x1080, 30 fps\n rotate          : 90'), { w: 1080, h: 1920 })
+
+// security: password rules, RFC 6238 TOTP test vector (secret "12345678901234567890"), sealed data, signed 2FA cookie
+assert.ok(passwordProblem('short1A!') && passwordProblem('alllowercase1234!') && passwordProblem('NoSymbolsHere123') && passwordProblem('Prahari@2026xx'))
+assert.equal(passwordProblem('Blue-Tiger#4809'), null)
+const RFC = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+assert.equal(totpAt(RFC, 1), '287082')
+assert.equal(totpVerify(RFC, '287082', 0, 59_000), 1)
+assert.equal(totpVerify(RFC, '287082', 1, 59_000), null, 'a code that was already used is refused')
+assert.equal(totpVerify(RFC, '000000', 0, 59_000), null)
+assert.equal(unseal(seal('गुप्त')).toString(), 'गुप्त')
+assert.throws(() => unseal(seal('x').slice(0, -2) + 'AA'))
+const ck = twofaIssue(7)
+assert.ok(twofaValid(ck, 7) && !twofaValid(ck, 8) && !twofaValid(ck.slice(0, -1) + 'x', 7) && !twofaValid(ck, 7, Date.now() + 9 * 3600_000) && !twofaValid(undefined, 7))
+assert.equal(jwtUserId('a.' + Buffer.from('{"id":5}').toString('base64url') + '.c'), '5')
 
 console.log('all checks passed')

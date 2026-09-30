@@ -6,7 +6,8 @@ import { getPayload, type Where } from 'payload'
 import { cache } from 'react'
 import { publicArticleWhere } from '@/collections/Articles'
 import { TIERS } from '@/collections/TeamMembers'
-import type { Article, Author, Category, Media, Page, SiteSetting, Tag, TeamMember } from '@/payload-types'
+import { publicVideoWhere } from '@/collections/Videos'
+import type { Article, Author, Category, Media, Page, SiteSetting, Tag, TeamMember, Video } from '@/payload-types'
 import type { Lang } from './i18n'
 
 export const db = () => getPayload({ config })
@@ -164,6 +165,16 @@ export const getTeam = cache(async (lang: Lang): Promise<TeamMember[]> => {
   return (res.docs as TeamMember[]).sort(
     (a, b) => rank(a.tier) - rank(b.tier) || (a.order ?? 100) - (b.order ?? 100) || a.name.localeCompare(b.name, lang),
   )
+})
+
+export const getVideos = async (lang: Lang, opts: { limit?: number; page?: number } = {}) => {
+  const res = await (await db()).find({ collection: 'videos', locale: lang, where: publicVideoWhere(), sort: '-publishedAt', limit: opts.limit ?? 12, page: opts.page ?? 1, depth: 1 })
+  return { ...res, docs: res.docs as Video[] }
+}
+
+export const getVideo = cache(async (lang: Lang, slug: string) => {
+  const res = await (await db()).find({ collection: 'videos', locale: lang, where: { and: [publicVideoWhere(), { slug: { equals: slug } }] }, limit: 1, depth: 1 })
+  return res.docs[0] as Video | undefined
 })
 
 // ── Helpers for populated relations

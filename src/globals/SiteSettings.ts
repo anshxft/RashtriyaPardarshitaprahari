@@ -58,6 +58,24 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         {
+          label: 'Video watermark',
+          fields: [
+            {
+              name: 'videoWatermark',
+              type: 'group',
+              admin: { description: 'Set once. Applied automatically to every uploaded video (the original file is kept untouched).' },
+              fields: [
+                { name: 'enabled', type: 'checkbox', defaultValue: true },
+                { name: 'position', type: 'select', defaultValue: 'tr', options: [{ label: 'Top right (default)', value: 'tr' }, { label: 'Top left', value: 'tl' }, { label: 'Bottom right', value: 'br' }, { label: 'Bottom left', value: 'bl' }] },
+                { name: 'sizePercent', type: 'number', defaultValue: 14, min: 5, max: 30, admin: { description: 'Logo width as % of the video width' } },
+                { name: 'opacity', type: 'number', defaultValue: 90, min: 20, max: 100, admin: { description: 'Logo opacity in %' } },
+                { name: 'marginPercent', type: 'number', defaultValue: 2.5, min: 0, max: 10, admin: { description: 'Distance from the edge, as % of the video width' } },
+                { name: 'logo', type: 'upload', relationTo: 'media', admin: { description: 'Optional PNG with transparent background. Blank = the official round logo.' } },
+              ],
+            },
+          ],
+        },
+        {
           label: 'Future slots',
           fields: [
             { name: 'adsEnabled', type: 'checkbox', defaultValue: false, admin: { description: 'Placeholder only — ad slots render nothing until built.' } },

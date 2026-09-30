@@ -1,10 +1,12 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link'
 import { ArticleCard } from '@/components/ArticleCard'
 import { SubmitCta } from '@/components/SubmitCta'
+import { videoThumb } from '@/components/VideoPlayer'
 import { SectionTitle, Slot, VerdictBadge } from '@/components/ui'
 import { EditorMessage } from '@/components/EditorMessage'
 import { HOME_BLOCKS } from '@/content/site-structure'
-import { asCat, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, type Card } from '@/lib/data'
+import { asCat, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, getVideos, type Card } from '@/lib/data'
 import { assertLang, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
@@ -25,11 +27,12 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   ])
   const lead = featured.docs[0] || latest.docs[0]
   const rest = latest.docs.filter((a) => a.id !== lead?.id)
-  const [editorPage, settings, aina, sampadkiya] = await Promise.all([
+  const [editorPage, settings, aina, sampadkiya, videos] = await Promise.all([
     getBySlug('pages', lang, 'editor-in-chief-message'),
     getSettings(lang),
     getCategoryArticles(lang, 'samaj-ka-aina', 3),
     getCategoryArticles(lang, 'sampadkiya', 3),
+    getVideos(lang, { limit: 4 }),
   ])
   const blocks = await Promise.all(
     HOME_BLOCKS.map(async (slug) => ({ slug, cat: (await getCategory(lang, slug))?.cat, items: (await getCategoryArticles(lang, slug, 4)).docs })),
@@ -62,6 +65,32 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       </section>
 
       <Slot name="ad-home-top" />
+
+      {videos.docs.length > 0 && (
+        <section>
+          <SectionTitle lang={lang} href={paths.videos(lang)}>
+            🎬 {d.videos}
+          </SectionTitle>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {videos.docs.map((v) => {
+              const thumb = videoThumb(v)
+              return (
+                <article key={v.id} className="group relative">
+                  <div className="relative aspect-video overflow-hidden rounded-lg bg-navy-900">
+                    {thumb && <img src={thumb} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                    <span className="absolute inset-0 flex items-center justify-center text-4xl text-white/90 drop-shadow">▶</span>
+                  </div>
+                  <h3 className="mt-2 font-display leading-snug font-bold">
+                    <Link href={paths.video(lang, v.slug)} className="after:absolute after:inset-0 hover:text-navy-700 dark:hover:text-gold-300">
+                      {v.title}
+                    </Link>
+                  </h3>
+                </article>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {investigations.docs.length > 0 && (
         <section className="-mx-4 bg-navy-900 px-4 py-8 text-white sm:rounded-xl">

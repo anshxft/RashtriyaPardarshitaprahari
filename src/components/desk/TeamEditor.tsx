@@ -27,7 +27,6 @@ export type TeamForm = {
   published: boolean
 }
 
-export const emptyTeam = (): TeamForm => ({ name: '', designation: '', tier: 'reporter', workArea: '', state: '', district: '', bureau: '', idNumber: '', bio: '', experience: '', email: '', phone: '', publishContact: false, order: 100, photo: { id: null, url: null }, published: false })
 
 const input = 'w-full rounded-md border border-line bg-bg px-3 py-3 text-base'
 const card = 'rounded-xl border border-line bg-bg p-4 shadow-sm'

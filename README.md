@@ -85,6 +85,23 @@ by `node scripts/logo-variants.mjs`.
 | Documents Speak | tab *Documents* (any format): PDF/image + source + reference | inline PDF/image preview with source and reference |
 | Corrections | Admin → Corrections | note under the story + public `/hi/corrections` log |
 
+## Round 3 — प्रहरी डेस्क, News ID, e-paper, Team, Videos
+
+- **प्रहरी डेस्क (`/desk`)** — the fast editor for solo publishing (laptop or 5G phone). *+ नई खबर*: fields → or paste the whole story and it is split into headline / dateline / paragraphs automatically. Six page templates, **Auto Fit** (never overflows into other stories), live preview identical to the published page, photo crop with no empty placeholder, one-tap Draft / Send for review / Publish / Schedule. *+ लिंक कार्ड* adds an external news-portal card (clearly marked "external"). Breaking news is managed at `/desk/breaking`.
+- **News ID** `NTP-YYYY-MM-DD-0001` is created once at first publish and never changes. Every story has a QR (short link `/n/<ID>`), a printable/downloadable version and an image share card, all carrying the ID + QR. The **original publish date is frozen**; later edits show "संशोधित" with the date.
+- **E-paper** (`/hi/epaper`): A3 pages laid out automatically from that day's stories (browser-measured, 6 columns, story never split across pages unless too long, pinned stories reserved first). Print/PDF via the browser.
+- **हमारी टीम** (`/hi/team`): searchable State → District → Bureau → Designation. The Editor-in-Chief manages the roster in `/desk/team` (with preview); it can also be edited in Admin.
+- **Videos** (`/desk/video`): upload once, the site adds the Trust logo (top-right, set in Site Settings → Video watermark) in the background — the **original is kept untouched**. If processing is still running or fails, the original plays with the logo laid over it, so publishing is never blocked. Limit: processing must finish inside Vercel's 300 s function limit (about 10–15 min of 1080p); for longer videos switch to Cloudflare Stream or Mux.
+- **Registered tagline** (`तथ्य * पारदर्शिता * जवाबदेही * जनहित`) lives in `src/content/brand.ts` and is not editable from the admin.
+
+### Security (Round 3)
+
+- **Passwords**: at least 12 characters with capital, small, digit and symbol; obvious words refused (create, change and reset).
+- **2-step verification (authenticator app)**: set `REQUIRE_2FA=1` on Vercel. At the first login each person scans a QR (Google/Microsoft Authenticator, Authy) and from then on needs the 6-digit code after the password. Wrong code 5× = 15-minute lock. It covers the Desk, `/admin` and the REST API. Lost phone: an Admin un-ticks *2-step verification set up* on that user (Admin → Users) and the person enrols again. Leave it off locally.
+- **Roles / publish permission**: Reporter can never publish; Editor can publish unless an Admin un-ticks *Can publish* on that user; Admin can always.
+- **Edit history**: articles, videos, team profiles and pages keep versions (Admin → open item → *Versions*). Who changed a published story and when is also shown as the "revisions" list.
+- **Daily encrypted backup**: Vercel Cron calls `/api/cron/backup` at 03:00 IST; every collection and site settings are exported, gzip-compressed, AES-256-encrypted with `BACKUP_KEY` and stored in Blob `backups/` (last 14 kept). Set `CRON_SECRET` and `BACKUP_KEY` on Vercel and keep a copy of `BACKUP_KEY` in a password manager. To open one: download the file, then `BACKUP_KEY=… npm run backup:open -- <file>`. Uploaded media stay in Blob; the database itself also has Supabase's own backups.
+
 ## What you must fill in manually
 
 1. **Admin → Site Settings**: Trust name, **registration number**, editor, publisher, address, email, phone, grievance officer, **notification email**, social links. Placeholders appear in `[brackets]`.

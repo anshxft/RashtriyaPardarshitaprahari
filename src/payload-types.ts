@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     articles: Article;
+    videos: Video;
     categories: Category;
     tags: Tag;
     authors: Author;
@@ -89,6 +90,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
@@ -610,6 +612,18 @@ export interface User {
   id: number;
   name: string;
   role: 'admin' | 'editor' | 'reporter';
+  /**
+   * Untick to stop this Editor from publishing. Admins always can. Reporters can never publish.
+   */
+  canPublish?: boolean | null;
+  /**
+   * Untick (Admin only) to reset this person’s authenticator app — they will scan a new QR at next login.
+   */
+  totpEnabled?: boolean | null;
+  totpSecret?: string | null;
+  totpLast?: number | null;
+  totpFails?: number | null;
+  totpLockUntil?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -732,6 +746,55 @@ export interface TeamMember {
    * Sample profile (removed by npm run demo:remove)
    */
   demoContent?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Tip: the Desk (/desk/video) uploads videos in a few clicks; the logo is added automatically.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos".
+ */
+export interface Video {
+  id: number;
+  title: string;
+  /**
+   * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
+   */
+  slug?: string | null;
+  description?: string | null;
+  location?: string | null;
+  /**
+   * Date of the event (not the publish time)
+   */
+  eventDate?: string | null;
+  reporterName?: string | null;
+  reporter?: (number | null) | TeamMember;
+  category?: (number | null) | Category;
+  /**
+   * Optional. Blank = a frame from the video is used.
+   */
+  thumbnail?: (number | null) | Media;
+  /**
+   * The untouched upload. Kept separately; never overwritten.
+   */
+  originalUrl?: string | null;
+  /**
+   * Logo-watermarked copy that is published.
+   */
+  processedUrl?: string | null;
+  posterUrl?: string | null;
+  processing?: ('queued' | 'processing' | 'ready' | 'failed') | null;
+  processError?: string | null;
+  durationSec?: number | null;
+  sizeBytes?: number | null;
+  /**
+   * Future date = scheduled.
+   */
+  publishedAt?: string | null;
+  demoContent?: boolean | null;
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -930,6 +993,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'articles';
         value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'videos';
+        value: number | Video;
       } | null)
     | ({
         relationTo: 'categories';
@@ -1144,6 +1211,34 @@ export interface ArticlesSelect<T extends boolean = true> {
         by?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos_select".
+ */
+export interface VideosSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  location?: T;
+  eventDate?: T;
+  reporterName?: T;
+  reporter?: T;
+  category?: T;
+  thumbnail?: T;
+  originalUrl?: T;
+  processedUrl?: T;
+  posterUrl?: T;
+  processing?: T;
+  processError?: T;
+  durationSec?: T;
+  sizeBytes?: T;
+  publishedAt?: T;
+  demoContent?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1404,6 +1499,12 @@ export interface PrivateFilesSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  canPublish?: T;
+  totpEnabled?: T;
+  totpSecret?: T;
+  totpLast?: T;
+  totpFails?: T;
+  totpLockUntil?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1500,6 +1601,29 @@ export interface SiteSetting {
     telegram?: string | null;
   };
   /**
+   * Set once. Applied automatically to every uploaded video (the original file is kept untouched).
+   */
+  videoWatermark?: {
+    enabled?: boolean | null;
+    position?: ('tr' | 'tl' | 'br' | 'bl') | null;
+    /**
+     * Logo width as % of the video width
+     */
+    sizePercent?: number | null;
+    /**
+     * Logo opacity in %
+     */
+    opacity?: number | null;
+    /**
+     * Distance from the edge, as % of the video width
+     */
+    marginPercent?: number | null;
+    /**
+     * Optional PNG with transparent background. Blank = the official round logo.
+     */
+    logo?: (number | null) | Media;
+  };
+  /**
    * Placeholder only — ad slots render nothing until built.
    */
   adsEnabled?: boolean | null;
@@ -1543,6 +1667,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         instagram?: T;
         whatsappChannel?: T;
         telegram?: T;
+      };
+  videoWatermark?:
+    | T
+    | {
+        enabled?: T;
+        position?: T;
+        sizePercent?: T;
+        opacity?: T;
+        marginPercent?: T;
+        logo?: T;
       };
   adsEnabled?: T;
   donationsEnabled?: T;

@@ -20,6 +20,7 @@ const m = fileIds.length
   : { docs: [] }
 await payload.delete({ collection: 'authors', where: { slug: { equals: 'sample-reporter' } } })
 const tm = await payload.delete({ collection: 'team-members', where: { demoContent: { equals: true } } })
+const vd = await payload.delete({ collection: 'videos', where: { demoContent: { equals: true } } })
 
-console.log(`Removed ${ids.length} demo/sample articles, ${b.docs.length} breaking items, ${m.docs.length} sample files, ${tm.docs.length} sample team profiles.`)
+console.log(`Removed ${ids.length} demo/sample articles, ${b.docs.length} breaking items, ${m.docs.length} sample files, ${tm.docs.length} sample team profiles, ${vd.docs.length} sample videos.`)
 process.exit(0)

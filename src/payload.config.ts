@@ -20,6 +20,7 @@ import { PrivateFiles } from './collections/PrivateFiles'
 import { Tags } from './collections/Tags'
 import { TeamMembers } from './collections/TeamMembers'
 import { Users } from './collections/Users'
+import { Videos } from './collections/Videos'
 import { migrations } from './migrations'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -36,7 +37,7 @@ export default buildConfig({
     },
   },
   collections: [
-    Articles, Categories, Tags, Authors, TeamMembers, BreakingNews, Corrections, Pages, Media,
+    Articles, Videos, Categories, Tags, Authors, TeamMembers, BreakingNews, Corrections, Pages, Media,
     Submissions, Appointments, ContactMessages, PrivateFiles, Users,
   ],
   globals: [SiteSettings],
