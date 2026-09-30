@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const payload = await db()
   const base = siteUrl()
   const [articles, cats, pages] = await Promise.all([
-    payload.find({ collection: 'articles', where: publicArticleWhere(), limit: 5000, depth: 0, select: { slug: true, updatedAt: true, demoContent: true }, sort: '-publishedAt' }),
+    payload.find({ collection: 'articles', where: publicArticleWhere(), limit: 5000, depth: 0, select: { slug: true, updatedAt: true, demoContent: true, format: true }, sort: '-publishedAt' }),
     payload.find({ collection: 'categories', limit: 500, depth: 0, select: { slug: true } }),
     payload.find({ collection: 'pages', limit: 100, depth: 0, select: { slug: true, updatedAt: true } }),
   ])
@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...cats.docs.flatMap((c) => both((l) => paths.category(l, c.slug))),
     ...pages.docs.flatMap((p) => both((l) => paths.page(l, p.slug), p.updatedAt)),
     ...both((l) => paths.corrections(l)),
-    ...articles.docs.filter((a) => !a.demoContent).flatMap((a) => both((l) => paths.article(l, a.slug), a.updatedAt)),
+    ...both((l) => paths.team(l)),
+    ...articles.docs.filter((a) => !a.demoContent && a.format !== 'link').flatMap((a) => both((l) => paths.article(l, a.slug), a.updatedAt)),
   ]
 }

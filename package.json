@@ -16,7 +16,7 @@
     "create-admin": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/create-admin.ts",
     "db:push": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run scripts/db-push.ts",
     "typecheck": "tsc --noEmit",
-    "check": "node scripts/check.ts && node scripts/check-paste.ts",
+    "check": "node scripts/check.ts && node scripts/check-paste.ts && node scripts/check-link.ts",
     "db-url": "node scripts/db-url.mjs"
   },
   "dependencies": {
@@ -35,7 +35,8 @@
     "qrcode": "^1.5.4",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "sharp": "0.35.4"
+    "sharp": "0.35.4",
+    "undici": "^8.11.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
