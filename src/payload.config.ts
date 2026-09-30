@@ -51,7 +51,11 @@ export default buildConfig({
         pool: { connectionString: env.DATABASE_URL, ssl: { rejectUnauthorized: false } },
         prodMigrations: env.RUN_MIGRATIONS === 'false' ? undefined : migrations,
       })
-    : sqliteAdapter({ client: { url: env.DATABASE_URL || 'file:./prahari.db' } }),
+    : sqliteAdapter({
+        client: { url: env.DATABASE_URL || 'file:./prahari.db' },
+        // Schema sync for local SQLite only runs on request (npm run db:push, seed scripts). Auto-push on every hot reload crashes drizzle.
+        push: env.DB_PUSH === '1',
+      }),
   sharp,
   localization: {
     locales: [
