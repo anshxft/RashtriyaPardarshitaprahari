@@ -152,6 +152,34 @@ body {
     }
   }
 
+  /* messages (saved / error / copied / form sent) appear softly */
+  [role='status'],
+  [role='alert'] {
+    animation: fade-in 0.25s ease-out both;
+  }
+  /* form fields: focus border eases in */
+  input,
+  select,
+  textarea {
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  /* dark / light switch fades instead of flashing */
+  body {
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
+  }
+  /* opened accordions and “More ▼” menus fade in */
+  details[open] > :not(summary) {
+    animation: fade-in 0.2s ease-out both;
+  }
+  /* the red FLASH strip slides up from the bottom of the video */
+  .anim-strip {
+    animation: strip-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
   .anim-fade {
     animation: fade-in 0.2s ease-out both;
   }
@@ -174,6 +202,12 @@ body {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+@keyframes strip-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
   }
 }
 @keyframes fade-in {
