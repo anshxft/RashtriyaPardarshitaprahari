@@ -8,11 +8,11 @@ import { getPayload } from 'payload'
 
 const { ADMIN_EMAIL: email, ADMIN_PASSWORD: password, ADMIN_NAME: name = 'Admin', ADMIN_ROLE: role = 'admin' } = process.env
 if (!email || !password || password.length < 12) {
-  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD (min 12 chars). Optional: ADMIN_NAME, ADMIN_ROLE=admin|editor|reporter')
+  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD (min 12 chars). Optional: ADMIN_NAME, ADMIN_ROLE=admin|senior|editor|reporter')
   process.exit(1)
 }
-if (!['admin', 'editor', 'reporter'].includes(role)) {
-  console.error('ADMIN_ROLE must be admin, editor or reporter')
+if (!['admin', 'senior', 'editor', 'reporter'].includes(role)) {
+  console.error('ADMIN_ROLE must be admin, senior, editor or reporter')
   process.exit(1)
 }
 const payload = await getPayload({ config })

@@ -82,6 +82,7 @@ export interface Config {
     'contact-messages': ContactMessage;
     'private-files': PrivateFile;
     users: User;
+    'audit-log': AuditLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -104,6 +105,7 @@ export interface Config {
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
     'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -115,9 +117,11 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('hi' | 'en') | ('hi' | 'en')[];
   globals: {
     'site-settings': SiteSetting;
+    permissions: Permission;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    permissions: PermissionsSelect<false> | PermissionsSelect<true>;
   };
   locale: 'hi' | 'en';
   widgets: {
@@ -416,7 +420,7 @@ export interface Article {
    * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
    */
   slug?: string | null;
-  format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion' | 'link';
+  format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion' | 'link' | 'video';
   category: number | Category;
   tags?: (number | Tag)[] | null;
   /**
@@ -465,6 +469,22 @@ export interface Article {
    */
   demoContent?: boolean | null;
   createdBy?: (number | null) | User;
+  /**
+   * Archive / Delete / Restore from the Desk (/desk/news).
+   */
+  lifecycle?: ('active' | 'archived' | 'trashed') | null;
+  lifecycleBefore?: string | null;
+  trashedAt?: string | null;
+  trashReason?: string | null;
+  /**
+   * Version = 1.<this>. Goes up on every change to a published story.
+   */
+  versionMinor?: number | null;
+  /**
+   * Latest (re-)publish time.
+   */
+  lastPublishedAt?: string | null;
+  lastEditedBy?: string | null;
   /**
    * Optional public note for this edit (shown as “संशोधित”). Not stored on the story itself.
    */
@@ -611,7 +631,7 @@ export interface Author {
 export interface User {
   id: number;
   name: string;
-  role: 'admin' | 'editor' | 'reporter';
+  role: 'admin' | 'senior' | 'editor' | 'reporter';
   /**
    * Untick to stop this Editor from publishing. Admins always can. Reporters can never publish.
    */
@@ -967,6 +987,46 @@ export interface ContactMessage {
   createdAt: string;
 }
 /**
+ * हर ज़रूरी कार्रवाई का स्थायी रिकॉर्ड। इसे बदला या मिटाया नहीं जा सकता।
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log".
+ */
+export interface AuditLog {
+  id: number;
+  action: string;
+  summary?: string | null;
+  newsId?: string | null;
+  articleId?: number | null;
+  collectionSlug?: string | null;
+  title?: string | null;
+  url?: string | null;
+  user?: (number | null) | User;
+  userName?: string | null;
+  role?: string | null;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  reason?: string | null;
+  version?: string | null;
+  changedFields?: string | null;
+  ip?: string | null;
+  /**
+   * Short fingerprint of the login session (never the token itself).
+   */
+  session?: string | null;
+  details?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1049,6 +1109,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'audit-log';
+        value: number | AuditLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1201,6 +1265,13 @@ export interface ArticlesSelect<T extends boolean = true> {
   sample?: T;
   demoContent?: T;
   createdBy?: T;
+  lifecycle?: T;
+  lifecycleBefore?: T;
+  trashedAt?: T;
+  trashReason?: T;
+  versionMinor?: T;
+  lastPublishedAt?: T;
+  lastEditedBy?: T;
   editNote?: T;
   revisions?:
     | T
@@ -1525,6 +1596,32 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log_select".
+ */
+export interface AuditLogSelect<T extends boolean = true> {
+  action?: T;
+  summary?: T;
+  newsId?: T;
+  articleId?: T;
+  collectionSlug?: T;
+  title?: T;
+  url?: T;
+  user?: T;
+  userName?: T;
+  role?: T;
+  fromStatus?: T;
+  toStatus?: T;
+  reason?: T;
+  version?: T;
+  changedFields?: T;
+  ip?: T;
+  session?: T;
+  details?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1671,6 +1768,82 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * प्रधान संपादक / एडमिन के पास हमेशा सभी अधिकार रहते हैं। बाकी भूमिकाओं के अधिकार यहां बदलें; बदलाव लगभग 30 सेकंड में हर जगह लागू होते हैं।
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "permissions".
+ */
+export interface Permission {
+  id: number;
+  publish?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  approve?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  editOthers?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  download?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  share?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  archive?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  republish?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  restore?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  versionHistory?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  trashOwnDraft?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  trashPublished?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  trashVideo?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  auditLog?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -1734,6 +1907,106 @@ export interface SiteSettingsSelect<T extends boolean = true> {
       };
   adsEnabled?: T;
   donationsEnabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "permissions_select".
+ */
+export interface PermissionsSelect<T extends boolean = true> {
+  publish?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  approve?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  editOthers?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  download?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  share?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  archive?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  republish?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  restore?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  versionHistory?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  trashOwnDraft?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  trashPublished?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  trashVideo?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  auditLog?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

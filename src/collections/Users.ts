@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { APIError } from 'payload'
 import { isAdmin, isAdminField, isLoggedIn } from '../access'
 import { passwordProblem } from '../lib/security'
+import { audit } from '../lib/audit'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -14,6 +15,14 @@ export const Users: CollectionConfig = {
     update: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin' || { id: { equals: req.user?.id } },
   },
   hooks: {
+    afterLogin: [({ req, user }) => audit(req.payload, user as never, { action: 'login', collectionSlug: 'users' }, req.headers)],
+    afterChange: [
+      async ({ doc, previousDoc, operation, req }) => {
+        if (operation === 'update' && previousDoc?.role !== doc.role)
+          await audit(req.payload, req.user as never, { action: 'role-change', collectionSlug: 'users', title: doc.email, fromStatus: previousDoc?.role, toStatus: doc.role }, req.headers, req)
+        return doc
+      },
+    ],
     beforeValidate: [
       ({ data }) => {
         // Strong passwords for everyone, on create, change and reset.
@@ -41,9 +50,10 @@ export const Users: CollectionConfig = {
       defaultValue: 'reporter',
       access: { update: isAdminField, create: isAdminField },
       options: [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Editor (reviews & publishes)', value: 'editor' },
-        { label: 'Reporter (drafts only)', value: 'reporter' },
+        { label: 'Admin / प्रधान संपादक (Super Admin — all rights)', value: 'admin' },
+        { label: 'Senior Editor / वरिष्ठ संपादक (approve, re-publish, restore)', value: 'senior' },
+        { label: 'Editor / संपादक (reviews & publishes)', value: 'editor' },
+        { label: 'Reporter / रिपोर्टर (drafts only)', value: 'reporter' },
       ],
     },
     {

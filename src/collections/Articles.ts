@@ -1,7 +1,8 @@
 import type { CollectionConfig, Where } from 'payload'
-import { canPublish, isEditor, isEditorField } from '../access'
+import { canPublish, isEditorField } from '../access'
 import { slugField } from '../fields'
-import { articleBeforeChange } from '../lib/articleHooks'
+import { allowed } from '../lib/permissions'
+import { articleAfterChange, articleBeforeChange } from '../lib/articleHooks'
 import { INK_OPTIONS, TEMPLATES } from '../lib/layout'
 import { siteUrl } from '../lib/paths'
 
@@ -14,13 +15,17 @@ export const FORMATS = [
   { label: 'Documents Speak / दस्तावेज़ बोलते हैं', value: 'documents' },
   { label: 'Opinion / विचार', value: 'opinion' },
   { label: 'Link to another portal / लिंक न्यूज़', value: 'link' },
+  { label: 'Video News / वीडियो खबर', value: 'video' },
 ] as const
 
 const is = (...formats: string[]) => (data: Record<string, unknown>) => formats.includes(data?.format as string)
 
-/** Public visitors only ever see published articles whose publish time has arrived (= scheduled publishing). */
+/** Not archived / not in the trash (rows from before Round 4 have no lifecycle value = active). */
+export const liveLifecycle = (): Where => ({ or: [{ lifecycle: { equals: 'active' } }, { lifecycle: { exists: false } }] })
+
+/** Public visitors only ever see published, non-archived articles whose publish time has arrived (= scheduled publishing). */
 export const publicArticleWhere = (): Where => ({
-  and: [{ _status: { equals: 'published' } }, { publishedAt: { less_than_equal: new Date().toISOString() } }],
+  and: [{ _status: { equals: 'published' } }, { publishedAt: { less_than_equal: new Date().toISOString() } }, liveLifecycle()],
 })
 
 export const Articles: CollectionConfig = {
@@ -33,14 +38,15 @@ export const Articles: CollectionConfig = {
       'Tip: the Desk (/desk) is the fast way to add news. Reporters save drafts and set Review status → "Submitted". Only Editors/Admins can publish. Future publish date = scheduled.',
     preview: (doc) => `${siteUrl()}/hi/preview/${doc.id}`,
   },
-  versions: { drafts: true, maxPerDoc: 25 },
+  versions: { drafts: true, maxPerDoc: 0 }, // 0 = keep every version (old versions are never wiped)
   access: {
     read: ({ req }) => (req.user ? true : publicArticleWhere()),
     create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => (!req.user ? false : canPublish(req) || { createdBy: { equals: req.user.id } }),
-    delete: isEditor,
+    update: ({ req }) => (!req.user ? false : canPublish(req) || allowed(req.user as never, 'editOthers') || { createdBy: { equals: req.user.id } }),
+    // Nothing is ever hard-deleted from the panel or API: Desk → Delete moves to Trash; only an Admin can purge from the Desk.
+    delete: () => false,
   },
-  hooks: { beforeChange: [articleBeforeChange] },
+  hooks: { beforeChange: [articleBeforeChange], afterChange: [articleAfterChange] },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },
     { name: 'subheadline', type: 'text', localized: true, admin: { description: 'Optional second line under the headline' } },
@@ -273,6 +279,26 @@ export const Articles: CollectionConfig = {
     { name: 'sample', type: 'checkbox', label: 'Show "Sample" label', admin: { position: 'sidebar' } },
     { name: 'demoContent', type: 'checkbox', index: true, admin: { position: 'sidebar', description: 'Temporary demo item. Bulk delete: npm run demo:remove' } },
     { name: 'createdBy', type: 'relationship', relationTo: 'users', admin: { position: 'sidebar', readOnly: true } },
+    // Round 4 lifecycle — changed only through the Desk's Archive / Delete / Restore actions (server-checked + audited).
+    {
+      name: 'lifecycle',
+      type: 'select',
+      defaultValue: 'active',
+      index: true,
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Archived', value: 'archived' },
+        { label: 'Trash (soft-deleted)', value: 'trashed' },
+      ],
+      access: { create: () => false, update: () => false },
+      admin: { position: 'sidebar', readOnly: true, description: 'Archive / Delete / Restore from the Desk (/desk/news).' },
+    },
+    { name: 'lifecycleBefore', type: 'text', admin: { hidden: true } },
+    { name: 'trashedAt', type: 'date', access: { create: () => false, update: () => false }, admin: { position: 'sidebar', readOnly: true, condition: (d) => d?.lifecycle === 'trashed' } },
+    { name: 'trashReason', type: 'text', access: { create: () => false, update: () => false }, admin: { position: 'sidebar', readOnly: true, condition: (d) => d?.lifecycle === 'trashed' } },
+    { name: 'versionMinor', type: 'number', defaultValue: 0, admin: { position: 'sidebar', readOnly: true, description: 'Version = 1.<this>. Goes up on every change to a published story.' } },
+    { name: 'lastPublishedAt', type: 'date', admin: { position: 'sidebar', readOnly: true, date: { pickerAppearance: 'dayAndTime' }, description: 'Latest (re-)publish time.' } },
+    { name: 'lastEditedBy', type: 'text', admin: { position: 'sidebar', readOnly: true } },
     { name: 'editNote', type: 'text', virtual: true, admin: { position: 'sidebar', description: 'Optional public note for this edit (shown as “संशोधित”). Not stored on the story itself.' } },
     {
       name: 'revisions',

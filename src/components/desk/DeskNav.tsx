@@ -5,10 +5,10 @@ import { usePathname, useRouter } from 'next/navigation'
 
 const ITEMS = [
   { href: '/desk', icon: '🏠', label: 'होम', match: /^\/desk$/ },
-  { href: '/desk/news/new', icon: '➕', label: 'समाचार', match: /^\/desk\/news/ },
+  { href: '/desk/news', icon: '📰', label: 'खबरें', match: /^\/desk\/news/ },
   { href: '/desk/video', icon: '🎬', label: 'वीडियो', match: /^\/desk\/video/ },
   { href: '/desk/team', icon: '👥', label: 'टीम', match: /^\/desk\/team/ },
-  { href: '/hi/epaper', icon: '📰', label: 'ई-पेपर', match: /^\/hi\/epaper/ },
+  { href: '/hi/epaper', icon: '🗞', label: 'ई-पेपर', match: /^\/hi\/epaper/ },
 ]
 
 export function DeskNav({ bottom }: { bottom?: boolean }) {

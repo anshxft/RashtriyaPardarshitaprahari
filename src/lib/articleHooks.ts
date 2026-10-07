@@ -1,4 +1,7 @@
-import { APIError, type CollectionBeforeChangeHook, type PayloadRequest } from 'payload'
+import { APIError, type CollectionAfterChangeHook, type CollectionBeforeChangeHook, type PayloadRequest } from 'payload'
+import { audit } from './audit'
+import { newsStatus, versionLabel } from './newsStatus'
+import { loadPermissions } from './permissions'
 import { canPublish } from '../access'
 import { NEWS_ID_PREFIX } from '../content/brand'
 
@@ -18,6 +21,16 @@ export async function nextNewsId(req: PayloadRequest, iso: string): Promise<stri
 }
 
 const WATCHED = ['title', 'subheadline', 'excerpt', 'content', 'heroImage', 'reporterName', 'location'] as const
+/** Fields whose change is recorded in the version history / audit log. */
+const TRACKED = [...WATCHED, 'reporter', 'category', 'tags', 'sources', 'documents', 'linkCard', 'externalImage', 'format', 'slug'] as const
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+const idOf = (v: unknown) => (v && typeof v === 'object' && 'id' in v ? (v as { id: unknown }).id : v)
+/** Which tracked fields differ (relations compared by id). */
+export function changedFields(next: Record<string, unknown>, prev: Record<string, unknown> | undefined): string[] {
+  if (!prev) return []
+  return TRACKED.filter((k) => k in next && !same(Array.isArray(next[k]) ? (next[k] as unknown[]).map(idOf) : idOf(next[k]), Array.isArray(prev[k]) ? (prev[k] as unknown[]).map(idOf) : idOf(prev[k])))
+}
+type Ctx = { republish?: 'original' | 'updated'; auditAction?: string; reason?: string; skipAudit?: boolean; changed?: string[] }
 
 /**
  * - reporters can never publish (defamation safety)
@@ -25,8 +38,11 @@ const WATCHED = ['title', 'subheadline', 'excerpt', 'content', 'heroImage', 'rep
  * - after first publish: publish date, News ID (and, for non-admins, the URL) are frozen
  * - later edits of a published story are logged publicly as "संशोधित / Revised"
  */
-export const articleBeforeChange: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+export const articleBeforeChange: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req, context }) => {
   const user = req.user as { id: number; role?: string; name?: string } | null
+  const ctx = context as Ctx
+  await loadPermissions(req.payload)
+  if (user) data.lastEditedBy = user.name || undefined
   if (operation === 'create' && user) data.createdBy = user.id
   const publishing = data._status === 'published'
 
@@ -54,15 +70,57 @@ export const articleBeforeChange: CollectionBeforeChangeHook = async ({ data, or
     data.publishedAt = stamp
     data.firstPublishedAt = stamp
     data.newsId = await nextNewsId(req, stamp)
+    data.versionMinor = 0
+    data.lastPublishedAt = stamp
   }
 
-  // Public revision note ("संशोधित"). Only for real people editing; seed/bulk scripts never create one.
+  // Version history: every real change to a published story = next version (1.0 → 1.1 → 1.2 …), never wiped.
+  const changed = changedFields(data, was)
+  ctx.changed = operation === 'create' ? [] : changed
   if (user && wasPublished && publishing && was) {
-    const changed = WATCHED.some((k) => k in data && JSON.stringify(data[k] ?? null) !== JSON.stringify(was[k] ?? null))
-    if (changed || data.editNote) {
-      data.revisions = [...(was.revisions || []), { at: new Date().toISOString(), note: data.editNote || '', locale: req.locale || undefined, by: user?.name }]
+    const visible = WATCHED.some((k) => k in data && !same(data[k], was[k]))
+    const republishUpdated = ctx.republish === 'updated'
+    if (changed.length || republishUpdated) data.versionMinor = (was.versionMinor || 0) + 1
+    // Public revision note ("संशोधित / Updated on"). Only for real people editing; seed/bulk scripts never create one.
+    if (visible || data.editNote || republishUpdated) {
+      const note = data.editNote || (republishUpdated ? 'पुनः प्रकाशित / Re-published' : '')
+      data.revisions = [...(was.revisions || []), { at: new Date().toISOString(), note, locale: req.locale || undefined, by: user?.name }]
     }
   }
+  if (ctx.republish) data.lastPublishedAt = new Date().toISOString()
   delete data.editNote
   return data
+}
+
+/** Audit trail for every save made by a person (create, edit, publish, status changes). Desk actions add their own reason. */
+export const articleAfterChange: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req, context }) => {
+  const ctx = context as Ctx
+  if (!req.user || ctx.skipAudit) return doc
+  const from = operation === 'update' && previousDoc ? newsStatus(previousDoc) : null
+  const to = newsStatus(doc)
+  const firstPublish = !previousDoc?.firstPublishedAt && Boolean(doc.firstPublishedAt)
+  const action =
+    ctx.auditAction ?? (operation === 'create' ? (firstPublish ? 'publish' : 'create') : firstPublish ? 'publish' : ctx.changed?.length ? 'edit' : from !== to ? 'status' : null)
+  if (!action) return doc
+  await audit(
+    req.payload,
+    req.user as never,
+    {
+      action,
+      newsId: doc.newsId,
+      articleId: doc.id,
+      collectionSlug: 'articles',
+      title: doc.title,
+      url: doc.slug ? `/hi/news/${doc.slug}` : undefined,
+      fromStatus: from,
+      toStatus: to,
+      reason: ctx.reason,
+      version: doc.firstPublishedAt ? versionLabel(doc.versionMinor) : undefined,
+      changedFields: ctx.changed,
+      details: ctx.republish ? { republish: ctx.republish } : undefined,
+    },
+    req.headers,
+    req,
+  )
+  return doc
 }
