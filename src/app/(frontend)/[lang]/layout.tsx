@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { Mukta, Noto_Sans_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer, Header } from '@/components/Chrome'
+import { WhatsAppFloat } from '@/components/WhatsAppFloat'
+import { officeNumbers } from '@/lib/contact'
+import { getSettings } from '@/lib/data'
 import { isLang, t, type Lang } from '@/lib/i18n'
 import { siteUrl } from '@/lib/paths'
 import '../globals.css'
@@ -35,6 +38,8 @@ const themeScript = `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang: l } = await params
   const lang: Lang = isLang(l) ? l : 'hi' // invalid langs 404 at page level
+  const s = await getSettings(lang)
+  const wa = s.whatsappButton === false ? [] : officeNumbers(s.offices).filter((n) => n.whatsapp)
   return (
     <html lang={lang} className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
       <head>
@@ -46,6 +51,12 @@ export default async function Layout({ children, params }: { children: ReactNode
           {children}
         </main>
         <Footer lang={lang} />
+        <WhatsAppFloat
+          numbers={wa}
+          text={s.whatsappMessage || (lang === 'hi' ? 'नमस्ते, राष्ट्रीय पारदर्शिता प्रहरी।' : 'Hello, Rashtriya Pardarshita Prahari.')}
+          label={lang === 'hi' ? 'व्हाट्सएप्प पर संपर्क करें' : 'Contact us on WhatsApp'}
+          choose={lang === 'hi' ? 'किस कार्यालय से बात करनी है?' : 'Which office would you like to reach?'}
+        />
       </body>
     </html>
   )

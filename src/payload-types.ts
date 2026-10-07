@@ -1570,6 +1570,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface SiteSetting {
   id: number;
   siteName: string;
+  /**
+   * Line under the site name (header, footer, e-paper masthead), e.g. “आधिकारिक ई-पेपर और डिजिटल न्यूज़”.
+   */
+  descriptor?: string | null;
   tagline?: string | null;
   trustName?: string | null;
   trustRegistrationNo?: string | null;
@@ -1579,6 +1583,38 @@ export interface SiteSetting {
    * Any other legal / registration text for the footer
    */
   registrationNote?: string | null;
+  /**
+   * Shown on the Contact page and in the footer. WhatsApp numbers also appear in the floating WhatsApp button.
+   */
+  offices?:
+    | {
+        /**
+         * e.g. पंजीकृत कार्यालय
+         */
+        title: string;
+        address?: string | null;
+        /**
+         * Optional second line, e.g. ऑनलाइन समाचारपत्र एवं डिजिटल न्यूज़ प्रकोष्ठ …
+         */
+        unit?: string | null;
+        phones?:
+          | {
+              number: string;
+              kind?: ('both' | 'whatsapp' | 'call') | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Pre-filled text when a visitor opens WhatsApp from the site.
+   */
+  whatsappMessage?: string | null;
+  whatsappButton?: boolean | null;
+  /**
+   * Old single address (used only when no offices are listed above).
+   */
   address?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -1640,12 +1676,30 @@ export interface SiteSetting {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
+  descriptor?: T;
   tagline?: T;
   trustName?: T;
   trustRegistrationNo?: T;
   editorName?: T;
   publisherName?: T;
   registrationNote?: T;
+  offices?:
+    | T
+    | {
+        title?: T;
+        address?: T;
+        unit?: T;
+        phones?:
+          | T
+          | {
+              number?: T;
+              kind?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  whatsappMessage?: T;
+  whatsappButton?: T;
   address?: T;
   email?: T;
   phone?: T;

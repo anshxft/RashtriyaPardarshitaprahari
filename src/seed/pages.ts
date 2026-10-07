@@ -9,7 +9,7 @@ export const PAGES: P[] = [
   {
     slug: 'about-us',
     title: { hi: 'हमारे बारे में', en: 'About Us' },
-    hi: `**राष्ट्रीय पारदर्शिता प्रहरी** एक ऑनलाइन राष्ट्रीय समाचार पत्र है, जिसका संचालन और प्रकाशन **[ट्रस्ट का पूरा नाम] (पारदर्शिता प्रहरी ट्रस्ट)** द्वारा किया जाता है। हमारा ध्येय वाक्य है — **खबर से आगे, जवाबदेही तक।**
+    hi: `**राष्ट्रीय पारदर्शिता प्रहरी** एक ऑनलाइन राष्ट्रीय समाचार पत्र है, जिसका संचालन और प्रकाशन **[ट्रस्ट का पूरा नाम] (पारदर्शिता प्रहरी ट्रस्ट)** द्वारा किया जाता है। हमारा ध्येय वाक्य है — **तथ्य हमारा आधार, पारदर्शिता हमारी पहचान, जवाबदेही हमारा संकल्प, जनहित हमारा उद्देश्य।**
 
 ## हमारे मूल्य
 - **तथ्य** — हमारा आधार
@@ -29,7 +29,7 @@ export const PAGES: P[] = [
 - शिकायत अधिकारी: [नाम, ईमेल, फोन]
 
 ये विवरण एडमिन → Site Settings में भी बदले जा सकते हैं।`,
-    en: `**Rashtriya Pardarshita Prahari** is an online national newspaper run and published by **[Full name of Trust] (Pardarshita Prahari Trust)**. Our motto: **Beyond News. Towards Accountability.**
+    en: `**Rashtriya Pardarshita Prahari** is an online national newspaper run and published by **[Full name of Trust] (Pardarshita Prahari Trust)**. Our motto (registered, in Hindi): **तथ्य हमारा आधार, पारदर्शिता हमारी पहचान, जवाबदेही हमारा संकल्प, जनहित हमारा उद्देश्य।**
 
 ## Our values
 - **Facts** — our foundation

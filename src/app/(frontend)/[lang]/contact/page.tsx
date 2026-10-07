@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { FormPage } from '@/components/FormPage'
+import { Offices } from '@/components/Offices'
 import { contactFields } from '@/content/forms'
+import { getSettings } from '@/lib/data'
 import { assertLang, t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic' // reads searchParams
@@ -23,5 +25,23 @@ export default async function ContactPage({ params, searchParams }: Props) {
     lang === 'hi'
       ? 'सुझाव, सुधार का अनुरोध या शिकायत — हमें लिखें। सुधार के अनुरोधों पर हम सुधार नीति के अनुसार कार्रवाई करते हैं।'
       : 'Feedback, a correction request or a grievance — write to us. Correction requests are handled under our Correction Policy.'
-  return <FormPage lang={lang} kind="contact" fields={contactFields} title={t(lang).contact} intro={intro} defaults={defaults} />
+  const s = await getSettings(lang)
+  return (
+    <>
+      {(s.offices?.length ?? 0) > 0 && (
+        <div className="mb-10">
+          <Offices offices={s.offices || []} lang={lang} waText={s.whatsappMessage} variant="cards" />
+          {s.email && (
+            <p className="mt-4 text-sm">
+              ✉ {lang === 'hi' ? 'ईमेल (सभी कार्यालय)' : 'Email (all offices)'}:{' '}
+              <a className="font-semibold text-link underline" href={`mailto:${s.email}`}>
+                {s.email}
+              </a>
+            </p>
+          )}
+        </div>
+      )}
+      <FormPage lang={lang} kind="contact" fields={contactFields} title={t(lang).contact} intro={intro} defaults={defaults} />
+    </>
+  )
 }

@@ -5,6 +5,8 @@ import { getBreaking, getArticles, getCategories, getFooterPages, getMenu, getSe
 import { formatDate, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 import { LangSwitch, Nav, ThemeToggle } from './client'
+import { Offices } from './Offices'
+import { SocialLinks } from './SocialLinks'
 
 const GROUP_LABELS: Record<string, { hi: string; en: string }> = {
   news: { hi: 'खबरें', en: 'News' },
@@ -34,6 +36,9 @@ export async function Header({ lang }: { lang: Lang }) {
             <Link href={paths.team(lang)} className="hover:underline">{d.team}</Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <span className="hidden text-gold-300 sm:block">
+              <SocialLinks social={settings.social} variant="icons" />
+            </span>
             <Link href={paths.search(lang)} className="rounded px-2 py-0.5 hover:bg-white/10" aria-label={d.search}>
               <span aria-hidden>⌕</span> <span className="hidden sm:inline">{d.search}</span>
             </Link>
@@ -51,6 +56,7 @@ export async function Header({ lang }: { lang: Lang }) {
               <span className="block truncate font-display text-xl leading-tight font-extrabold text-navy-900 sm:text-2xl md:text-4xl dark:text-gold-300">
                 {settings.siteName || d.siteName}
               </span>
+              {settings.descriptor && <span className="block text-xs leading-snug font-semibold text-navy-700 sm:text-sm dark:text-white/80">{settings.descriptor}</span>}
               <span className="block text-xs leading-snug font-semibold text-saffron-600 sm:text-sm md:text-base">{d.tagline}</span>
             </span>
           </Link>
@@ -136,6 +142,7 @@ export async function Footer({ lang }: { lang: Lang }) {
             <Image src="/logo-160.webp" alt="" width={64} height={64} />
             <div>
               <p className="font-display text-xl font-bold text-gold-300">{s.siteName || d.siteName}</p>
+              {s.descriptor && <p className="text-xs font-semibold text-white/70">{s.descriptor}</p>}
               <p className="text-sm leading-snug">{TAGLINE_FULL}</p>
             </div>
           </div>
@@ -154,7 +161,7 @@ export async function Footer({ lang }: { lang: Lang }) {
               <dt className="inline text-white/60">{d.editor}: </dt>
               <dd className="inline">{s.editorName || '—'}</dd>
             </div>
-            {s.address && (
+            {!s.offices?.length && s.address && (
               <div>
                 <dt className="inline text-white/60">{d.address}: </dt>
                 <dd className="inline whitespace-pre-line">{s.address}</dd>
@@ -170,13 +177,16 @@ export async function Footer({ lang }: { lang: Lang }) {
                 </dd>
               </div>
             )}
-            {s.phone && (
+            {!s.offices?.length && s.phone && (
               <div>
                 <dt className="inline text-white/60">{lang === 'hi' ? 'फोन' : 'Phone'}: </dt>
                 <dd className="inline">{s.phone}</dd>
               </div>
             )}
           </dl>
+          <div className="mt-5">
+            <Offices offices={s.offices || []} lang={lang} waText={s.whatsappMessage} variant="footer" />
+          </div>
         </div>
 
         <div>
@@ -266,15 +276,7 @@ export async function Footer({ lang }: { lang: Lang }) {
           {social.length > 0 && (
             <>
               <p className="mt-6 mb-2 font-bold text-gold-300">{d.followUs}</p>
-              <ul className="flex flex-wrap gap-2 text-sm">
-                {social.map(([k, v]) => (
-                  <li key={k}>
-                    <a href={v} target="_blank" rel="noopener noreferrer me" className="rounded border border-white/25 px-2 py-1 capitalize hover:bg-white/10">
-                      {k}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <SocialLinks social={s.social} variant="chips" />
             </>
           )}
         </div>
