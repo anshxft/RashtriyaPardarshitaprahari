@@ -27,7 +27,7 @@ export function TeamCard({ m, lang, featured }: { m: TeamMember; lang: Lang; fea
   const src = photo?.sizes?.card?.url || photo?.url
   const place = [m.bureau, m.district, stateLabel(m.state, lang)].filter(Boolean).join(' · ')
   return (
-    <article className={`flex gap-4 rounded-xl border border-line bg-bg p-4 shadow-sm ${featured ? 'md:col-span-2 lg:col-span-3 md:p-6' : ''}`}>
+    <article id={m.slug || undefined} className={`scroll-mt-24 flex gap-4 rounded-xl border border-line bg-bg p-4 shadow-sm ${featured ? 'md:col-span-2 lg:col-span-3 md:p-6' : ''}`}>
       <div className={`relative shrink-0 overflow-hidden rounded-full bg-navy-900 ${featured ? 'h-28 w-28 md:h-36 md:w-36' : 'h-20 w-20'}`}>
         {src ? (
           <Image src={src} alt={m.name} fill sizes="150px" className="object-cover" />
