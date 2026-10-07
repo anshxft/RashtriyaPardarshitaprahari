@@ -97,6 +97,7 @@ export const SiteSettings: GlobalConfig = {
                 { name: 'logo', type: 'upload', relationTo: 'media', admin: { description: 'Optional PNG with transparent background. Blank = the official round logo.' } },
               ],
             },
+            { name: 'aiVoiceNote', type: 'checkbox', defaultValue: false, label: 'Show “AI voice / कृत्रिम आवाज़” note under videos that use the synthetic female voice' },
           ],
         },
         {

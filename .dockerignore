@@ -1,0 +1,9 @@
+node_modules
+.next
+.local-storage
+media
+private-files
+*.db
+.env*
+!.env.example
+.git
