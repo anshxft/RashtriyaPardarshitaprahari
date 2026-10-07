@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from 'react'
-import { BODY_PX, bylinePx, colW, headlinePx, spanW, subPx, type EpStory } from '@/lib/epaper'
+import { AD_LABEL_H, adHeight, BODY_PX, bylinePx, colW, headlinePx, spanW, subPx, type EpStory } from '@/lib/epaper'
 import { INK } from '@/lib/layout'
 import { t, type Lang } from '@/lib/i18n'
 
@@ -23,6 +23,7 @@ function Qr({ svg, size }: { svg?: string | null; size: number }) {
  */
 export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: number; scale: number; take?: number; lang: Lang }) {
   const d = t(lang)
+  if (s.slot === 'ad' && s.ad && s.photo) return <AdBlock s={s} width={spanW(cols)} lang={lang} />
   const L = s.layout
   const width = spanW(cols)
   const paras = s.paragraphs.slice(0, take ?? s.paragraphs.length)
@@ -69,7 +70,13 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   )
 
   return (
-    <article data-ep-block={s.id} style={{ width, boxSizing: 'border-box', background: '#fff', color: '#111', fontFamily: font.body, borderBottom: '1px solid #bbb', paddingBottom: 6 }}>
+    <article
+      data-ep-block={s.id}
+      style={{ width, boxSizing: 'border-box', background: s.slot === 'aina' ? '#fffaf2' : '#fff', color: '#111', fontFamily: font.body, borderBottom: '1px solid #bbb', paddingBottom: 6, ...(s.slot === 'aina' ? { borderTop: '2px solid #c25a00', borderLeft: '2px solid #c25a00', borderRight: '2px solid #c25a00', borderBottom: '2px solid #c25a00', paddingLeft: 8, paddingRight: 8 } : {}) }}
+    >
+      {s.slot === 'aina' && (
+        <div style={{ margin: '0 -8px 8px', background: '#c25a00', color: '#fff', fontFamily: font.head, fontWeight: 800, fontSize: 20, lineHeight: '34px', textAlign: 'center' }}>{lang === 'hi' ? 'समाज का आइना' : 'Samaj Ka Aaina'}</div>
+      )}
       {!side && photo}
       {head}
       {side ? (
@@ -88,5 +95,16 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
         </div>
       </footer>
     </article>
+  )
+}
+
+/** Advertisement column: always under a visible “विज्ञापन” label, fixed height so the packer knows it exactly. */
+function AdBlock({ s, width, lang }: { s: EpStory; width: number; lang: Lang }) {
+  const H = adHeight(s.ad!.aspect)
+  return (
+    <aside data-ep-block="ad" style={{ width, height: H, boxSizing: 'border-box', background: '#fff', border: '1px dashed #999', paddingBottom: 8 }}>
+      <div style={{ height: AD_LABEL_H, lineHeight: `${AD_LABEL_H}px`, fontSize: 11, fontWeight: 700, letterSpacing: 1, textAlign: 'center', color: '#666', borderBottom: '1px solid #ddd' }}>{lang === 'hi' ? 'विज्ञापन / ADVERTISEMENT' : 'ADVERTISEMENT'}</div>
+      <img src={s.photo!.src} alt={s.photo!.alt} style={{ display: 'block', width: '100%', height: H - AD_LABEL_H - 10, objectFit: 'contain' }} />
+    </aside>
   )
 }

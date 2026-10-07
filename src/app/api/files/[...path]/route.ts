@@ -10,8 +10,9 @@ const TYPES: Record<string, string> = { '.mp4': 'video/mp4', '.webm': 'video/web
 /** Local-only file server with Range support (so videos can seek). */
 export async function GET(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const rel = (await params).path.map(decodeURIComponent).join('/')
-  // Originals and editor-only exports (social, flash, voice) need a login; the website version and posters are public.
-  if (/^(videos\/(original|social|flash)\/|tts\/)/.test(rel) &&!(await currentUser())) return new Response('Login required', { status: 401 })
+  // Originals and editor-only exports (social, voice) need a login; the website / Flash+Voice versions and posters are
+  // what the public player shows.
+  if (/^(videos\/(original|social)\/|tts\/)/.test(rel) && !(await currentUser())) return new Response('Login required', { status: 401 })
   let file: string
   try {
     file = localPath(rel)

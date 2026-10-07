@@ -22,7 +22,7 @@ async function fontsReady() {
  * Packs stories onto A3 pages using the browser's real text layout: each story is rendered off-screen at its block
  * width, measured, and placed by the pure packer in lib/epaper. Re-runs whenever the stories change.
  */
-export function usePack(stories: EpStory[], lang: Lang) {
+export function usePack(stories: EpStory[], lang: Lang, ad?: EpStory | null) {
   const [ready, setReady] = useState(false)
   const [pages, setPages] = useState<PackedPage[]>([])
 
@@ -43,7 +43,7 @@ export function usePack(stories: EpStory[], lang: Lang) {
         return (host.firstElementChild as HTMLElement).getBoundingClientRect().height
       }
       try {
-        setPages(pack(stories, measure))
+        setPages(pack(stories, measure, { ad }))
       } finally {
         setTimeout(() => {
           root.unmount()
@@ -52,7 +52,7 @@ export function usePack(stories: EpStory[], lang: Lang) {
       }
     }, 0)
     return () => clearTimeout(timer)
-  }, [ready, stories, lang])
+  }, [ready, stories, lang, ad])
 
   return { ready, pages }
 }

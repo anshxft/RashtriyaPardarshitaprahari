@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { rateLimited, sniffType, validate } from '../src/lib/forms.ts'
 import { slugify } from '../src/lib/slugify.ts'
-import { GEO, pack, pageBottom, variantsFor, type EpStory } from '../src/lib/epaper.ts'
+import { BODY_PX, GEO, MIN_BODY_PX, pack, pageBottom, SLOT_COLS, variantsFor, type EpStory } from '../src/lib/epaper.ts'
 import { resolveLayout } from '../src/lib/layout.ts'
 import { jwtUserId, passwordProblem, seal, totpAt, totpVerify, twofaIssue, twofaValid, unseal } from '../src/lib/security.ts'
 import { buttonsFor, newsStatus, publishChecklist } from '../src/lib/newsStatus.ts'
@@ -10,6 +10,7 @@ import { allowed, DEFAULTS, matrixFrom } from '../src/lib/permissions.ts'
 import { downloadName, slugLatin } from '../src/lib/fileName.ts'
 import { mobile10, officeNumbers, waLink } from '../src/lib/contact.ts'
 import { flashArgs, flashTimes, socialArgs, videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
+import { caption, openLink } from '../src/lib/shareText.ts'
 import { applyPronunciations, toSsml, ttsKey } from '../src/lib/tts.ts'
 
 const fields = [
@@ -159,5 +160,28 @@ const ssml = toSsml('पहला वाक्य। दूसरा <वाक�
 assert.ok(ssml.includes('<break time="500ms"/>') && ssml.includes('rate="110%"') && ssml.includes('&lt;वाक्य&gt;'))
 assert.equal(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1 }, [], 'google'))
 assert.notEqual(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1.2 }, [], 'google'), 'new settings = new audio')
+
+// e-paper Round 4: readable floor, “समाज का आइना” + ad columns on page 1 (right), nothing reserved when there is nothing
+assert.ok(pages.flatMap((p) => p.placed).every((a) => a.variant.scale * BODY_PX >= MIN_BODY_PX - 1e-9), 'body never below the readable size')
+assert.ok(variantsFor(story('v', 100, { bodyScale: 75 })).every((v) => v.scale * BODY_PX >= MIN_BODY_PX - 1e-9), 'editor cannot go below the floor either')
+assert.ok(variantsFor(story('v', 100, { autoFit: true })).every((v, _, a) => v.scale === a[0].scale), 'Auto Fit widens, never shrinks text')
+const aina = { ...story('aina', 600), categorySlug: 'samaj-ka-aina' }
+const adStory: EpStory = { ...story('ad', 0), id: 'ad', paragraphs: [], slot: 'ad', ad: { aspect: 1.4 }, photo: { src: '/x.png', alt: 'ad' } }
+const withSlots = pack([...many.slice(0, 12), aina], fake, { ad: adStory })
+const p1 = withSlots[0].placed
+const ainaP = p1.find((a) => a.id === 'aina')!, adP = p1.find((a) => a.id === 'ad')!
+const rightX = GEO.margin + (GEO.cols - SLOT_COLS) * ((GEO.pageW - GEO.margin * 2 - GEO.gutter * (GEO.cols - 1)) / GEO.cols + GEO.gutter)
+assert.ok(ainaP && Math.abs(ainaP.x - rightX) < 1 && ainaP.y === GEO.margin + GEO.mastheadH && ainaP.story.slot === 'aina', 'aina column at the top right of page 1')
+assert.ok(adP && Math.abs(adP.x - rightX) < 1 && adP.y > ainaP.y, 'ad column under it')
+for (const a of p1) for (const b of p1) if (a !== b) assert.ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, 'slots never overlap news')
+assert.ok(!pack(many.slice(0, 5), fake).flatMap((p) => p.placed).some((a) => a.story.slot), 'no column story / no ad = no reserved space')
+
+// auto-share texts: always the link + News ID; X fits 280 (a link counts as 23)
+const it = { headline: 'ह'.repeat(400), description: 'विवरण', hashtags: '#RPP #झारखंड', url: 'https://example.org/n/NTP-2026-10-07-0001', newsId: 'NTP-2026-10-07-0001' }
+const xc = caption(it, 'x')
+assert.ok(xc.includes(it.url) && xc.includes(it.newsId) && xc.replace(it.url, 'x'.repeat(23)).length <= 280, 'X within 280')
+for (const p of ['telegram', 'facebook', 'instagram'] as const) assert.ok(caption(it, p).endsWith(it.url) && caption(it, p).includes(it.newsId) && caption(it, p).length <= 2000)
+assert.ok(caption(it, 'telegram').length <= 1000, 'Telegram photo caption limit')
+assert.ok(openLink(it, 'whatsapp').startsWith('https://wa.me/?text=') && openLink(it, 'facebook').includes(encodeURIComponent(it.url)))
 
 console.log('all checks passed')

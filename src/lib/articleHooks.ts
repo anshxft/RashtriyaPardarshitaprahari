@@ -122,5 +122,10 @@ export const articleAfterChange: CollectionAfterChangeHook = async ({ doc, previ
     req.headers,
     req,
   )
+  // Auto-share on publish / re-publish (digital news; video news waits for its social video). Never blocks the save.
+  if ((action === 'publish' || action === 'republish') && doc.format !== 'video' && doc.format !== 'link' && newsStatus(doc) !== 'scheduled') {
+    const { autoShare } = await import('./shareService')
+    autoShare(doc.id, 'news')
+  }
   return doc
 }

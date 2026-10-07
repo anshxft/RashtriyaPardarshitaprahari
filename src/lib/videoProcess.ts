@@ -101,9 +101,17 @@ export async function runJob(job: MediaJob, budgetMs = 30 * 60_000) {
   const videoId = typeof job.video === 'object' ? job.video.id : job.video
   try {
     if (job.kind === 'web') await webVersion(videoId, budgetMs)
+    else if ((job.kind === 'social' || job.kind === 'vertical' || job.kind === 'flash') && process.env.VERCEL && process.env.VIDEO_WORKER !== 'external')
+      // Vercel has no Devanagari fonts and a 5-minute limit: text overlays would come out as boxes. The worker has both.
+      throw new Error('सोशल / फ्लैश वीडियो के लिए वीडियो वर्कर (Railway) चाहिए — वर्कर जुड़ने के बाद “फिर बनाएं” दबाएं')
     else if (job.kind === 'social' || job.kind === 'vertical') await socialVersion(videoId, job.kind, budgetMs)
     else if (job.kind === 'flash') await (await import('./flashVideo')).flashVersion(videoId, job.params as never, budgetMs)
     await payload.update({ collection: 'media-jobs', id: job.id, data: { status: 'done', error: null }, overrideAccess: true })
+    if (job.kind === 'social') {
+      const v = await payload.findByID({ collection: 'videos', id: videoId, depth: 0, draft: true })
+      const aId = typeof v.article === 'object' ? v.article?.id : v.article
+      if (aId && v._status === 'published') (await import('./shareService')).autoShare(aId, 'video')
+    }
   } catch (e) {
     const error = String((e as Error).message || e).slice(0, 400)
     const final = (job.attempts || 1) >= 3

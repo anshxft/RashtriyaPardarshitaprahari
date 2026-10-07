@@ -93,8 +93,30 @@ export const Credit = ({ img, lang }: { img?: Img; lang: Lang }) =>
     </p>
   ) : null
 
-/** Disabled placeholder for future ads / donation. Renders nothing until built (see Site Settings → Future slots). */
-export const Slot = ({ name }: { name: `ad-${string}` | 'donate' }) => <div data-slot={name} hidden />
+/** Ad slot: shows one live ad for its placement (Advertisement Manager) when ads are enabled; otherwise nothing at all. */
+export async function Slot({ name }: { name: `ad-${string}` | 'donate' }) {
+  const placement = name === 'ad-home-top' ? 'home-top' : name.startsWith('ad-article') ? 'article' : null
+  if (!placement) return null
+  const { getAd } = await import('@/lib/data')
+  const ad = await getAd(placement)
+  if (!ad) return null
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={ad.image} alt={ad.title} loading="lazy" className="mx-auto max-h-64 w-auto max-w-full rounded" />
+  )
+  return (
+    <aside aria-label="विज्ञापन / Advertisement" className="my-6 rounded-lg border border-dashed border-line p-2 text-center">
+      <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">विज्ञापन / Advertisement</p>
+      {ad.link ? (
+        <a href={ad.link} target="_blank" rel="sponsored noopener noreferrer">
+          {img}
+        </a>
+      ) : (
+        img
+      )}
+    </aside>
+  )
+}
 
 export const Pagination = ({ page, totalPages, base, lang }: { page: number; totalPages: number; base: string; lang: Lang }) => {
   if (totalPages <= 1) return null

@@ -22,6 +22,10 @@ export type EpStory = {
   link?: { url: string; siteName?: string | null; description?: string | null } | null
   qrSvg?: string | null
   publishedAt: string
+  categorySlug?: string | null
+  /** fixed column slots on page 1: the “समाज का आइना” column and the advertisement column */
+  slot?: 'aina' | 'ad' | null
+  ad?: { link?: string | null; aspect: number } | null
 }
 
 /** A3 portrait at 96 dpi. */
@@ -52,6 +56,15 @@ export const headlinePx = (size: Size, span: number) => HEAD[Math.min(4, Math.ma
 export const subPx = (size: Size, span: number) => Math.round(headlinePx(size, span) * (span === 1 ? 0.62 : 0.5) + 2)
 export const bylinePx = (size: Size) => ({ sm: 11, md: 12.5, lg: 14, xl: 16 })[size]
 export const BODY_PX = 13.5
+/** Readable floor: body text is never drawn smaller than this (Round 4: never shrink text just to fit more). */
+export const MIN_BODY_PX = 13
+export const bodyScaleOf = (s: EpStory) => Math.max(MIN_BODY_PX / BODY_PX, s.layout.bodyScale / 100)
+
+/** Page-1 column slots (right-hand side). */
+export const SLOT_COLS = 2
+export const AINA_SLUG = 'samaj-ka-aina'
+export const AD_LABEL_H = 26
+export const adHeight = (aspect: number) => Math.min(640, Math.round(spanW(SLOT_COLS) * aspect) + AD_LABEL_H + 8)
 
 export const MAX_PAGES = 40
 
@@ -72,19 +85,19 @@ export function sortStories(list: EpStory[]): EpStory[] {
   })
 }
 
-/** What Auto Fit may try, in order. Font never drops below 90% of the editor's size; widening is capped at 4 columns. */
+/** What Auto Fit may try, in order: only wider blocks (max 4 columns). The text size is never reduced to fit more. */
 export function variantsFor(s: EpStory, take?: number): Variant[] {
   const base = s.layout.columns
-  const scale0 = s.layout.bodyScale / 100
+  const scale0 = bodyScaleOf(s)
   const out: Variant[] = [{ cols: base, scale: scale0, take }]
   if (!s.layout.autoFit) return out
-  for (let c = base; c <= 4; c++) for (const f of [1, 0.95, 0.9]) if (!(c === base && f === 1)) out.push({ cols: c, scale: scale0 * f, take })
+  for (let c = base + 1; c <= 4; c++) out.push({ cols: c, scale: scale0, take })
   return out
 }
 
 type Measure = (s: EpStory, v: Variant) => number
 
-export function pack(stories: EpStory[], measure: Measure): PackedPage[] {
+export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null } = {}): PackedPage[] {
   type PG = { colTop: number[]; placed: Placed[] }
   const pages: PG[] = []
   const newPage = (): PG => {
@@ -98,7 +111,7 @@ export function pack(stories: EpStory[], measure: Measure): PackedPage[] {
   const h = (s: EpStory, v: Variant) => {
     const k = `${s.id}|${v.cols}|${v.scale.toFixed(3)}|${v.take ?? 'all'}`
     let x = cache.get(k)
-    if (x == null) cache.set(k, (x = Math.ceil(measure(s, v)) + 2))
+    if (x == null) cache.set(k, (x = s.slot === 'ad' && s.ad ? adHeight(s.ad.aspect) : Math.ceil(measure(s, v)) + 2))
     return x
   }
 
@@ -119,6 +132,27 @@ export function pack(stories: EpStory[], measure: Measure): PackedPage[] {
   // Pinned stories are placed first (so their page is reserved); everything else then flows around them, first-fit from page 1.
   const sorted = sortStories(stories).map((s) => ({ s, pin: s.layout.epaperPage ? Math.min(s.layout.epaperPage, MAX_PAGES) : (null as number | null | undefined), cont: false }))
   const queue = [...sorted.filter((x) => x.pin).sort((a, b) => a.pin! - b.pin!), ...sorted.filter((x) => !x.pin)]
+
+  // Page 1, right-hand columns: the dedicated “समाज का आइना” column, then the advertisement column. Nothing to show =
+  // no slot (the space goes back to the news). A column story too long for the slot simply joins the normal flow.
+  const c0 = GEO.cols - SLOT_COLS
+  let slotY = GEO.margin + GEO.mastheadH
+  const ainaAt = queue.findIndex((x) => x.s.categorySlug === AINA_SLUG && !x.pin)
+  if (ainaAt >= 0) {
+    const s = { ...queue[ainaAt].s, slot: 'aina' as const }
+    const v = { cols: SLOT_COLS, scale: bodyScaleOf(s) }
+    const height = h(s, v)
+    if (slotY + height <= GEO.margin + GEO.mastheadH + (pageBottom - GEO.margin - GEO.mastheadH) * 0.7) {
+      put(pages[0], 1, s, v, height, { c: c0, y: slotY })
+      slotY += height + GEO.blockGap
+      queue.splice(ainaAt, 1)
+    }
+  }
+  if (extra.ad?.ad) {
+    const s = { ...extra.ad, slot: 'ad' as const }
+    const height = h(s, { cols: SLOT_COLS, scale: 1 })
+    if (slotY + height <= pageBottom) put(pages[0], 1, s, { cols: SLOT_COLS, scale: 1 }, height, { c: c0, y: slotY })
+  }
   while (queue.length) {
     const { s, pin, cont } = queue.shift()!
     const vs = variantsFor(s)

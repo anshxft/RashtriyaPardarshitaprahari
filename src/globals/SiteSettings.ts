@@ -101,9 +101,41 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         {
+          label: 'Auto-share',
+          fields: [
+            {
+              name: 'autoShare',
+              type: 'group',
+              admin: {
+                description:
+                  'Platform keys live in the server environment (see .env.example). A platform without keys stays OFF and the Desk offers Copy caption + Download media + Open platform instead. Failed posts never block publishing.',
+              },
+              fields: [
+                { name: 'news', type: 'checkbox', label: 'Auto-share digital news on publish', defaultValue: false },
+                { name: 'video', type: 'checkbox', label: 'Auto-share video news on publish', defaultValue: false },
+                { name: 'epaper', type: 'checkbox', label: 'Auto-share the e-paper issue (button on the e-paper page)', defaultValue: false },
+                {
+                  name: 'platforms',
+                  type: 'select',
+                  hasMany: true,
+                  defaultValue: ['telegram', 'facebook', 'instagram', 'x'],
+                  options: [
+                    { label: 'Telegram', value: 'telegram' },
+                    { label: 'Facebook Page', value: 'facebook' },
+                    { label: 'Instagram', value: 'instagram' },
+                    { label: 'X (Twitter)', value: 'x' },
+                  ],
+                  admin: { description: 'Which platforms auto-share may use (only those with keys actually post).' },
+                },
+                { name: 'hashtags', type: 'text', defaultValue: '#राष्ट्रीय_पारदर्शिता_प्रहरी #RPP', admin: { description: 'Always added to posts' } },
+              ],
+            },
+          ],
+        },
+        {
           label: 'Future slots',
           fields: [
-            { name: 'adsEnabled', type: 'checkbox', defaultValue: false, admin: { description: 'Placeholder only — ad slots render nothing until built.' } },
+            { name: 'adsEnabled', type: 'checkbox', defaultValue: false, label: 'Ads enabled', admin: { description: 'Show ads from Content → Advertisements (e-paper column, home page, story pages). Off = no ads anywhere.' } },
             { name: 'donationsEnabled', type: 'checkbox', defaultValue: false, admin: { description: 'Placeholder only — not built yet.' } },
           ],
         },
