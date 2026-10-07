@@ -5,6 +5,9 @@ import { slugify } from '../src/lib/slugify.ts'
 import { GEO, pack, pageBottom, variantsFor, type EpStory } from '../src/lib/epaper.ts'
 import { resolveLayout } from '../src/lib/layout.ts'
 import { jwtUserId, passwordProblem, seal, totpAt, totpVerify, twofaIssue, twofaValid, unseal } from '../src/lib/security.ts'
+import { buttonsFor, newsStatus, publishChecklist } from '../src/lib/newsStatus.ts'
+import { allowed, DEFAULTS, matrixFrom } from '../src/lib/permissions.ts'
+import { downloadName, slugLatin } from '../src/lib/fileName.ts'
 import { mobile10, officeNumbers, waLink } from '../src/lib/contact.ts'
 import { videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
 
@@ -97,5 +100,42 @@ for (const v of ['9431924522', '94319 24522', '+91-9431924522', '919431924522', 
 for (const v of ['12345', '5431924522', '', null]) assert.equal(mobile10(v), null)
 assert.equal(waLink('9835704715', 'नमस्ते'), 'https://wa.me/919835704715?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87')
 assert.deepEqual(officeNumbers([{ title: 'A', phones: [{ number: '9431924522', kind: 'whatsapp' }, { number: '8580074522', kind: 'call' }, { number: 'x' }] }]).map((n) => [n.number, n.call, n.whatsapp]), [['9431924522', false, true], ['8580074522', true, false]])
+
+// role matrix: admin always; editor publishes but cannot delete published news by default; matrix edits take effect
+const ed = { id: 2, role: 'editor' }, rep = { id: 3, role: 'reporter' }, adm = { id: 1, role: 'admin' }
+assert.ok(allowed(adm, 'trashPublished') && allowed(ed, 'publish') && !allowed(ed, 'trashPublished') && !allowed(rep, 'publish'))
+assert.ok(!allowed({ id: 2, role: 'editor', canPublish: false }, 'publish'), 'per-user publish switch')
+assert.ok(allowed(ed, 'trashPublished', matrixFrom({ trashPublished: { editor: true } })), 'admin can switch a right on')
+assert.ok(!allowed(ed, 'publish', matrixFrom({ publish: { editor: false } })))
+assert.deepEqual(matrixFrom(null), DEFAULTS)
+assert.ok(!allowed({ id: 9, role: 'hacker' }, 'download') && !allowed(null, 'download'))
+// status
+const past = '2026-01-01T00:00:00Z', future = '2999-01-01T00:00:00Z'
+assert.equal(newsStatus({ _status: 'draft' }), 'draft')
+assert.equal(newsStatus({ _status: 'draft', reviewStatus: 'submitted' }), 'pending')
+assert.equal(newsStatus({ _status: 'published', publishedAt: future }), 'scheduled')
+assert.equal(newsStatus({ _status: 'published', publishedAt: past }), 'published')
+assert.equal(newsStatus({ _status: 'published', publishedAt: past, versionMinor: 2 }), 'updated')
+assert.equal(newsStatus({ _status: 'published', lifecycle: 'archived' }), 'archived')
+assert.equal(newsStatus({ _status: 'published', lifecycle: 'trashed' }), 'trashed')
+// buttons by status × role (Part 1.1 / 1.8)
+const b = (s: Parameters<typeof buttonsFor>[0], u: Parameters<typeof buttonsFor>[1], owner: number) => buttonsFor(s, u, owner, {}, DEFAULTS)
+assert.deepEqual(b('draft', rep, 3).main, ['edit', 'preview', 'delete'], 'reporter: own draft, no publish')
+assert.deepEqual(b('draft', ed, 3).main, ['edit', 'preview', 'publish'], 'editor cannot trash someone else’s draft by default')
+assert.deepEqual(b('published', ed, 3).main, ['preview', 'edit', 'download', 'share', 'archive'], 'editor: no re-publish / delete by default')
+assert.ok(!b('published', ed, 3).more.includes('delete'))
+assert.ok(b('published', adm, 3).main.includes('republish') && b('published', adm, 3).more.includes('delete'))
+assert.deepEqual(b('trashed', ed, 2).main, [], 'only admin restores from trash')
+assert.deepEqual(b('trashed', adm, 2).main, ['restoreTrash', 'purge'])
+assert.ok(b('archived', { id: 5, role: 'senior' }, 3).main.includes('restorePublish'))
+assert.ok(!b('pending', rep, 3).main.includes('approve') && b('pending', { id: 5, role: 'senior' }, 3).main.includes('approve'))
+// publish checklist
+assert.ok(publishChecklist({ title: 'x', reporterName: 'r', location: 'l', categoryId: 1, body: 'b' }).every((i) => !i.required || i.ok))
+assert.ok(publishChecklist({ title: 'x', categoryId: 1, body: 'b' }).some((i) => i.required && !i.ok), 'reporter + location required')
+// safe download names
+assert.equal(slugLatin('बिहार में सड़क सुरक्षा'), 'bihar-men-sarak-suraksha')
+assert.equal(downloadName('NTP-2026-09-30-0001', 'राम / "test" <x>?', '2026-09-30T20:00:00Z', 'MP4'), 'NTP-2026-10-01-0001'.replace('2026-10-01', '2026-09-30') + '_ram-test-x_2026-10-01.mp4')
+assert.ok(downloadName(null, '', null, 'jpg') === 'NTP-DRAFT_news_undated.jpg')
+assert.ok(/^[A-Za-z0-9_.-]+$/.test(downloadName('NTP-1', 'क्या?:*|\/ ॐ'.repeat(30), '2026-01-01', 'png')))
 
 console.log('all checks passed')

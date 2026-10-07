@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { currentUser } from '@/lib/auth'
 import { db } from '@/lib/data'
 import { mayPublish } from '@/lib/deskData'
+import { newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
+import { allowed, loadPermissions } from '@/lib/permissions'
 import { formatDate } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
@@ -14,12 +16,11 @@ const ACTIONS = [
   { href: '/hi/epaper', icon: '📰', title: 'ई-पेपर', hint: 'आज का A3 अंक', color: 'bg-white text-navy-900 ring-1 ring-line' },
 ]
 
-const chip = (s?: string | null, review?: string | null) =>
-  s === 'published' ? ['प्रकाशित', 'bg-india-600 text-white'] : review === 'submitted' ? ['समीक्षा में', 'bg-saffron-500 text-navy-950'] : ['ड्राफ्ट', 'bg-slate-200 text-slate-800']
 
 export default async function DeskHome() {
   const user = (await currentUser())!
   const payload = await db()
+  await loadPermissions(payload)
   const list = await payload.find({
     collection: 'articles',
     sort: '-updatedAt',
@@ -29,7 +30,8 @@ export default async function DeskHome() {
     overrideAccess: false,
     user,
     locale: 'hi',
-    select: { title: true, _status: true, reviewStatus: true, newsId: true, slug: true, updatedAt: true, format: true },
+    where: { or: [{ lifecycle: { in: ['active', 'archived'] } }, { lifecycle: { exists: false } }] },
+    select: { title: true, _status: true, reviewStatus: true, newsId: true, slug: true, updatedAt: true, format: true, lifecycle: true, publishedAt: true, versionMinor: true, revisions: true },
   })
   const review = mayPublish(user) ? list.docs.filter((a) => a.reviewStatus === 'submitted' && a._status !== 'published') : []
 
@@ -66,13 +68,19 @@ export default async function DeskHome() {
       )}
 
       <section className="rounded-xl border border-line bg-bg p-4">
-        <h2 className="mb-2 font-display text-lg font-bold">हाल की खबरें</h2>
+        <div className="mb-2 flex flex-wrap items-center gap-3">
+          <h2 className="font-display text-lg font-bold">हाल की खबरें</h2>
+          <Link href="/desk/news" className="ml-auto text-sm font-semibold text-link underline">सभी खबरें / आर्काइव / ट्रैश →</Link>
+          {allowed(user, 'auditLog') && <Link href="/desk/audit" className="text-sm font-semibold text-link underline">📜 ऑडिट लॉग</Link>}
+          {user.role === 'admin' && <Link href="/admin/globals/permissions" className="text-sm font-semibold text-link underline">🔐 अधिकार (Permissions)</Link>}
+        </div>
         {list.docs.length === 0 ? (
           <p className="py-6 text-center text-muted">अभी कोई खबर नहीं। ऊपर “नई खबर” दबाएं।</p>
         ) : (
           <ul className="divide-y divide-line">
             {list.docs.map((a) => {
-              const [label, cls] = chip(a._status, a.reviewStatus)
+              const st = STATUS_LABEL[newsStatus(a)]
+              const [label, cls] = [st.hi, st.cls]
               return (
                 <li key={a.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
                   <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${cls}`}>{label}</span>

@@ -69,6 +69,19 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   return res.docs[0] as Article | undefined
 })
 
+/** An archived story keeps its URL / QR: visitors see a short notice with the News ID (content stays in the newsroom). */
+export const getArchivedStub = cache(async (lang: Lang, slug: string) => {
+  const res = await (await db()).find({
+    collection: 'articles',
+    locale: lang,
+    where: { and: [{ _status: { equals: 'published' } }, { lifecycle: { equals: 'archived' } }, { slug: { equals: slug } }] },
+    limit: 1,
+    depth: 0,
+    select: { title: true, newsId: true, firstPublishedAt: true, slug: true },
+  })
+  return res.docs[0] as Pick<Article, 'title' | 'newsId' | 'firstPublishedAt' | 'slug'> | undefined
+})
+
 /** Editors only: a draft (or published) story exactly as the public page would render it. */
 export const getArticleForPreview = async (lang: Lang, id: string, user: unknown) =>
   (await (await db()).findByID({ collection: 'articles', id, draft: true, locale: lang, depth: 2, overrideAccess: false, user: user as never }).catch(() => null)) as Article | null

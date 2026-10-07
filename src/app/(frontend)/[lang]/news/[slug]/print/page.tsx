@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { RichText, SourcesBox } from '@/components/ArticleParts'
 import { PrintButton } from '@/components/PrintButton'
 import { Qr } from '@/components/Qr'
 import { TAGLINE_SHORT } from '@/content/brand'
-import { asAuthor, asCat, cardImage, getArticle, getSettings } from '@/lib/data'
+import { currentUser } from '@/lib/auth'
+import { asAuthor, asCat, cardImage, db, getArticle, getSettings } from '@/lib/data'
+import { allowed, loadPermissions } from '@/lib/permissions'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 import { decodeSlug, paths, siteUrl } from '@/lib/paths'
 
-export const revalidate = 60
-export const generateStaticParams = async () => []
+export const dynamic = 'force-dynamic' // staff-only: checks the login on every request
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 /** One story, A4, with QR + News ID. Print it or "Save as PDF" from the browser (works on phones too). */
@@ -20,6 +21,10 @@ export default async function PrintStory({ params, searchParams }: { params: Pro
   const d = t(lang)
   const a = await getArticle(lang, decodeSlug(p.slug))
   if (!a) notFound()
+  // Round 4: the printable / PDF copy is an Editor/Admin download, not a public one.
+  const user = await currentUser()
+  await loadPermissions(await db())
+  if (!allowed(user, 'download')) redirect(paths.article(lang, a.slug))
   const settings = await getSettings(lang)
   const img = cardImage(a, 'hero')
   const byline = a.reporterName || (typeof a.reporter === 'object' && a.reporter ? a.reporter.name : undefined) || asAuthor(a.author)?.name

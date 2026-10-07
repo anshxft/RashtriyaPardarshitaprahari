@@ -21,6 +21,8 @@ import { Tags } from './collections/Tags'
 import { TeamMembers } from './collections/TeamMembers'
 import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
+import { AuditLog } from './collections/AuditLog'
+import { Permissions } from './globals/Permissions'
 import { migrations } from './migrations'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -38,9 +40,9 @@ export default buildConfig({
   },
   collections: [
     Articles, Videos, Categories, Tags, Authors, TeamMembers, BreakingNews, Corrections, Pages, Media,
-    Submissions, Appointments, ContactMessages, PrivateFiles, Users,
+    Submissions, Appointments, ContactMessages, PrivateFiles, Users, AuditLog,
   ],
-  globals: [SiteSettings],
+  globals: [SiteSettings, Permissions],
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

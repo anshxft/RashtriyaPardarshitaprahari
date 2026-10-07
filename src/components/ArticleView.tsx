@@ -10,6 +10,7 @@ import { ShareButtons } from './client'
 import { Qr } from './Qr'
 import { ShareCard } from './ShareCard'
 import { StoryTools } from './StoryTools'
+import { downloadName } from '@/lib/fileName'
 import { Cover, Credit, FormatBadge, QuestionBadge, SampleBadge, SectionTitle, Slot } from './ui'
 
 const H1: Record<Size, string> = { sm: 'text-2xl md:text-4xl', md: 'text-3xl md:text-5xl', lg: 'text-4xl md:text-6xl', xl: 'text-5xl md:text-7xl' }
@@ -148,7 +149,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
           title={a.title}
           shortUrl={shortUrl}
           printHref={`${paths.article(lang, a.slug)}/print`}
-          fileName={a.newsId || `story-${a.id}`}
+          fileName={downloadName(a.newsId, a.title, a.firstPublishedAt || a.publishedAt, 'png').replace(/\.png$/, '')}
           labels={{ print: d.printPdf, image: d.downloadImage, share: d.shareLinkLabel, busy: d.imageBusy, fail: d.imageFail, copied: d.linkCopied }}
         >
           <ShareCard lang={lang} title={a.title} subtitle={a.subheadline || a.excerpt} category={cat?.title} date={formatDate(stamp, lang)} img={img} newsId={a.newsId} shortUrl={shortUrl} siteName={siteName} />

@@ -10,6 +10,7 @@ import { INK, INK_OPTIONS, resolveLayout, TEMPLATES, type Ink, type Layout, type
 import { parsePastedStory } from '@/lib/paste'
 import { EpaperPreview } from './EpaperPreview'
 import { PhotoField, type Photo } from './PhotoField'
+import { publishChecklist } from '@/lib/newsStatus'
 
 export type NewsForm = {
   id?: number
@@ -69,6 +70,11 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
   const [dirty, setDirty] = useState(false)
   const [more, setMore] = useState(false)
   const [schedule, setSchedule] = useState(Boolean(initial.scheduleAt))
+  const [confirm, setConfirm] = useState<null | 'publish' | 'schedule'>(null)
+  // Opened from the news list with “Publish / Approve”: go straight to the checklist.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('publish') === '1') setConfirm('publish')
+  }, [])
 
   const set = <K extends keyof NewsForm>(k: K, v: NewsForm[K]) => (setF((x) => ({ ...x, [k]: v })), setDirty(true))
   const setLayout = (p: Layout) => (setF((x) => ({ ...x, layout: { ...x.layout, ...p } })), setDirty(true))
@@ -319,7 +325,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
             <p className="text-xs text-muted">तारीख अपने-आप लगती है (भारतीय समय) और पहली बार प्रकाशित होने के बाद कभी नहीं बदलती।</p>
           </section>
 
-          <section className={card}>
+          <section id="photo" className={`${card} scroll-mt-20`}>
             <h3 className={h3}>4 · फोटो</h3>
             <PhotoField photo={f.photo} onChange={(p) => set('photo', p)} alt={f.title} credit={f.credit} onCredit={(v) => set('credit', v)} />
           </section>
@@ -461,12 +467,12 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
           {mayPublish ? (
             <>
               {schedule && !f.published && (
-                <button type="button" disabled={busy || !f.scheduleAt} onClick={() => save('schedule')} className="min-h-12 flex-1 rounded-lg bg-gold-400 px-5 font-bold text-navy-950 disabled:opacity-60 sm:flex-none">
+                <button type="button" disabled={busy || !f.scheduleAt} onClick={() => setConfirm('schedule')} className="min-h-12 flex-1 rounded-lg bg-gold-400 px-5 font-bold text-navy-950 disabled:opacity-60 sm:flex-none">
                   ⏰ शेड्यूल करें
                 </button>
               )}
               {!(schedule && !f.published) && (
-                <button type="button" disabled={busy} onClick={() => save('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white hover:bg-india-600/90 disabled:opacity-60 sm:flex-none">
+                <button type="button" disabled={busy} onClick={() => setConfirm('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white hover:bg-india-600/90 disabled:opacity-60 sm:flex-none">
                   {f.published ? '✔ अपडेट प्रकाशित करें' : '🚀 प्रकाशित करें'}
                 </button>
               )}
@@ -479,6 +485,20 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
           {busy && <span className="text-sm text-muted">सेव हो रहा है…</span>}
         </div>
       </div>
+
+      {confirm && (
+        <PublishConfirm
+          republish={f.published}
+          schedule={confirm === 'schedule'}
+          items={publishChecklist({ title: f.title, subheadline: f.subheadline, reporterName: f.reporterName, location: f.location, categoryId: f.categoryId, hasMedia: Boolean(f.photo.id || f.photo.url), body: f.body, isLink: f.format === 'link' })}
+          onCancel={() => setConfirm(null)}
+          onOk={() => {
+            const m = confirm
+            setConfirm(null)
+            save(m)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -505,7 +525,12 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-muted">वेब पेज पर “इमेज डाउनलोड” से QR वाला शेयर-कार्ड मिलता है।</p>
+          <p className="mt-2 text-xs text-muted">
+            QR वाला न्यूज़ कार्ड, टेक्स्ट कॉपी और फोटो:{' '}
+            <Link href={`/desk/news/${r.id}/download`} className="font-semibold underline">
+              डाउनलोड पेज
+            </Link>
+          </p>
         </div>
         {r.qrSvg && <div className="rounded bg-white p-1" dangerouslySetInnerHTML={{ __html: r.qrSvg }} />}
       </div>
@@ -513,5 +538,45 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
         बंद करें
       </button>
     </section>
+  )
+}
+
+/** Part 1.3: checklist first, then the official confirmation. Required items missing = Publish stays disabled. */
+function PublishConfirm({ items, republish, schedule, onCancel, onOk }: { items: ReturnType<typeof publishChecklist>; republish: boolean; schedule: boolean; onCancel: () => void; onOk: () => void }) {
+  const blocked = items.some((i) => i.required && !i.ok)
+  return (
+    <div role="dialog" aria-modal aria-label="प्रकाशन की पुष्टि" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={onCancel}>
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <p className="mb-3 font-display text-lg font-bold">✅ प्रकाशन से पहले जांच</p>
+        <ul className="space-y-1.5 text-sm">
+          {items.map((i) => (
+            <li key={i.key} className="flex items-start gap-2">
+              <span aria-hidden className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>
+                {i.ok ? '✔' : i.required ? '✘' : '⚠'}
+              </span>
+              <span>
+                {i.label}
+                {i.note && <span className="block text-xs text-muted">{i.note}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {blocked ? (
+          <p className="mt-4 rounded bg-alert-600/10 px-3 py-2 text-sm font-semibold text-alert-700">✘ वाले ज़रूरी हिस्से भरें, फिर प्रकाशित करें।</p>
+        ) : (
+          <p className="mt-4 font-semibold">
+            {republish ? 'क्या आप ये बदलाव आधिकारिक रूप से प्रकाशित करना चाहते हैं? नया संस्करण बनेगा; News ID और URL वही रहेंगे।' : schedule ? 'क्या आप इस समाचार को तय समय पर आधिकारिक रूप से प्रकाशित करना चाहते हैं?' : 'क्या आप इस समाचार को आधिकारिक रूप से प्रकाशित करना चाहते हैं?'}
+          </p>
+        )}
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button type="button" onClick={onCancel} className="min-h-12 rounded-lg border border-line font-bold">
+            Cancel
+          </button>
+          <button type="button" onClick={onOk} disabled={blocked} className="min-h-12 rounded-lg bg-india-600 font-extrabold text-white disabled:opacity-50">
+            {schedule ? 'Schedule' : 'Publish Now'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

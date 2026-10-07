@@ -7,7 +7,7 @@ import { currentUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-const ROLE = { admin: 'एडमिन', editor: 'संपादक', reporter: 'रिपोर्टर' } as const
+const ROLE = { admin: 'प्रधान संपादक / एडमिन', senior: 'वरिष्ठ संपादक', editor: 'संपादक', reporter: 'रिपोर्टर' } as const
 
 export default async function DeskLayout({ children }: { children: ReactNode }) {
   const user = await currentUser()
