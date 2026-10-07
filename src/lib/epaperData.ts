@@ -3,7 +3,7 @@ import { publicArticleWhere } from '@/collections/Articles'
 import { proxied } from '@/components/ShareCard'
 import type { Article } from '@/payload-types'
 import { istDate } from './articleHooks'
-import { asCat, cardImage, db } from './data'
+import { asCat, cardImage, db, getAd } from './data'
 import type { EpStory } from './epaper'
 import { lexicalToParagraphs } from './lexical'
 import type { Lang } from './i18n'
@@ -19,7 +19,7 @@ export async function toEpStory(a: Article, lang: Lang): Promise<EpStory> {
   const isLink = a.format === 'link' && a.linkCard?.url
   const url = `${siteUrl()}${a.newsId ? paths.newsShort(a.newsId) : paths.article(lang, a.slug)}`
   const known = img && (img.src.startsWith('/') || /^https:\/\/[^/]*(wikimedia\.org|unsplash\.com|pexels\.com|vercel-storage\.com)\//.test(img.src))
-  const photoSrc = img ? (known ? proxied(img.src, 1080) : img.src) : undefined
+  const photoSrc = img ? (known ? proxied(img.src, 1920) : img.src) : undefined // sharp when zoomed / Full HD export
   const linkImg = isLink && a.linkCard?.imageUrl ? a.linkCard.imageUrl : undefined
   return {
     id: String(a.id),
@@ -28,6 +28,7 @@ export async function toEpStory(a: Article, lang: Lang): Promise<EpStory> {
     reporter: a.reporterName || member,
     location: a.location,
     category: asCat(a.category)?.title,
+    categorySlug: asCat(a.category)?.slug,
     newsId: a.newsId,
     url,
     paragraphs: lexicalToParagraphs(a.content).length ? lexicalToParagraphs(a.content) : a.excerpt ? [a.excerpt] : [],
@@ -76,4 +77,22 @@ export async function listEditions(limitDays = 30): Promise<{ date: string; coun
     count.set(day, (count.get(day) || 0) + 1)
   }
   return [...count.entries()].slice(0, limitDays).map(([date, n]) => ({ date, count: n }))
+}
+
+/** The live e-paper advertisement (Advertisement Manager, placement “epaper”) as a page-1 column block, or null. */
+export async function getEpaperAd(): Promise<EpStory | null> {
+  const ad = await getAd('epaper')
+  if (!ad) return null
+  const known = ad.image.startsWith('/') || /vercel-storage\.com\//.test(ad.image)
+  return {
+    id: 'ad',
+    title: ad.title,
+    url: ad.link || '',
+    paragraphs: [],
+    photo: { src: known ? proxied(ad.image, 1080) : ad.image, alt: ad.title },
+    layout: resolveLayout(undefined, { hasPhoto: true }),
+    publishedAt: new Date().toISOString(),
+    slot: 'ad',
+    ad: { link: ad.link, aspect: ad.w && ad.h ? Math.min(2.2, Math.max(0.5, ad.h / ad.w)) : 1.4 },
+  }
 }

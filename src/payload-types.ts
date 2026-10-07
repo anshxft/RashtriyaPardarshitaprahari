@@ -85,6 +85,8 @@ export interface Config {
     'audit-log': AuditLog;
     'media-jobs': MediaJob;
     pronunciations: Pronunciation;
+    'share-log': ShareLog;
+    ads: Ad;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -110,6 +112,8 @@ export interface Config {
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'media-jobs': MediaJobsSelect<false> | MediaJobsSelect<true>;
     pronunciations: PronunciationsSelect<false> | PronunciationsSelect<true>;
+    'share-log': ShareLogSelect<false> | ShareLogSelect<true>;
+    ads: AdsSelect<false> | AdsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -456,6 +460,14 @@ export interface Article {
    */
   publishedAt: string;
   heroImage?: (number | null) | Media;
+  /**
+   * Made from this news (Desk → Social share). Edit before sharing; the link and News ID are always added.
+   */
+  social?: {
+    headline?: string | null;
+    description?: string | null;
+    hashtags?: string | null;
+  };
   /**
    * ONE approved script: the red FLASH strip and the female voice both use exactly this text. The system never adds facts.
    */
@@ -1147,6 +1159,66 @@ export interface Pronunciation {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "share-log".
+ */
+export interface ShareLog {
+  id: number;
+  article?: (number | null) | Article;
+  newsId?: string | null;
+  title?: string | null;
+  kind?: ('news' | 'video' | 'epaper') | null;
+  platform: string;
+  status: 'queued' | 'success' | 'failed';
+  /**
+   * Sent automatically on publish
+   */
+  auto?: boolean | null;
+  postUrl?: string | null;
+  response?: string | null;
+  attempts?: number | null;
+  by?: string | null;
+  /**
+   * What was posted (headline, text, link, media)
+   */
+  item?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads".
+ */
+export interface Ad {
+  id: number;
+  /**
+   * Advertiser / internal name (also the image alt text)
+   */
+  title: string;
+  /**
+   * Portrait works best for the e-paper column (e.g. 600×900).
+   */
+  image: number | Media;
+  /**
+   * Optional website of the advertiser
+   */
+  link?: string | null;
+  placements: ('epaper' | 'home-top' | 'article')[];
+  active?: boolean | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1240,6 +1312,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pronunciations';
         value: number | Pronunciation;
+      } | null)
+    | ({
+        relationTo: 'share-log';
+        value: number | ShareLog;
+      } | null)
+    | ({
+        relationTo: 'ads';
+        value: number | Ad;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1379,6 +1459,13 @@ export interface ArticlesSelect<T extends boolean = true> {
   firstPublishedAt?: T;
   publishedAt?: T;
   heroImage?: T;
+  social?:
+    | T
+    | {
+        headline?: T;
+        description?: T;
+        hashtags?: T;
+      };
   flash?:
     | T
     | {
@@ -1809,6 +1896,41 @@ export interface PronunciationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "share-log_select".
+ */
+export interface ShareLogSelect<T extends boolean = true> {
+  article?: T;
+  newsId?: T;
+  title?: T;
+  kind?: T;
+  platform?: T;
+  status?: T;
+  auto?: T;
+  postUrl?: T;
+  response?: T;
+  attempts?: T;
+  by?: T;
+  item?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads_select".
+ */
+export interface AdsSelect<T extends boolean = true> {
+  title?: T;
+  image?: T;
+  link?: T;
+  placements?: T;
+  active?: T;
+  startsAt?: T;
+  endsAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1945,7 +2067,23 @@ export interface SiteSetting {
   };
   aiVoiceNote?: boolean | null;
   /**
-   * Placeholder only — ad slots render nothing until built.
+   * Platform keys live in the server environment (see .env.example). A platform without keys stays OFF and the Desk offers Copy caption + Download media + Open platform instead. Failed posts never block publishing.
+   */
+  autoShare?: {
+    news?: boolean | null;
+    video?: boolean | null;
+    epaper?: boolean | null;
+    /**
+     * Which platforms auto-share may use (only those with keys actually post).
+     */
+    platforms?: ('telegram' | 'facebook' | 'instagram' | 'x')[] | null;
+    /**
+     * Always added to posts
+     */
+    hashtags?: string | null;
+  };
+  /**
+   * Show ads from Content → Advertisements (e-paper column, home page, story pages). Off = no ads anywhere.
    */
   adsEnabled?: boolean | null;
   /**
@@ -2094,6 +2232,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         logo?: T;
       };
   aiVoiceNote?: T;
+  autoShare?:
+    | T
+    | {
+        news?: T;
+        video?: T;
+        epaper?: T;
+        platforms?: T;
+        hashtags?: T;
+      };
   adsEnabled?: T;
   donationsEnabled?: T;
   updatedAt?: T;

@@ -252,6 +252,17 @@ export const Articles: CollectionConfig = {
     },
     { name: 'heroImage', type: 'upload', relationTo: 'media', admin: { position: 'sidebar' } },
     {
+      name: 'social',
+      type: 'group',
+      label: 'Social media version',
+      admin: { position: 'sidebar', description: 'Made from this news (Desk → Social share). Edit before sharing; the link and News ID are always added.' },
+      fields: [
+        { name: 'headline', type: 'text' },
+        { name: 'description', type: 'textarea' },
+        { name: 'hashtags', type: 'text' },
+      ],
+    },
+    {
       name: 'flash',
       type: 'group',
       label: 'Flash News + voice (video news)',

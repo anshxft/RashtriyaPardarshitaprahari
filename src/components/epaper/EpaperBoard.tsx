@@ -17,6 +17,8 @@ type Props = {
   date: string
   dateLabel: string
   siteName: string
+  descriptor?: string | null
+  ad?: EpStory | null
   stories: EpStory[]
   editions: { date: string; label: string; count: number }[]
   canEdit: boolean
@@ -25,7 +27,7 @@ type Props = {
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font-bold text-white hover:bg-navy-700'
 
-export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions, canEdit }: Props) {
+export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, stories, editions, canEdit }: Props) {
   const d = t(lang)
   const router = useRouter()
   const [patches, setPatches] = useState<Record<string, Layout>>({})
@@ -40,7 +42,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
     () => stories.map((s) => (patches[s.id] ? { ...s, layout: { ...s.layout, ...Object.fromEntries(Object.entries(patches[s.id]).filter(([, v]) => v !== undefined)) } as EpStory['layout'] } : s)),
     [stories, patches],
   )
-  const { ready, pages } = usePack(eff, lang)
+  const { ready, pages } = usePack(eff, lang, ad)
+  const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
     const el = wrap.current
@@ -61,7 +64,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
   }, [pages.length])
   useEffect(() => setIdx((i) => Math.min(i, Math.max(0, pages.length - 1))), [pages.length])
 
-  const scale = Math.min(1, width / GEO.pageW)
+  // Pages are vector (real text), so any zoom stays sharp; zoom > 1 scrolls sideways.
+  const scale = Math.min(1, width / GEO.pageW) * zoom
   const flash = (m: string) => {
     setNote(m)
     setTimeout(() => setNote(''), 2500)
@@ -99,7 +103,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
     const el = document.getElementById(`ep-page-${n}`)
     if (!el) return
     const { toBlob } = await import('html-to-image')
-    const opts = { width: GEO.pageW, height: GEO.pageH, pixelRatio: 1.5, cacheBust: true, style: { transform: 'none', margin: '0' } }
+    // 2× = 2246 × 3174 px: above Full HD in both directions, crisp on any screen.
+    const opts = { width: GEO.pageW, height: GEO.pageH, pixelRatio: 2, cacheBust: true, style: { transform: 'none', margin: '0' } }
     await toBlob(el, opts)
     const blob = await toBlob(el, opts)
     if (!blob) return
@@ -116,13 +121,13 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
     return (
       <div key={pl.id} className="ep-cell" style={{ position: 'absolute', left: pl.x, top: pl.y, width: pl.w, height: pl.h, overflow: 'hidden' }}>
         <StoryBlock s={pl.story} cols={pl.variant.cols} scale={pl.variant.scale} take={pl.variant.take} lang={lang} />
-        {canEdit && cur && (
+        {canEdit && cur && pl.story.slot !== 'ad' && (
           <div className="ep-tools no-print" style={{ position: 'absolute', top: 3, right: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: pl.w - 6 }}>
             {pl.fitted && <span style={{ background: '#f28c1b', color: '#000', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>{d.autoFitted}</span>}
             {pl.pinFailed && <span style={{ background: '#d0201a', color: '#fff', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>{d.pinMissed}</span>}
             <button type="button" className={tool} title="Columns −" onClick={() => patch(baseId, { columns: Math.max(1, cur.layout.columns - 1) })}>◀ col</button>
             <button type="button" className={tool} title="Columns +" onClick={() => patch(baseId, { columns: Math.min(4, cur.layout.columns + 1) })}>col ▶</button>
-            <button type="button" className={tool} title="Text smaller" onClick={() => patch(baseId, { bodyScale: Math.max(75, cur.layout.bodyScale - 5) })}>A−</button>
+            <button type="button" className={tool} title="Text smaller" onClick={() => patch(baseId, { bodyScale: Math.max(100, cur.layout.bodyScale - 5) })}>A−</button>
             <button type="button" className={tool} title="Text larger" onClick={() => patch(baseId, { bodyScale: Math.min(130, cur.layout.bodyScale + 5) })}>A+</button>
             <button type="button" className={tool} title="Earlier" onClick={() => move(baseId, -1)}>↑</button>
             <button type="button" className={tool} title="Later" onClick={() => move(baseId, 1)}>↓</button>
@@ -188,6 +193,17 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
           <button type="button" className={btn} onClick={() => pageImage(pages[idx]?.number ?? 1)} disabled={!pages.length}>
             🖼 {d.pageImage}
           </button>
+          <span className="mx-1 hidden h-6 w-px bg-line sm:block" />
+          {[1, 1.5, 2].map((z) => (
+            <button key={z} type="button" className={`${btn} ${zoom === z ? '!bg-navy-900 !text-white' : ''}`} onClick={() => setZoom(z)} aria-label={`zoom ${z}x`}>
+              🔍 {z}×
+            </button>
+          ))}
+          {canEdit && (
+            <Link href={`/desk/epaper-share?date=${date}`} className={btn}>
+              📣 {lang === 'hi' ? 'शेयर करें' : 'Share'}
+            </Link>
+          )}
           {canEdit && <span className="text-sm font-semibold text-saffron-600">🛠 {d.layoutTools}</span>}
           {note && (
             <span role="status" className="text-sm font-semibold text-india-600">
@@ -197,7 +213,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
         </div>
       </div>
 
-      <div ref={wrap} className="w-full">
+      <div ref={wrap} className="w-full overflow-x-auto">
         {!ready && <p className="py-16 text-center text-muted">{d.preparing}</p>}
         {ready && stories.length === 0 && <p className="py-16 text-center text-muted">{d.noEdition}</p>}
         {pages.map((pg, i) => (
@@ -206,14 +222,16 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, stories, editions
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #0b1f4d', display: 'flex', alignItems: 'center', gap: 22 }}>
-                    <img src="/logo-160.webp" alt="" width={112} height={112} />
+                    <img src="/logo.png" alt="" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain' }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 66, lineHeight: 1.1, color: '#0b1f4d' }}>{siteName}</div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: '#c25a00', marginTop: 4 }}>{TAGLINE_SHORT}</div>
+                      <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 62, lineHeight: 1.08, color: '#0b1f4d' }}>{siteName}</div>
+                      {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#0b1f4d', marginTop: 2 }}>{descriptor}</div>}
+                      <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 3 }}>{TAGLINE_SHORT}</div>
                     </div>
                     <div style={{ textAlign: 'right', fontSize: 15, lineHeight: 1.5, color: '#333', minWidth: 190 }}>
                       <div style={{ fontWeight: 700 }}>{dateLabel}</div>
                       <div>{d.epaper}</div>
+                      <div style={{ marginTop: 4, display: 'inline-block', border: '2px solid #0b1f4d', padding: '1px 8px', fontWeight: 800, color: '#0b1f4d' }}>मूल्य: निःशुल्क</div>
                     </div>
                   </header>
                 )}

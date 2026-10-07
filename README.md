@@ -102,6 +102,23 @@ by `node scripts/logo-variants.mjs`.
 - **Edit history**: articles, videos, team profiles and pages keep versions (Admin → open item → *Versions*). Who changed a published story and when is also shown as the "revisions" list.
 - **Daily encrypted backup**: Vercel Cron calls `/api/cron/backup` at 03:00 IST; every collection and site settings are exported, gzip-compressed, AES-256-encrypted with `BACKUP_KEY` and stored in Blob `backups/` (last 14 kept). Set `CRON_SECRET` and `BACKUP_KEY` on Vercel and keep a copy of `BACKUP_KEY` in a password manager. To open one: download the file, then `BACKUP_KEY=… npm run backup:open -- <file>`. Uploaded media stay in Blob; the database itself also has Supabase's own backups.
 
+## Round 4 — contact, editor panel, video pipeline, voice, auto-share, e-paper
+
+- **Contact & branding**: Site Settings → Identity (descriptor line) and → Contact (offices with call / WhatsApp numbers, pre-filled WhatsApp text, floating button switch). Contact page, footer and every public form use them. New logo: replace `public/logo*.png|webp`, `og-default.jpg`, `emblem.png` and `logo-watermark.png` (see `scripts/logo-variants.mjs`).
+- **Editor panel** (`/desk/news`): status tabs (Draft, Pending, Scheduled, Published, Updated, Archived, Trash), buttons by status × role, publish checklist + confirmation, Archive / Delete (2 confirmations + reason, soft) / Restore (Admin) / Re-publish (original date or “Updated on”) / Purge (Admin + password), Create New From This News, preview (desktop / mobile / social), version history (every version kept), download centre, audit log (`/desk/audit`, append-only). Roles: Reporter, Editor, Senior Editor, Admin (प्रधान संपादक); rights per role in **Admin → Permissions**. Downloads are Editor/Admin only.
+- **Video news** (`/desk/video`): one master record (an article with format “video”). Upload resumes after a dropped connection when the R2 bucket is configured. Jobs (`media-jobs`): website version with logo + thumbnail, Social-Ready 1920×1080 / 1080×1920 with headline, reporter, place, date, News ID and end screen; Flash + Voice final. Public: Watch + Share only via `/api/v/<id>/play` (short-lived link, never the original).
+- **Flash + female voice**: one approved script for strip and voice; TTS provider by env (`TTS_PROVIDER=google|azure`), cached; pronunciation dictionary (Admin → Content → Pronunciation dictionary, speech only); optional “AI voice” note (Site Settings → Video watermark).
+- **Auto-share** (Site Settings → Auto-share; keys in env): Telegram, Facebook Page, Instagram, X adapters; WhatsApp = links only. Share preview + per-platform choice at `/desk/news/<id>/share`; e-paper issue at `/desk/epaper-share`; log + retry at `/desk/share-log`; failures email the Admin and never block publishing.
+- **E-paper**: masthead with descriptor and “मूल्य: निःशुल्क”; page 1 right-hand columns for “समाज का आइना” (stories in that section) and the advertisement column (**Content → Advertisements**, placement “E-paper”; Site Settings → Ads enabled); body text never below 13 px (Auto Fit only widens); zoom 1×/1.5×/2× (vector, stays sharp); page image export 2246 × 3174 px.
+
+### Video worker (recommended for real videos)
+
+Vercel functions stop after 5 minutes and have no Hindi fonts, so social / flash videos are made by a small worker:
+1. Cloudflare → R2 → create a private bucket + an API token (Object Read & Write). Put `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` in Vercel **and** in the worker. Run `node scripts/r2-cors.mjs` once.
+2. Railway → New Project → Deploy from GitHub repo (this repo; `railway.json` builds `worker/Dockerfile`). Variables: `DATABASE_URL`, `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, the `S3_*` values and (for the voice) the `TTS_*` values.
+3. On Vercel set `VIDEO_WORKER=external` and redeploy.
+Without the worker, the website version (logo) is still made on Vercel for short clips; social / flash jobs then show “worker needed”.
+
 ## What you must fill in manually
 
 1. **Admin → Site Settings**: Trust name, **registration number**, editor, publisher, address, email, phone, grievance officer, **notification email**, social links. Placeholders appear in `[brackets]`.

@@ -69,6 +69,18 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   return res.docs[0] as Article | undefined
 })
 
+/** One live ad for a placement (random among the live ones), or null when ads are off / none is running. */
+export async function getAd(placement: string): Promise<{ title: string; image: string; link?: string | null; w?: number | null; h?: number | null } | null> {
+  const payload = await db()
+  const s = (await payload.findGlobal({ slug: 'site-settings', depth: 0 })) as { adsEnabled?: boolean }
+  if (!s.adsEnabled) return null
+  const { liveAdsWhere } = await import('@/collections/Ads')
+  const res = await payload.find({ collection: 'ads', where: liveAdsWhere(placement), limit: 20, depth: 1 })
+  const ad = res.docs[Math.floor(Math.random() * res.docs.length)]
+  const m = ad && asMedia(ad.image)
+  return ad && m?.url ? { title: ad.title, image: m.url, link: ad.link, w: m.width, h: m.height } : null
+}
+
 /** An archived story keeps its URL / QR: visitors see a short notice with the News ID (content stays in the newsroom). */
 export const getArchivedStub = cache(async (lang: Lang, slug: string) => {
   const res = await (await db()).find({

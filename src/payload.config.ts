@@ -24,6 +24,8 @@ import { Videos } from './collections/Videos'
 import { AuditLog } from './collections/AuditLog'
 import { MediaJobs } from './collections/MediaJobs'
 import { Pronunciations } from './collections/Pronunciations'
+import { ShareLog } from './collections/ShareLog'
+import { Ads } from './collections/Ads'
 import { Permissions } from './globals/Permissions'
 import { migrations } from './migrations'
 import { SiteSettings } from './globals/SiteSettings'
@@ -42,7 +44,7 @@ export default buildConfig({
   },
   collections: [
     Articles, Videos, Categories, Tags, Authors, TeamMembers, BreakingNews, Corrections, Pages, Media,
-    Submissions, Appointments, ContactMessages, PrivateFiles, Users, AuditLog, MediaJobs, Pronunciations,
+    Submissions, Appointments, ContactMessages, PrivateFiles, Users, AuditLog, MediaJobs, Pronunciations, ShareLog, Ads,
   ],
   globals: [SiteSettings, Permissions],
   editor: lexicalEditor(),

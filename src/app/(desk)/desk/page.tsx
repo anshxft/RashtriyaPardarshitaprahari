@@ -33,6 +33,9 @@ export default async function DeskHome() {
     where: { or: [{ lifecycle: { in: ['active', 'archived'] } }, { lifecycle: { exists: false } }] },
     select: { title: true, _status: true, reviewStatus: true, newsId: true, slug: true, updatedAt: true, format: true, lifecycle: true, publishedAt: true, versionMinor: true, revisions: true },
   })
+  const failedShares = allowed(user, 'share')
+    ? (await payload.find({ collection: 'share-log', where: { and: [{ status: { equals: 'failed' } }, { createdAt: { greater_than: new Date(Date.now() - 7 * 86_400_000).toISOString() } }] }, limit: 1, depth: 0, overrideAccess: true })).totalDocs
+    : 0
   const review = mayPublish(user) ? list.docs.filter((a) => a.reviewStatus === 'submitted' && a._status !== 'published') : []
 
   return (
@@ -50,6 +53,12 @@ export default async function DeskHome() {
           </Link>
         ))}
       </div>
+
+      {failedShares > 0 && (
+        <Link href="/desk/share-log?failed=1" className="block rounded-xl border-2 border-alert-600 bg-alert-600/10 p-3 font-semibold text-alert-700">
+          ⚠ पिछले 7 दिनों में {failedShares} सोशल पोस्ट विफल रहीं — देखें और दोबारा कोशिश करें →
+        </Link>
+      )}
 
       {review.length > 0 && (
         <section className="rounded-xl border-2 border-saffron-500 bg-bg p-4">
