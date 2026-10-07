@@ -545,8 +545,8 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
 function PublishConfirm({ items, republish, schedule, onCancel, onOk }: { items: ReturnType<typeof publishChecklist>; republish: boolean; schedule: boolean; onCancel: () => void; onOk: () => void }) {
   const blocked = items.some((i) => i.required && !i.ok)
   return (
-    <div role="dialog" aria-modal aria-label="प्रकाशन की पुष्टि" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={onCancel}>
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div role="dialog" aria-modal aria-label="प्रकाशन की पुष्टि" className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={onCancel}>
+      <div className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <p className="mb-3 font-display text-lg font-bold">✅ प्रकाशन से पहले जांच</p>
         <ul className="space-y-1.5 text-sm">
           {items.map((i) => (

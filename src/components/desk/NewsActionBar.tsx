@@ -111,8 +111,8 @@ export function NewsActionBar({ id, slug, title, buttons, info }: { id: number; 
       )}
 
       {dialog && (
-        <div role="dialog" aria-modal aria-label={title} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={() => !pending && setDialog(null)}>
-          <div className="w-full max-w-md rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div role="dialog" aria-modal aria-label={title} className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={() => !pending && setDialog(null)}>
+          <div className="anim-sheet w-full max-w-md rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="mb-1 text-xs text-muted">{info.newsId || `#${id}`}</p>
             <p className="mb-4 font-semibold leading-snug">{title}</p>
 

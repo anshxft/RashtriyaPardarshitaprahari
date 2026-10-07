@@ -116,3 +116,85 @@ body {
     color: #000 !important;
   }
 }
+
+/* ── Light motion: only where it helps (tap feedback, things appearing, menus opening).
+      Nothing moves for people who switched on "reduce motion" on their phone / computer. */
+@media (prefers-reduced-motion: no-preference) {
+  /* tap / click feedback on buttons and button-like links */
+  button:not(:disabled),
+  a[class*='rounded'],
+  summary {
+    transition:
+      transform 0.12s ease,
+      background-color 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  button:not(:disabled):active,
+  a[class*='rounded']:active,
+  summary:active {
+    transform: scale(0.96);
+  }
+
+  /* headlines in cards: colour eases on hover */
+  #main article h2 a,
+  #main article h3 a {
+    transition: color 0.15s ease;
+  }
+
+  /* news cards and page sections rise in gently while scrolling (browsers without support just show them) */
+  @supports (animation-timeline: view()) {
+    #main article.group,
+    #main > div > section {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+  }
+
+  .anim-fade {
+    animation: fade-in 0.2s ease-out both;
+  }
+  .anim-slide-in {
+    animation: slide-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .anim-pop {
+    transform-origin: bottom right;
+    animation: pop-in 0.18s ease-out both;
+  }
+  .anim-sheet {
+    animation: sheet-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
