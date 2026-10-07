@@ -116,7 +116,7 @@ export function Nav({ lang, primary, groups, labels }: { lang: Lang; primary: Na
       </div>
 
       {mega && (
-        <div id="mega-menu" className="absolute inset-x-0 top-full z-50 hidden rounded-b-lg border-t-2 border-gold-400 bg-navy-950 p-6 shadow-2xl lg:grid lg:grid-cols-4 lg:gap-6">
+        <div id="mega-menu" className="anim-fade absolute inset-x-0 top-full z-50 hidden rounded-b-lg border-t-2 border-gold-400 bg-navy-950 p-6 shadow-2xl lg:grid lg:grid-cols-4 lg:gap-6">
           {groups.map((g) => (
             <div key={g.key}>
               <p className="mb-2 border-b border-white/15 pb-1 text-sm font-bold tracking-wide text-gold-300 uppercase">{g.label}</p>
@@ -147,8 +147,8 @@ export function Nav({ lang, primary, groups, labels }: { lang: Lang; primary: Na
 
       {drawer && (
         <div className="fixed inset-0 z-[100] lg:hidden" role="dialog" aria-modal="true" aria-label={labels.menu}>
-          <button type="button" aria-label={labels.close} className="absolute inset-0 bg-black/60" onClick={() => setDrawer(false)} />
-          <nav id="nav-drawer" className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-y-auto bg-navy-950 text-white shadow-2xl">
+          <button type="button" aria-label={labels.close} className="anim-fade absolute inset-0 bg-black/60" onClick={() => setDrawer(false)} />
+          <nav id="nav-drawer" className="anim-slide-in absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-y-auto bg-navy-950 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/15 p-4">
               <span className="font-display text-lg font-bold text-gold-300">{labels.menu}</span>
               <button type="button" onClick={() => setDrawer(false)} className="rounded px-3 py-1 text-2xl leading-none hover:bg-white/10" aria-label={labels.close}>

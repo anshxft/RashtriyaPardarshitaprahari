@@ -14,7 +14,7 @@ export function WhatsAppFloat({ numbers, text, label, choose }: { numbers: Conta
     </svg>
   )
   const cls =
-    'fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-lg ring-2 ring-white/70 hover:bg-[#1ebe5b] print:hidden'
+    'anim-pop fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-lg ring-2 ring-white/70 hover:bg-[#1ebe5b] print:hidden'
   if (numbers.length === 1)
     return (
       <a href={href(numbers[0].number)} target="_blank" rel="noopener noreferrer" aria-label={label} className={cls}>
@@ -27,7 +27,7 @@ export function WhatsAppFloat({ numbers, text, label, choose }: { numbers: Conta
         <div
           role="dialog"
           aria-label={choose}
-          className="fixed right-4 bottom-20 z-50 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-line bg-bg shadow-2xl print:hidden"
+          className="anim-pop fixed right-4 bottom-20 z-50 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-line bg-bg shadow-2xl print:hidden"
         >
           <p className="bg-[#075e54] px-4 py-2.5 text-sm font-bold text-white">{choose}</p>
           <ul className="divide-y divide-line">
