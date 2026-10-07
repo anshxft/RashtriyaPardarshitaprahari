@@ -1,5 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { isAdmin, isEditorField } from '../access'
+import { validateMobile } from '../lib/contact'
 
 /** The one place for contact details, Trust registration, Editor-in-Chief name, address and social links. */
 export const SiteSettings: GlobalConfig = {
@@ -14,6 +15,7 @@ export const SiteSettings: GlobalConfig = {
           label: 'Identity',
           fields: [
             { name: 'siteName', type: 'text', localized: true, required: true },
+            { name: 'descriptor', type: 'text', localized: true, admin: { description: 'Line under the site name (header, footer, e-paper masthead), e.g. “आधिकारिक ई-पेपर और डिजिटल न्यूज़”.' } },
             // The registered tagline lives in code (content/brand.ts) and cannot be edited here.
             { name: 'tagline', type: 'text', localized: true, admin: { hidden: true } },
             { name: 'trustName', type: 'text', localized: true },
@@ -26,7 +28,29 @@ export const SiteSettings: GlobalConfig = {
         {
           label: 'Contact',
           fields: [
-            { name: 'address', type: 'textarea', localized: true },
+            {
+              name: 'offices',
+              type: 'array',
+              labels: { singular: 'Office', plural: 'Offices' },
+              admin: { description: 'Shown on the Contact page and in the footer. WhatsApp numbers also appear in the floating WhatsApp button.' },
+              fields: [
+                { name: 'title', type: 'text', localized: true, required: true, admin: { description: 'e.g. पंजीकृत कार्यालय' } },
+                { name: 'address', type: 'textarea', localized: true },
+                { name: 'unit', type: 'text', localized: true, admin: { description: 'Optional second line, e.g. ऑनलाइन समाचारपत्र एवं डिजिटल न्यूज़ प्रकोष्ठ …' } },
+                {
+                  name: 'phones',
+                  type: 'array',
+                  labels: { singular: 'Number', plural: 'Numbers' },
+                  fields: [
+                    { name: 'number', type: 'text', required: true, validate: validateMobile },
+                    { name: 'kind', type: 'select', defaultValue: 'both', options: [{ label: 'WhatsApp + Call', value: 'both' }, { label: 'WhatsApp only', value: 'whatsapp' }, { label: 'Call only', value: 'call' }] },
+                  ],
+                },
+              ],
+            },
+            { name: 'whatsappMessage', type: 'text', localized: true, admin: { description: 'Pre-filled text when a visitor opens WhatsApp from the site.' } },
+            { name: 'whatsappButton', type: 'checkbox', defaultValue: true, label: 'Show the floating WhatsApp button on every page' },
+            { name: 'address', type: 'textarea', localized: true, admin: { description: 'Old single address (used only when no offices are listed above).' } },
             { name: 'email', type: 'email' },
             { name: 'phone', type: 'text' },
             { name: 'whatsapp', type: 'text' },

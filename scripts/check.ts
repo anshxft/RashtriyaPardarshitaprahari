@@ -5,6 +5,7 @@ import { slugify } from '../src/lib/slugify.ts'
 import { GEO, pack, pageBottom, variantsFor, type EpStory } from '../src/lib/epaper.ts'
 import { resolveLayout } from '../src/lib/layout.ts'
 import { jwtUserId, passwordProblem, seal, totpAt, totpVerify, twofaIssue, twofaValid, unseal } from '../src/lib/security.ts'
+import { mobile10, officeNumbers, waLink } from '../src/lib/contact.ts'
 import { videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
 
 const fields = [
@@ -90,5 +91,11 @@ assert.throws(() => unseal(seal('x').slice(0, -2) + 'AA'))
 const ck = twofaIssue(7)
 assert.ok(twofaValid(ck, 7) && !twofaValid(ck, 8) && !twofaValid(ck.slice(0, -1) + 'x', 7) && !twofaValid(ck, 7, Date.now() + 9 * 3600_000) && !twofaValid(undefined, 7))
 assert.equal(jwtUserId('a.' + Buffer.from('{"id":5}').toString('base64url') + '.c'), '5')
+
+// contact numbers: every common way of writing an Indian mobile number → 10 digits; junk never becomes a link
+for (const v of ['9431924522', '94319 24522', '+91-9431924522', '919431924522', '09431924522']) assert.equal(mobile10(v), '9431924522')
+for (const v of ['12345', '5431924522', '', null]) assert.equal(mobile10(v), null)
+assert.equal(waLink('9835704715', 'नमस्ते'), 'https://wa.me/919835704715?text=%E0%A4%A8%E0%A4%AE%E0%A4%B8%E0%A5%8D%E0%A4%A4%E0%A5%87')
+assert.deepEqual(officeNumbers([{ title: 'A', phones: [{ number: '9431924522', kind: 'whatsapp' }, { number: '8580074522', kind: 'call' }, { number: 'x' }] }]).map((n) => [n.number, n.call, n.whatsapp]), [['9431924522', false, true], ['8580074522', true, false]])
 
 console.log('all checks passed')

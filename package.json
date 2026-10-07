@@ -13,12 +13,13 @@
     "seed": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/index.ts",
     "seed:round3": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/round3.ts",
     "backup:open": "node scripts/backup-open.ts",
-    "demo:remove":"cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/remove-demo.ts",
+    "demo:remove": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/remove-demo.ts",
     "create-admin": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run src/seed/create-admin.ts",
     "db:push": "cross-env DB_PUSH=1 NODE_OPTIONS=--no-deprecation payload run scripts/db-push.ts",
     "typecheck": "tsc --noEmit",
     "check": "node scripts/check.ts && node scripts/check-paste.ts && node scripts/check-link.ts",
-    "db-url": "node scripts/db-url.mjs"
+    "db-url": "node scripts/db-url.mjs",
+    "seed:round4": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/round4.ts"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
