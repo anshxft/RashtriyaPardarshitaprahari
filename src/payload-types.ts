@@ -83,6 +83,8 @@ export interface Config {
     'private-files': PrivateFile;
     users: User;
     'audit-log': AuditLog;
+    'media-jobs': MediaJob;
+    pronunciations: Pronunciation;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -106,6 +108,8 @@ export interface Config {
     'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
+    'media-jobs': MediaJobsSelect<false> | MediaJobsSelect<true>;
+    pronunciations: PronunciationsSelect<false> | PronunciationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -452,6 +456,46 @@ export interface Article {
    */
   publishedAt: string;
   heroImage?: (number | null) | Media;
+  /**
+   * ONE approved script: the red FLASH strip and the female voice both use exactly this text. The system never adds facts.
+   */
+  flash?: {
+    enabled?: boolean | null;
+    /**
+     * Short, factual — written and approved by the editor.
+     */
+    script?: string | null;
+    breaking?: boolean | null;
+    repeat?: boolean | null;
+    /**
+     * Repeat interval (seconds)
+     */
+    intervalSec?: number | null;
+    voice?: boolean | null;
+    /**
+     * Speed (1 = normal)
+     */
+    voiceRate?: number | null;
+    /**
+     * Voice volume %
+     */
+    voiceVolume?: number | null;
+    /**
+     * Pause between sentences (ms)
+     */
+    pauseMs?: number | null;
+    audioUrl?: string | null;
+    /**
+     * Cache key: script + voice settings
+     */
+    audioKey?: string | null;
+    approvedBy?: string | null;
+    approvedAt?: string | null;
+  };
+  /**
+   * Video news: the uploaded video (website version, social versions, flash + voice).
+   */
+  video?: (number | null) | Video;
   /**
    * Only for freely-licensed hotlinked images (Wikimedia/Unsplash). Credit is required.
    */
@@ -809,6 +853,37 @@ export interface Video {
   processError?: string | null;
   durationSec?: number | null;
   sizeBytes?: number | null;
+  width?: number | null;
+  height?: number | null;
+  hasAudio?: boolean | null;
+  /**
+   * Social-Ready 1920×1080 (headline, News ID, date, reporter, end screen)
+   */
+  socialUrl?: string | null;
+  /**
+   * Social-Ready vertical 1080×1920
+   */
+  verticalUrl?: string | null;
+  /**
+   * Final video with Flash strip + voice
+   */
+  flashUrl?: string | null;
+  /**
+   * Replaced videos are kept here (never deleted).
+   */
+  previousFiles?:
+    | {
+        originalUrl?: string | null;
+        processedUrl?: string | null;
+        replacedAt?: string | null;
+        by?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The master news record (News ID, QR, publish state) this video belongs to.
+   */
+  article?: (number | null) | Article;
   /**
    * Future date = scheduled.
    */
@@ -1028,6 +1103,50 @@ export interface AuditLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-jobs".
+ */
+export interface MediaJob {
+  id: number;
+  kind: 'web' | 'social' | 'vertical' | 'flash';
+  video: number | Video;
+  status?: ('queued' | 'running' | 'done' | 'failed') | null;
+  attempts?: number | null;
+  lockedAt?: string | null;
+  error?: string | null;
+  params?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * आवाज़ में सही उच्चारण के लिए। खबर का दिखने वाला पाठ नहीं बदलता।
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pronunciations".
+ */
+export interface Pronunciation {
+  id: number;
+  /**
+   * As written in the news, e.g. झामुमो
+   */
+  word: string;
+  /**
+   * How the voice should say it, e.g. झारखंड मुक्ति मोर्चा
+   */
+  speakAs: string;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1113,6 +1232,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-log';
         value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'media-jobs';
+        value: number | MediaJob;
+      } | null)
+    | ({
+        relationTo: 'pronunciations';
+        value: number | Pronunciation;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1252,6 +1379,24 @@ export interface ArticlesSelect<T extends boolean = true> {
   firstPublishedAt?: T;
   publishedAt?: T;
   heroImage?: T;
+  flash?:
+    | T
+    | {
+        enabled?: T;
+        script?: T;
+        breaking?: T;
+        repeat?: T;
+        intervalSec?: T;
+        voice?: T;
+        voiceRate?: T;
+        voiceVolume?: T;
+        pauseMs?: T;
+        audioUrl?: T;
+        audioKey?: T;
+        approvedBy?: T;
+        approvedAt?: T;
+      };
+  video?: T;
   externalImage?:
     | T
     | {
@@ -1307,6 +1452,22 @@ export interface VideosSelect<T extends boolean = true> {
   processError?: T;
   durationSec?: T;
   sizeBytes?: T;
+  width?: T;
+  height?: T;
+  hasAudio?: T;
+  socialUrl?: T;
+  verticalUrl?: T;
+  flashUrl?: T;
+  previousFiles?:
+    | T
+    | {
+        originalUrl?: T;
+        processedUrl?: T;
+        replacedAt?: T;
+        by?: T;
+        id?: T;
+      };
+  article?: T;
   publishedAt?: T;
   demoContent?: T;
   createdBy?: T;
@@ -1622,6 +1783,32 @@ export interface AuditLogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-jobs_select".
+ */
+export interface MediaJobsSelect<T extends boolean = true> {
+  kind?: T;
+  video?: T;
+  status?: T;
+  attempts?: T;
+  lockedAt?: T;
+  error?: T;
+  params?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pronunciations_select".
+ */
+export interface PronunciationsSelect<T extends boolean = true> {
+  word?: T;
+  speakAs?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1756,6 +1943,7 @@ export interface SiteSetting {
      */
     logo?: (number | null) | Media;
   };
+  aiVoiceNote?: boolean | null;
   /**
    * Placeholder only — ad slots render nothing until built.
    */
@@ -1905,6 +2093,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         marginPercent?: T;
         logo?: T;
       };
+  aiVoiceNote?: T;
   adsEnabled?: T;
   donationsEnabled?: T;
   updatedAt?: T;

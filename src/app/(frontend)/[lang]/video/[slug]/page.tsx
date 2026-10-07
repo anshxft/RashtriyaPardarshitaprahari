@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { ShareButtons } from '@/components/client'
 import { VideoPlayer, videoPoster } from '@/components/VideoPlayer'
 import { getSettings, getVideo, getVideos } from '@/lib/data'
@@ -24,9 +24,11 @@ export default async function VideoPage({ params }: Props) {
   const d = t(lang)
   const v = await getVideo(lang, decodeSlug(p.slug))
   if (!v) notFound()
+  // Round 4: a video news lives on ONE master page (its article: News ID, QR, versions). Old video links go there.
+  if (typeof v.article === 'object' && v.article?.slug && v.article._status === 'published') permanentRedirect(paths.article(lang, v.article.slug))
   const [settings, more] = await Promise.all([getSettings(lang), getVideos(lang, { limit: 4 })])
   const url = `${siteUrl()}${paths.video(lang, v.slug)}`
-  const ld = { '@context': 'https://schema.org', '@type': 'VideoObject', name: v.title, description: v.description || v.title, uploadDate: v.publishedAt, thumbnailUrl: videoPoster(v), contentUrl: v.processedUrl || v.originalUrl, duration: v.durationSec ? `PT${v.durationSec}S` : undefined }
+  const ld = { '@context': 'https://schema.org', '@type': 'VideoObject', name: v.title, description: v.description || v.title, uploadDate: v.publishedAt, thumbnailUrl: videoPoster(v), contentUrl: `${siteUrl()}/api/v/${v.id}/play`, duration: v.durationSec ? `PT${v.durationSec}S` : undefined }
   const related = more.docs.filter((x) => x.id !== v.id).slice(0, 3)
   return (
     <article className="mx-auto max-w-3xl">
@@ -39,7 +41,7 @@ export default async function VideoPage({ params }: Props) {
       <h1 className="font-display text-3xl leading-tight font-extrabold text-navy-900 md:text-4xl dark:text-fg">{v.title}</h1>
       <p className="mt-2 text-sm text-muted">{[v.reporterName && `${d.reportBy}: ${v.reporterName}`, v.location && `📍 ${v.location}`, formatDate(v.publishedAt, lang, true)].filter(Boolean).join(' · ')}</p>
       <div className="mt-4">
-        <VideoPlayer v={v} wm={settings.videoWatermark || {}} />
+        <VideoPlayer v={v} aiNote={Boolean(settings.aiVoiceNote)} />
       </div>
       {v.description && <p className="mt-4 text-lg leading-relaxed">{v.description}</p>}
       <div className="mt-4">

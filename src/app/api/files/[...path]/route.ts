@@ -5,12 +5,13 @@ import { currentUser } from '@/lib/auth'
 import { localPath } from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
-const TYPES: Record<string, string> = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.m4v': 'video/x-m4v', '.jpg': 'image/jpeg', '.png': 'image/png' }
+const TYPES: Record<string, string> = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.m4v': 'video/x-m4v', '.jpg': 'image/jpeg', '.png': 'image/png', '.mp3': 'audio/mpeg' }
 
-/** Local-only file server with Range support (so videos can seek). Originals need a login; published files are public. */
+/** Local-only file server with Range support (so videos can seek). */
 export async function GET(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const rel = (await params).path.map(decodeURIComponent).join('/')
-  if (rel.startsWith('videos/original/') && !(await currentUser())) return new Response('Login required', { status: 401 })
+  // Originals and editor-only exports (social, flash, voice) need a login; the website version and posters are public.
+  if (/^(videos\/(original|social|flash)\/|tts\/)/.test(rel) &&!(await currentUser())) return new Response('Login required', { status: 401 })
   let file: string
   try {
     file = localPath(rel)

@@ -13,3 +13,4 @@ next-env.d.ts
 
 # local video/file storage (dev only)
 .local-storage/
+prahari.db*

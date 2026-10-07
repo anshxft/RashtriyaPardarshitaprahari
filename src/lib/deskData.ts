@@ -84,5 +84,5 @@ export async function loadForm(id: string, locale: Lang, user: User): Promise<{ 
 export const mayPublish = (user: User) => canPublish({ user } as never)
 
 // Blank forms live here (server-safe): the client editor files can only be rendered, not called, from server pages.
-export const emptyVideo = (): VideoForm => ({ title: '', description: '', location: '', eventDate: new Date().toISOString().slice(0, 10), reporterName: '', reporterId: null, categoryId: null, thumb: { id: null, url: null }, scheduleAt: '', processing: '', processError: '', posterUrl: '', fileName: '', published: false })
+export const emptyVideo = (): VideoForm => ({ title: '', flashScript: '', description: '', location: '', reporterName: '', reporterId: null, categoryId: null, thumb: { id: null, url: null }, scheduleAt: '', breaking: false, flash: false, voice: false, repeat: true, intervalSec: 20, voiceRate: 1, voiceVolume: 100, pauseMs: 400, vertical: false, processing: '', processError: '', posterUrl: '', previewUrl: '', fileName: '', published: false, exports: {}, jobs: {} })
 export const emptyTeam = (): TeamForm => ({ name: '', designation: '', tier: 'reporter', workArea: '', state: '', district: '', bureau: '', idNumber: '', bio: '', experience: '', email: '', phone: '', publishContact: false, order: 100, photo: { id: null, url: null }, published: false })

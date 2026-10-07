@@ -10,6 +10,8 @@ import { ShareButtons } from './client'
 import { Qr } from './Qr'
 import { ShareCard } from './ShareCard'
 import { StoryTools } from './StoryTools'
+import { VideoPlayer } from './VideoPlayer'
+import type { Video } from '@/payload-types'
 import { downloadName } from '@/lib/fileName'
 import { Cover, Credit, FormatBadge, QuestionBadge, SampleBadge, SectionTitle, Slot } from './ui'
 
@@ -157,7 +159,17 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       </div>
 
       {/* No photo → no frame at all. */}
-      {img && L.showPhoto && (
+      {a.format === 'video' && a.video && typeof a.video === 'object' && (
+        <div className="mt-6">
+          <VideoPlayer
+            v={a.video as Video}
+            aiNote={Boolean(settings.aiVoiceNote)}
+            flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
+          />
+        </div>
+      )}
+
+      {img && L.showPhoto && a.format !== 'video' && (
         <figure className={`mt-6 ${L.photoSize === 'l' || L.photoSize === 'full' ? '' : 'mx-auto'} ${PHOTO[L.photoSize]}`}>
           <Cover img={img} sizes="(min-width:768px) 768px, 100vw" priority className="aspect-video" />
           <Credit img={img} lang={lang} />

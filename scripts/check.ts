@@ -9,7 +9,8 @@ import { buttonsFor, newsStatus, publishChecklist } from '../src/lib/newsStatus.
 import { allowed, DEFAULTS, matrixFrom } from '../src/lib/permissions.ts'
 import { downloadName, slugLatin } from '../src/lib/fileName.ts'
 import { mobile10, officeNumbers, waLink } from '../src/lib/contact.ts'
-import { videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
+import { flashArgs, flashTimes, socialArgs, videoSize, watermarkArgs } from '../src/lib/videoArgs.ts'
+import { applyPronunciations, toSsml, ttsKey } from '../src/lib/tts.ts'
 
 const fields = [
   { name: 'name', type: 'text', label: { hi: '', en: '' }, required: true, identity: true, maxLength: 5 },
@@ -137,5 +138,26 @@ assert.equal(slugLatin('बिहार में सड़क सुरक्�
 assert.equal(downloadName('NTP-2026-09-30-0001', 'राम / "test" <x>?', '2026-09-30T20:00:00Z', 'MP4'), 'NTP-2026-10-01-0001'.replace('2026-10-01', '2026-09-30') + '_ram-test-x_2026-10-01.mp4')
 assert.ok(downloadName(null, '', null, 'jpg') === 'NTP-DRAFT_news_undated.jpg')
 assert.ok(/^[A-Za-z0-9_.-]+$/.test(downloadName('NTP-1', 'क्या?:*|\/ ॐ'.repeat(30), '2026-01-01', 'png')))
+
+// video exports
+assert.deepEqual(flashTimes(60, 7, true, 20), [1, 21, 41])
+assert.deepEqual(flashTimes(60, 7, false, 20), [1])
+assert.deepEqual(flashTimes(4, 7, true, 20), [0], 'short clip: strip from the start')
+assert.ok(flashTimes(3600, 7, true, 5).length <= 30, 'interval never shorter than the strip; capped')
+const sa = socialArgs('i', 'l', 't', 'lo', 'e', { W: 1920, H: 1080, durationSec: 6, hasAudio: false, lowerH: 140, out: 'o' }).join(' ')
+assert.ok(sa.includes('pad=1920:1080') && sa.includes('concat=n=2:v=1:a=1') && sa.includes('-t 10'), 'landscape + 4 s end screen')
+const sv = socialArgs('i', 'l', 't', 'lo', 'e', { W: 1080, H: 1920, src: { w: 1920, h: 1080 }, durationSec: 6, hasAudio: true, lowerH: 140, out: 'o' }).join(' ')
+assert.ok(sv.includes('scale=1080:608') && sv.includes('[0:a]aresample') && sv.includes('anullsink'), 'vertical keeps the clip in the middle band, uses its sound')
+const fa = flashArgs('i', 's', 'v', 'o', { times: [1, 21], showSec: 7, hasAudio: true }).join(' ')
+assert.ok(fa.includes("between(t,1,8)+between(t,21,28)") && fa.includes('adelay=21000|21000') && fa.includes('volume=0.25') && fa.includes('amix=inputs=3'))
+assert.ok(!flashArgs('i', 's', null, 'o', { times: [1], showSec: 7, hasAudio: false }).includes('[a]'), 'no voice, no sound: video only')
+// voice: speech-only pronunciation fixes, whole words only, the script text itself is untouched
+const dict = [{ word: 'झामुमो', speakAs: 'झारखंड मुक्ति मोर्चा' }, { word: 'DC', speakAs: 'डी सी' }]
+assert.equal(applyPronunciations('झामुमो ने कहा, DC ने भी।', dict), 'झारखंड मुक्ति मोर्चा ने कहा, डी सी ने भी।')
+assert.equal(applyPronunciations('झामुमोवाले', dict), 'झामुमोवाले', 'not inside another word')
+const ssml = toSsml('पहला वाक्य। दूसरा <वाक्य>!', { rate: 1.1, pauseMs: 500 }, [])
+assert.ok(ssml.includes('<break time="500ms"/>') && ssml.includes('rate="110%"') && ssml.includes('&lt;वाक्य&gt;'))
+assert.equal(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1 }, [], 'google'))
+assert.notEqual(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1.2 }, [], 'google'), 'new settings = new audio')
 
 console.log('all checks passed')

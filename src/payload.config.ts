@@ -22,6 +22,8 @@ import { TeamMembers } from './collections/TeamMembers'
 import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
 import { AuditLog } from './collections/AuditLog'
+import { MediaJobs } from './collections/MediaJobs'
+import { Pronunciations } from './collections/Pronunciations'
 import { Permissions } from './globals/Permissions'
 import { migrations } from './migrations'
 import { SiteSettings } from './globals/SiteSettings'
@@ -40,7 +42,7 @@ export default buildConfig({
   },
   collections: [
     Articles, Videos, Categories, Tags, Authors, TeamMembers, BreakingNews, Corrections, Pages, Media,
-    Submissions, Appointments, ContactMessages, PrivateFiles, Users, AuditLog,
+    Submissions, Appointments, ContactMessages, PrivateFiles, Users, AuditLog, MediaJobs, Pronunciations,
   ],
   globals: [SiteSettings, Permissions],
   editor: lexicalEditor(),

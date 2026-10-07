@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { after } from 'next/server'
 import QRCode from 'qrcode'
 import { canPublish } from '@/access'
 import { currentUser } from '@/lib/auth'
@@ -11,7 +10,6 @@ import { sniffType } from '@/lib/forms'
 import { fetchLinkMeta, type LinkMeta } from '@/lib/linkMeta'
 import { paragraphsToLexical } from '@/lib/lexical'
 import { paths, siteUrl } from '@/lib/paths'
-import { processVideo } from '@/lib/videoProcess'
 
 async function requireUser() {
   const user = await currentUser()
@@ -119,83 +117,7 @@ export async function fetchLinkMetaAction(url: string): Promise<{ ok: true; meta
   }
 }
 
-// ── Videos: upload → auto logo → publish
 /** Called the moment the file has been uploaded: creates a draft and starts logo processing in the background. */
-export async function startVideoAction(input: { originalUrl: string; filename: string; size: number }): Promise<{ ok: true; id: number } | { ok: false; error: string }> {
-  try {
-    const user = await requireUser()
-    const title = input.filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 120) || 'नया वीडियो'
-    const doc = await (await db()).create({
-      collection: 'videos',
-      locale: 'hi',
-      data: { title, originalUrl: input.originalUrl, processing: 'queued', sizeBytes: input.size, _status: 'draft' } as never,
-      draft: true,
-      overrideAccess: false,
-      user,
-    })
-    after(() => processVideo(doc.id))
-    return { ok: true, id: doc.id }
-  } catch (e) {
-    return { ok: false, error: msg(e) }
-  }
-}
-
-export async function retryVideoAction(id: number): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const user = await requireUser()
-    await (await db()).findByID({ collection: 'videos', id, depth: 0, draft: true, overrideAccess: false, user }) // access check
-    after(() => processVideo(id))
-    return { ok: true }
-  } catch (e) {
-    return { ok: false, error: msg(e) }
-  }
-}
-
-export type VideoInput = {
-  id: number
-  locale: 'hi' | 'en'
-  mode: 'draft' | 'publish' | 'schedule'
-  title: string
-  description?: string
-  location?: string
-  eventDate?: string
-  reporterName?: string
-  reporterId?: number | null
-  categoryId?: number | null
-  thumbnailId?: number | null
-  scheduleAt?: string
-}
-
-export async function saveVideoAction(input: VideoInput): Promise<{ ok: true; status: 'draft' | 'published' | 'scheduled'; url?: string } | { ok: false; error: string }> {
-  try {
-    const user = await requireUser()
-    const publishing = input.mode !== 'draft'
-    if (publishing && !canPublish({ user } as never)) return { ok: false, error: 'प्रकाशित करने का अधिकार केवल संपादक/एडमिन के पास है' }
-    if (!input.title.trim()) return { ok: false, error: 'शीर्षक ज़रूरी है' }
-    const clean = (s?: string) => s?.trim() || null
-    const data: Record<string, unknown> = {
-      title: input.title.trim(),
-      description: clean(input.description),
-      location: clean(input.location),
-      eventDate: input.eventDate ? new Date(`${input.eventDate}T12:00:00+05:30`).toISOString() : null,
-      reporterName: clean(input.reporterName),
-      reporter: input.reporterId ?? null,
-      category: input.categoryId ?? null,
-      thumbnail: input.thumbnailId ?? null,
-      _status: publishing ? 'published' : 'draft',
-    }
-    if (input.mode === 'schedule' && input.scheduleAt) data.publishedAt = new Date(input.scheduleAt).toISOString()
-    else if (publishing) data.publishedAt = new Date().toISOString()
-    const payload = await db()
-    const doc = await payload.update({ collection: 'videos', id: input.id, locale: input.locale, data: data as never, draft: !publishing, overrideAccess: false, user })
-    revalidatePath('/[lang]', 'layout')
-    const scheduled = publishing && doc.publishedAt && new Date(doc.publishedAt).getTime() > Date.now() + 60_000
-    return { ok: true, status: scheduled ? 'scheduled' : publishing ? 'published' : 'draft', url: paths.video(input.locale, doc.slug) }
-  } catch (e) {
-    return { ok: false, error: msg(e) }
-  }
-}
-
 // ── Team (हमारी टीम)
 export type TeamInput = {
   id?: number
