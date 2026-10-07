@@ -214,10 +214,10 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
       </div>
 
       <div ref={wrap} className="w-full overflow-x-auto">
-        {!ready && <p className="py-16 text-center text-muted">{d.preparing}</p>}
+        {!ready && <p className="animate-pulse py-16 text-center text-muted motion-reduce:animate-none">{d.preparing}</p>}
         {ready && stories.length === 0 && <p className="py-16 text-center text-muted">{d.noEdition}</p>}
         {pages.map((pg, i) => (
-          <section key={pg.number} className="ep-sheet mb-6" style={{ display: view === 'all' || idx === i ? 'block' : 'none' }} aria-label={`${d.pageWord} ${pg.number}`}>
+          <section key={pg.number} className="ep-sheet anim-fade mb-6" style={{ display: view === 'all' || idx === i ? 'block' : 'none' }} aria-label={`${d.pageWord} ${pg.number}`}>
             <div className="ep-wrap" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (

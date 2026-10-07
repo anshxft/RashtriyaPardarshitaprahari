@@ -50,7 +50,7 @@ const card = 'rounded-xl border border-line bg-bg p-4 shadow-sm'
 const chip = 'min-h-11 rounded-full border border-line bg-bg px-4 py-2 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const STATUS: Record<string, [string, string]> = {
   queued: ['⏳ कतार में', 'bg-slate-200 text-slate-800'],
-  processing: ['⚙ प्रोसेसिंग: लोगो और थंबनेल…', 'bg-saffron-500 text-navy-950'],
+  processing: ['⚙ प्रोसेसिंग: लोगो और थंबनेल…', 'bg-saffron-500 text-navy-950 animate-pulse motion-reduce:animate-none'],
   ready: ['✔ तैयार (लोगो के साथ)', 'bg-india-600 text-white'],
   failed: ['⚠ प्रोसेसिंग विफल', 'bg-alert-600 text-white'],
 }
@@ -334,7 +334,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             show ? (
               <div key={k} className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-2">
                 <span className="min-w-0 flex-1 text-sm font-semibold">{l}</span>
-                {f.jobs[k] && <span className="text-xs text-muted">{JOB_HI[f.jobs[k].status] || f.jobs[k].status}</span>}
+                {f.jobs[k] && <span className={`text-xs text-muted ${f.jobs[k].status === 'running' || f.jobs[k].status === 'queued' ? 'animate-pulse motion-reduce:animate-none' : ''}`}>{JOB_HI[f.jobs[k].status] || f.jobs[k].status}</span>}
                 {f.jobs[k]?.status === 'failed' && <span className="w-full text-xs text-alert-700">{f.jobs[k].error}</span>}
                 {f.exports[k] && (
                   <a href={`/api/desk/download?video=${f.id}&kind=${k}`} className={chip}>
@@ -500,7 +500,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
           onPause={() => (audio.current?.pause(), 'speechSynthesis' in window && speechSynthesis.cancel())}
         />
         {show && p.script.trim() && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-10 flex items-center gap-2 bg-[#c8102e]/95 px-3 py-2 text-sm font-bold text-white sm:text-base">
+          <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-10 flex items-center gap-2 bg-[#c8102e]/95 px-3 py-2 text-sm font-bold text-white sm:text-base">
             <span className="shrink-0 rounded bg-white px-1.5 py-0.5 text-xs text-[#c8102e]">● {p.breaking ? 'BREAKING NEWS' : 'FLASH NEWS'}</span>
             <span>{p.script}</span>
           </div>

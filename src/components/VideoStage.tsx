@@ -28,7 +28,7 @@ export function VideoStage({ src, poster, flash, breaking }: { src: string; post
       />
       {breaking && <span className="pointer-events-none absolute top-3 left-3 animate-pulse rounded bg-[#c8102e] px-2 py-1 text-xs font-extrabold tracking-wide text-white motion-reduce:animate-none">● BREAKING NEWS</span>}
       {strip && show && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-12 flex items-center gap-2 bg-[#c8102e]/95 px-3 py-2 text-sm font-bold text-white sm:text-base">
+        <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-12 flex items-center gap-2 bg-[#c8102e]/95 px-3 py-2 text-sm font-bold text-white sm:text-base">
           <span className="shrink-0 rounded bg-white px-1.5 py-0.5 text-xs text-[#c8102e]">● {flash?.breaking ? 'BREAKING NEWS' : 'FLASH NEWS'}</span>
           <span>{flash!.script}</span>
         </div>
