@@ -20,9 +20,10 @@ const ICONS: Record<string, { label: string; path: string }> = {
   },
 }
 
-export function SocialLinks({ social, variant }: { social: Record<string, unknown> | null | undefined; variant: 'icons' | 'chips' }) {
+/** `whatsapp` = a click-to-chat link (office number), shown with the WhatsApp icon when there is no WhatsApp channel. */
+export function SocialLinks({ social, variant, whatsapp }: { social: Record<string, unknown> | null | undefined; variant: 'icons' | 'chips'; whatsapp?: string | null }) {
   const items = Object.keys(ICONS).flatMap((k) => {
-    const href = social?.[k]
+    const href = k === 'whatsappChannel' ? social?.[k] || whatsapp : social?.[k]
     return typeof href === 'string' && /^https?:\/\//.test(href) ? [{ k, href, ...ICONS[k] }] : []
   })
   if (!items.length) return null
