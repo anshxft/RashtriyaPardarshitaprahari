@@ -7,6 +7,7 @@ import { paths } from '@/lib/paths'
 import { LangSwitch, Nav, ThemeToggle } from './client'
 import { Offices } from './Offices'
 import { SocialLinks } from './SocialLinks'
+import { officeNumbers, waLink } from '@/lib/contact'
 
 const GROUP_LABELS: Record<string, { hi: string; en: string }> = {
   news: { hi: 'खबरें', en: 'News' },
@@ -20,6 +21,8 @@ export async function Header({ lang }: { lang: Lang }) {
   const d = t(lang)
   const [menu, settings] = await Promise.all([getMenu(lang), getSettings(lang)])
   const nav = menu.map((c) => ({ slug: c.slug!, title: c.title, group: c.menuGroup, children: c.children.map((k) => ({ slug: k.slug!, title: k.title })) }))
+  const wa = officeNumbers(settings.offices).find((n) => n.whatsapp)
+  const waHref = wa ? waLink(wa.number, settings.whatsappMessage) : null
   const groups = Object.entries(GROUP_LABELS).map(([key, l]) => ({ key, label: l[lang], items: nav.filter((c) => (c.group || 'news') === key) }))
 
   return (
@@ -28,22 +31,26 @@ export async function Header({ lang }: { lang: Lang }) {
         Skip to content
       </a>
       <div className="bg-navy-950 text-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-1.5 text-sm">
-          <span className="hidden sm:inline">{formatDate(new Date().toISOString(), lang)}</span>
-          <nav aria-label={d.quickLinks} className="hidden items-center gap-4 text-gold-300 md:flex">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 text-sm">
+          <span className="hidden lg:inline">{formatDate(new Date().toISOString(), lang)}</span>
+          <nav aria-label={d.quickLinks} className="flex items-center gap-3 text-xs font-semibold text-gold-300 sm:gap-4 sm:text-sm">
             <Link href={paths.epaper(lang)} className="hover:underline">{d.epaper}</Link>
             <Link href={paths.videos(lang)} className="hover:underline">{d.videos}</Link>
             <Link href={paths.team(lang)} className="hover:underline">{d.team}</Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-gold-300 sm:block">
-              <SocialLinks social={settings.social} variant="icons" />
+            <span className="hidden text-gold-300 md:block">
+              <SocialLinks social={settings.social} whatsapp={waHref} variant="icons" />
             </span>
             <Link href={paths.search(lang)} className="rounded px-2 py-0.5 hover:bg-white/10" aria-label={d.search}>
               <span aria-hidden>⌕</span> <span className="hidden sm:inline">{d.search}</span>
             </Link>
             <ThemeToggle label={d.darkMode} />
             <LangSwitch lang={lang} />
+          </div>
+          {/* Phones: the official social icons get their own thin row */}
+          <div className="flex w-full justify-center border-t border-white/10 pt-1 text-gold-300 md:hidden">
+            <SocialLinks social={settings.social} whatsapp={waHref} variant="icons" />
           </div>
         </div>
       </div>
@@ -129,6 +136,8 @@ export async function Footer({ lang }: { lang: Lang }) {
   const [menu, settings, pages, cats] = await Promise.all([getMenu(lang), getSettings(lang), getFooterPages(lang), getCategories(lang)])
   const s = settings
   const social = Object.entries(s.social || {}).filter(([k, v]) => k !== 'id' && v) as [string, string][]
+  const fw = officeNumbers(s.offices).find((n) => n.whatsapp)
+  const footerWa = fw ? waLink(fw.number, s.whatsappMessage) : null
   const special = SPECIAL_COLUMNS.map((slug) => cats.find((c) => c.slug === slug)).filter((c): c is NonNullable<typeof c> => Boolean(c))
   const specialSlugs: string[] = [...SPECIAL_COLUMNS]
   const subs = menu.flatMap((c) => c.children).filter((c) => !specialSlugs.includes(c.slug || ''))
@@ -146,6 +155,12 @@ export async function Footer({ lang }: { lang: Lang }) {
               <p className="text-sm leading-snug">{TAGLINE_FULL}</p>
             </div>
           </div>
+          {social.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-bold text-gold-300">{d.followUs}</p>
+              <SocialLinks social={s.social} whatsapp={footerWa} variant="chips" />
+            </div>
+          )}
           <dl className="mt-4 space-y-1 text-sm">
             {s.trustName && (
               <div>
@@ -273,12 +288,6 @@ export async function Footer({ lang }: { lang: Lang }) {
               </Link>
             </li>
           </ul>
-          {social.length > 0 && (
-            <>
-              <p className="mt-6 mb-2 font-bold text-gold-300">{d.followUs}</p>
-              <SocialLinks social={s.social} variant="chips" />
-            </>
-          )}
         </div>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/60">
