@@ -5,6 +5,7 @@ import { getBreaking, getArticles, getCategories, getFooterPages, getMenu, getSe
 import { formatDate, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 import { LangSwitch, Nav, ThemeToggle } from './client'
+import { FooterSection } from './FooterSection'
 import { Offices } from './Offices'
 import { SocialLinks } from './SocialLinks'
 import { officeNumbers, waLink } from '@/lib/contact'
@@ -16,6 +17,8 @@ const GROUP_LABELS: Record<string, { hi: string; en: string }> = {
   people: { hi: 'जन और विचार', en: 'People & ideas' },
 }
 const PRIMARY_COUNT = 8
+/** Not empty and not a “[placeholder]” left from the setup drafts (those are never shown to readers). */
+const filled = (v?: string | null) => Boolean(v && v.trim() && !/^\[.*\]$/.test(v.trim()))
 
 export async function Header({ lang }: { lang: Lang }) {
   const d = t(lang)
@@ -145,7 +148,7 @@ export async function Footer({ lang }: { lang: Lang }) {
   return (
     <footer className="mt-16 bg-navy-950 text-white/85">
       <div className="tricolor-rule" />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-10 md:grid-cols-2 md:gap-10 md:py-12 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-3">
             <Image src="/logo-160.webp" alt="" width={64} height={64} />
@@ -168,14 +171,18 @@ export async function Footer({ lang }: { lang: Lang }) {
                 <dd className="inline">{s.trustName}</dd>
               </div>
             )}
-            <div>
-              <dt className="inline text-white/60">{d.trustReg}: </dt>
-              <dd className="inline">{s.trustRegistrationNo || '—'}</dd>
-            </div>
-            <div>
-              <dt className="inline text-white/60">{d.editor}: </dt>
-              <dd className="inline">{s.editorName || '—'}</dd>
-            </div>
+            {filled(s.trustRegistrationNo) && (
+              <div>
+                <dt className="inline text-white/60">{d.trustReg}: </dt>
+                <dd className="inline">{s.trustRegistrationNo}</dd>
+              </div>
+            )}
+            {filled(s.editorName) && (
+              <div>
+                <dt className="inline text-white/60">{d.editor}: </dt>
+                <dd className="inline">{s.editorName}</dd>
+              </div>
+            )}
             {!s.offices?.length && s.address && (
               <div>
                 <dt className="inline text-white/60">{d.address}: </dt>
@@ -199,13 +206,12 @@ export async function Footer({ lang }: { lang: Lang }) {
               </div>
             )}
           </dl>
-          <div className="mt-5">
+          <FooterSection title={lang === 'hi' ? 'कार्यालय और हेल्पलाइन' : 'Offices & helplines'} className="mt-5">
             <Offices offices={s.offices || []} lang={lang} waText={s.whatsappMessage} variant="footer" />
-          </div>
+          </FooterSection>
         </div>
 
-        <div>
-          <p className="mb-3 font-bold text-gold-300">{d.allSections}</p>
+        <FooterSection title={d.allSections}>
           <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {menu.map((c) => (
               <li key={c.id}>
@@ -215,10 +221,9 @@ export async function Footer({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ul>
-        </div>
+        </FooterSection>
 
-        <div>
-          <p className="mb-3 font-bold text-gold-300">{d.quickLinks}</p>
+        <FooterSection title={d.quickLinks}>
           <ul className="space-y-1 text-sm">
             {special.map((c) => (
               <li key={c.id}>
@@ -255,10 +260,9 @@ export async function Footer({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ul>
-        </div>
+        </FooterSection>
 
-        <div>
-          <p className="mb-3 font-bold text-gold-300">{d.policies}</p>
+        <FooterSection title={d.policies}>
           <ul className="space-y-1 text-sm">
             {pages.map((p) => (
               <li key={p.id}>
@@ -288,7 +292,7 @@ export async function Footer({ lang }: { lang: Lang }) {
               </Link>
             </li>
           </ul>
-        </div>
+        </FooterSection>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-white/60">
         © {new Date().getFullYear()} {s.trustName || s.siteName || d.siteName}. {d.rights}.{s.registrationNote ? ` ${s.registrationNote}` : ''}

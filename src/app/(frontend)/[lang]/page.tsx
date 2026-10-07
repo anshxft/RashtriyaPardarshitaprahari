@@ -187,7 +187,6 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </section>
       )}
 
-      <Newsletter lang={lang} />
     </div>
   )
 }
@@ -216,23 +215,3 @@ function FactCheckStrip({ items, lang }: { items: Card[]; lang: Lang }) {
   )
 }
 
-
-function Newsletter({ lang }: { lang: Lang }) {
-  const d = t(lang)
-  return (
-    <section className="rounded-xl bg-navy-900 p-6 text-white md:flex md:items-center md:justify-between md:gap-8">
-      <div>
-        <h2 className="font-display text-2xl font-bold text-gold-300">📬 {d.newsletter}</h2>
-        <p className="mt-1 text-white/85">{d.newsletterText}</p>
-      </div>
-      {/* Placeholder: connect to a newsletter provider later. */}
-      <form className="mt-4 flex w-full max-w-md gap-2 md:mt-0" aria-disabled>
-        <label className="sr-only" htmlFor="nl-email">Email</label>
-        <input id="nl-email" type="email" disabled placeholder="email@example.com" className="min-w-0 flex-1 rounded-md bg-white/10 px-3 py-2 placeholder:text-white/50" />
-        <button type="button" disabled className="cursor-not-allowed rounded-md bg-gold-400/60 px-4 py-2 font-bold text-navy-950">
-          {d.comingSoon}
-        </button>
-      </form>
-    </section>
-  )
-}

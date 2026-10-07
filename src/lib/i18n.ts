@@ -309,3 +309,17 @@ export const formatDate = (iso: string | null | undefined, lang: Lang, withTime 
         timeZone: 'Asia/Kolkata',
       }).format(new Date(iso))
     : ''
+
+/** "5 मिनट पहले" / "3 घंटे पहले" for fresh news (under 24 h), else the date. Pages refresh every minute. */
+export function timeAgo(iso: string | null | undefined, lang: Lang, now = Date.now()): string {
+  if (!iso) return ''
+  const mins = Math.floor((now - new Date(iso).getTime()) / 60_000)
+  if (mins < 0 || mins >= 24 * 60) return formatDate(iso, lang)
+  if (mins < 1) return lang === 'hi' ? 'अभी-अभी' : 'just now'
+  if (mins < 60) return lang === 'hi' ? `${mins} मिनट पहले` : `${mins} min ago`
+  const h = Math.floor(mins / 60)
+  return lang === 'hi' ? `${h} घंटे पहले` : `${h} h ago`
+}
+
+/** Reading time for Hindi/English text (~180 words a minute), at least 1 minute. */
+export const readingMinutes = (text: string) => Math.max(1, Math.round(text.split(/\s+/).filter(Boolean).length / 180))

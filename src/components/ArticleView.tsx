@@ -1,6 +1,9 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { asAuthor, asCat, cardImage, getArticles, getCategories, getCorrections, getSettings, type Card } from '@/lib/data'
-import { formatDate, t, type Lang } from '@/lib/i18n'
+import { asAuthor, asCat, asMedia, cardImage, getArticles, getCategories, getCorrections, getSettings, type Card } from '@/lib/data'
+import { formatDate, readingMinutes, t, type Lang } from '@/lib/i18n'
+import { lexicalToText } from '@/lib/lexical'
+import { FontSizer, ReadingProgress } from './ReadingTools'
 import { INK, resolveLayout, type Ink, type Size } from '@/lib/layout'
 import { paths, siteUrl } from '@/lib/paths'
 import type { Article, Tag, TeamMember } from '@/payload-types'
@@ -40,6 +43,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const shortUrl = a.newsId ? `${siteUrl()}${paths.newsShort(a.newsId)}` : url
   const parentId = typeof a.followUpOf === 'object' ? a.followUpOf?.id : a.followUpOf
   const stamp = a.firstPublishedAt || a.publishedAt
+  const memberPhoto = member ? asMedia(member.photo)?.sizes?.thumb?.url || asMedia(member.photo)?.url : undefined
+  const readMin = readingMinutes(lexicalToText(a.content))
 
   const [related, followUps, parent, corrections, categories, settings] = await Promise.all([
     getArticles(lang, { where: { and: [{ category: { equals: cat?.id } }, { id: { not_equals: a.id } }] }, limit: 4 }),
@@ -89,7 +94,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const ld = (o: object) => <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(o).replace(/</g, '\\u003c') }} />
 
   return (
-    <article className="mx-auto max-w-3xl">
+    <article id="story" className="mx-auto max-w-3xl">
+      {!preview && <ReadingProgress target="story" />}
       {ld(jsonLd)}
       {claim && ld(claim)}
       {preview && (
@@ -124,14 +130,28 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
 
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-line py-3 text-sm">
         {byline && (
-          <span className={`${BY[L.reporterSize]} ${r.className}`} style={r.style}>
-            {d.reportBy}: <strong>{byline}</strong>
-            {member?.designation && <span className="text-muted"> · {member.designation}</span>}
+          <span className={`inline-flex items-center gap-2 ${BY[L.reporterSize]} ${r.className}`} style={r.style}>
+            {memberPhoto && <Image src={memberPhoto} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />}
+            <span>
+              {d.reportBy}:{' '}
+              {member?.slug ? (
+                <Link href={`${paths.team(lang)}#${member.slug}`} className="font-bold hover:underline">
+                  {byline}
+                </Link>
+              ) : (
+                <strong>{byline}</strong>
+              )}
+              {member?.designation && <span className="text-muted"> · {member.designation}</span>}
+            </span>
           </span>
         )}
         {a.location && <span>📍 {a.location}</span>}
         <span>
           {d.published}: <time dateTime={stamp}>{formatDate(stamp, lang, true)}</time>
+        </span>
+        <span className="text-muted">⏱ {readMin} {lang === 'hi' ? 'मिनट में पढ़ें' : 'min read'}</span>
+        <span className="ml-auto">
+          <FontSizer target="story-body" labels={{ smaller: lang === 'hi' ? 'अक्षर छोटे करें' : 'Smaller text', larger: lang === 'hi' ? 'अक्षर बड़े करें' : 'Larger text' }} />
         </span>
         {revisions[0] && (
           <span className="font-semibold text-saffron-600">
@@ -221,7 +241,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       )}
       {a.format === 'tracker' && a.tracker && <TrackerTimeline steps={a.tracker} lang={lang} />}
 
-      <div className="mt-8" style={{ fontSize: `${L.bodyScale}%` }}>
+      <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
         <RichText data={a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
       </div>
       <Slot name="ad-article-inline" />
@@ -259,11 +279,21 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
         </Link>
       </p>
 
-      {related.docs.length > 0 && (
+      {!preview && related.docs[0] && (
+        <Link href={paths.article(lang, related.docs[0].slug)} className="group mt-10 flex items-center gap-4 rounded-xl border-2 border-navy-900/20 bg-surface p-4 hover:border-saffron-500 dark:border-gold-300/30">
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-bold tracking-wide text-saffron-600 uppercase">{lang === 'hi' ? 'अगली खबर' : 'Next story'}</span>
+            <span className="mt-1 block font-display text-lg leading-snug font-bold group-hover:text-navy-700 dark:group-hover:text-gold-300">{related.docs[0].title}</span>
+          </span>
+          <span aria-hidden className="text-2xl transition-transform group-hover:translate-x-1">→</span>
+        </Link>
+      )}
+
+      {related.docs.length > 1 && (
         <section className="mt-12">
           <SectionTitle lang={lang}>{d.related}</SectionTitle>
           <div className="grid gap-6 sm:grid-cols-2">
-            {related.docs.map((x: Card) => (
+            {related.docs.slice(1).map((x: Card) => (
               <ArticleCard key={x.id} a={x} lang={lang} />
             ))}
           </div>

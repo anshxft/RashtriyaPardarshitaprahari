@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { asCat, cardImage, type Card, type Img } from '@/lib/data'
-import { formatDate, t, type Lang } from '@/lib/i18n'
+import { t, timeAgo, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 import { Cover, FormatBadge, QuestionBadge, SampleBadge, VerdictBadge } from './ui'
 
@@ -40,7 +40,7 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
       {external && <span aria-hidden> ↗</span>}
     </Link>
   )
-  const date = <time dateTime={a.publishedAt} className="text-xs text-muted">{formatDate(a.publishedAt, lang)}</time>
+  const date = <time dateTime={a.publishedAt} className="text-xs text-muted">{timeAgo(a.publishedAt, lang)}</time>
   const source = external && (
     <p className="text-xs font-semibold text-link">
       {external.siteName ? `${external.siteName} · ` : ''}
