@@ -64,7 +64,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </div>
       </section>
 
-      <Slot name="ad-home-top" />
+      <Slot name="ad-home-top" lang={lang} />
 
       {videos.docs.length > 0 && (
         <section>

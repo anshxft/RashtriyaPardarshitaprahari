@@ -158,6 +158,7 @@ export function NewsActionBar({ id, slug, title, buttons, info }: { id: number; 
 
             {dialog === 'republish' && (
               <>
+                <p className="mb-3 text-base font-bold">क्या आप इस समाचार को दोबारा प्रकाशित करना चाहते हैं?</p>
                 <dl className="mb-3 grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg bg-surface p-3 text-sm">
                   <dt className="text-muted">मूल प्रकाशन तिथि</dt>
                   <dd>{info.firstPublishedAt}</dd>
