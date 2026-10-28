@@ -93,12 +93,25 @@ export const Credit = ({ img, lang }: { img?: Img; lang: Lang }) =>
     </p>
   ) : null
 
-/** Ad slot: shows one live ad for its placement (Advertisement Manager) when ads are enabled; otherwise nothing at all. */
-export async function Slot({ name }: { name: `ad-${string}` | 'donate' }) {
+/**
+ * Ad slot: shows one live ad for its placement (Advertisement Manager) when ads are enabled.
+ * With no live ad the home zone shows an “advertise with us” box (pass `lang`); other slots show nothing.
+ */
+export async function Slot({ name, lang }: { name: `ad-${string}` | 'donate'; lang?: Lang }) {
   const placement = name === 'ad-home-top' ? 'home-top' : name.startsWith('ad-article') ? 'article' : null
   if (!placement) return null
   const { getAd } = await import('@/lib/data')
   const ad = await getAd(placement)
+  if (!ad && lang && placement === 'home-top')
+    return (
+      <aside aria-label="विज्ञापन / Advertisement" className="rounded-lg border-2 border-dashed border-line bg-surface px-4 py-6 text-center">
+        <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">विज्ञापन / Advertisement</p>
+        <p className="font-display text-lg font-bold">{lang === 'hi' ? 'यहाँ आपका विज्ञापन हो सकता है' : 'Your advertisement could be here'}</p>
+        <Link href={`/${lang}/contact`} className="mt-3 inline-block rounded-md bg-saffron-500 px-4 py-2 font-bold text-navy-950 hover:bg-saffron-600 hover:text-white">
+          {lang === 'hi' ? 'विज्ञापन के लिए संपर्क करें' : 'Contact us to advertise'}
+        </Link>
+      </aside>
+    )
   if (!ad) return null
   const img = (
     // eslint-disable-next-line @next/next/no-img-element

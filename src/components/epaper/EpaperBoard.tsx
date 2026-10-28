@@ -9,7 +9,9 @@ import { TAGLINE_SHORT } from '@/content/brand'
 import { GEO, sortStories, type EpStory, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
+import { TricolorName } from '../TricolorName'
 import { StoryBlock } from './StoryBlock'
+import { Tula } from './Tula'
 import { usePack } from './usePack'
 
 type Props = {
@@ -222,17 +224,19 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #0b1f4d', display: 'flex', alignItems: 'center', gap: 22 }}>
-                    <img src="/logo.png" alt="" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain' }} />
+                    {/* Left: India map. ponytail: empty slot until the client sends an official (Survey of India) map image — never draw borders ourselves */}
+                    <div style={{ width: 120, height: 120, flexShrink: 0 }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 62, lineHeight: 1.08, color: '#0b1f4d' }}>{siteName}</div>
+                      <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 62, lineHeight: 1.08 }}>
+                        <TricolorName name={siteName} />
+                      </div>
                       {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#0b1f4d', marginTop: 2 }}>{descriptor}</div>}
-                      <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 3 }}>{TAGLINE_SHORT}</div>
+                      <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 2 }}>{TAGLINE_SHORT}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginTop: 2 }}>
+                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #0b1f4d', padding: '0 6px', color: '#0b1f4d' }}>मूल्य: निःशुल्क</span>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: 15, lineHeight: 1.5, color: '#333', minWidth: 190 }}>
-                      <div style={{ fontWeight: 700 }}>{dateLabel}</div>
-                      <div>{d.epaper}</div>
-                      <div style={{ marginTop: 4, display: 'inline-block', border: '2px solid #0b1f4d', padding: '1px 8px', fontWeight: 800, color: '#0b1f4d' }}>मूल्य: निःशुल्क</div>
-                    </div>
+                    <Tula size={120} />
                   </header>
                 )}
                 {pg.placed.map((pl) => cell(pl, pg.number))}

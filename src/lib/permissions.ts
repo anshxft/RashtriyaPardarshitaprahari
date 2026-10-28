@@ -32,7 +32,7 @@ export const DEFAULTS: Matrix = {
   download: ['editor', 'senior'],
   share: ['editor', 'senior'],
   archive: ['editor', 'senior'],
-  republish: ['senior'],
+  republish: ['editor', 'senior'],
   restore: ['senior'],
   versionHistory: ['senior'],
   trashOwnDraft: ['reporter', 'editor', 'senior'],

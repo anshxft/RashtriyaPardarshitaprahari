@@ -43,7 +43,6 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
         <div className="rounded-xl border border-line bg-bg p-4">
           <p className="mb-2 font-semibold">🖼 न्यूज़ कार्ड (फोटो, QR और News ID के साथ)</p>
           <StoryTools
-            staff
             onDownload={log}
             title={a.title}
             shortUrl={shortUrl}

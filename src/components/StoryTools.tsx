@@ -1,16 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 type Labels = { print: string; image: string; share: string; busy: string; fail: string; copied: string }
 
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-60'
 
 /**
- * Per-story actions. Everyone: share link. Editors/Admins with the Download right only (Round 4 rule — public visitors
- * read, watch and share): Print/PDF and the news-card image (rendered in the browser from the hidden `children` card,
- * which carries the QR + News ID). Works the same on laptop and phone.
+ * Per-story actions for everyone (Round 5: readers may download news): share link, Print/PDF and the news-card image
+ * (rendered in the browser from the hidden `children` card, which carries the QR + News ID). Video files stay staff-only.
  */
 export function StoryTools({
   title,
@@ -19,7 +18,6 @@ export function StoryTools({
   fileName,
   labels,
   children,
-  staff: forced,
   onDownload,
 }: {
   title: string
@@ -28,20 +26,11 @@ export function StoryTools({
   fileName: string
   labels: Labels
   children: ReactNode
-  staff?: boolean
   onDownload?: (kind: string) => Promise<unknown>
 }) {
   const card = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
-  const [staff, setStaff] = useState(Boolean(forced))
-  useEffect(() => {
-    if (forced) return
-    fetch('/api/desk/me', { credentials: 'same-origin' })
-      .then((r) => (r.ok ? r.json() : { download: false }))
-      .then((j) => setStaff(Boolean(j.download)))
-      .catch(() => {})
-  }, [forced])
 
   async function image() {
     if (!card.current) return
@@ -84,16 +73,12 @@ export function StoryTools({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {staff && (
-        <>
-          <Link href={printHref} target="_blank" className={btn}>
-            🖨 {labels.print}
-          </Link>
-          <button type="button" onClick={image} disabled={busy} className={btn}>
-            🖼 {busy ? labels.busy : labels.image}
-          </button>
-        </>
-      )}
+      <Link href={printHref} target="_blank" className={btn}>
+        🖨 {labels.print}
+      </Link>
+      <button type="button" onClick={image} disabled={busy} className={btn}>
+        🖼 {busy ? labels.busy : labels.image}
+      </button>
       <button type="button" onClick={share} className={btn}>
         🔗 {labels.share}
       </button>
@@ -102,12 +87,10 @@ export function StoryTools({
           {note}
         </span>
       )}
-      {/* Off-screen capture target (staff only) */}
-      {staff && (
-        <div aria-hidden style={{ position: 'fixed', left: -12000, top: 0, width: 1080, height: 1350, pointerEvents: 'none' }}>
-          <div ref={card}>{children}</div>
-        </div>
-      )}
+      {/* Off-screen capture target for the news-card image */}
+      <div aria-hidden style={{ position: 'fixed', left: -12000, top: 0, width: 1080, height: 1350, pointerEvents: 'none' }}>
+        <div ref={card}>{children}</div>
+      </div>
     </div>
   )
 }
