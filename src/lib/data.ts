@@ -139,16 +139,10 @@ export const getBySlug = async <T extends 'tags' | 'authors' | 'pages'>(collecti
   return res.docs[0] as unknown as (T extends 'tags' ? Tag : T extends 'authors' ? Author : Page) | undefined
 }
 
+/** Red ticker on every page: the live Breaking Flash lines (same list, same order as the home-page card). */
 export const getBreaking = async (lang: Lang) => {
-  const now = new Date().toISOString()
-  const res = await (await db()).find({
-    collection: 'breaking-news',
-    locale: lang,
-    where: { and: [{ active: { equals: true } }, { or: [{ expiresAt: { exists: false } }, { expiresAt: { greater_than: now } }] }] },
-    limit: 10,
-    depth: 0,
-  })
-  return res.docs.map((b) => ({ text: b.text, href: b.link || undefined }))
+  const { getFlash } = await import('./flash')
+  return (await getFlash(lang)).map((f) => ({ text: f.lines.join(' — '), href: f.href }))
 }
 
 export const getCorrections = async (lang: Lang, articleId?: number) => {

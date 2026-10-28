@@ -194,3 +194,6 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     freeH: Math.max(0, pageBottom - Math.min(...pg.colTop)),
   }))
 }
+
+/** Page numbers are generated from the order of the pages (never typed): 1 → "01", 2 → "02" … no gaps after a reorder. */
+export const pageNo = (n: number) => String(n).padStart(2, '0')

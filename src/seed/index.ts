@@ -232,7 +232,7 @@ if ((await payload.count({ collection: 'corrections', where: { article: { equals
 // ── Breaking news (demo)
 if ((await payload.count({ collection: 'breaking-news' })).totalDocs === 0) {
   for (const b of DEMO_BREAKING) {
-    const doc = await payload.create({ collection: 'breaking-news', locale: 'hi', data: { text: b.hi, link: `/hi/news/${b.slug}`, active: true, demoContent: true } })
+    const doc = await payload.create({ collection: 'breaking-news', locale: 'hi', data: { text: b.hi, link: `/hi/news/${b.slug}`, status: 'active', duration: 'manual', publishedAt: new Date().toISOString(), demoContent: true } })
     await payload.update({ collection: 'breaking-news', id: doc.id, locale: 'en', data: { text: b.en } })
   }
   log('breaking news:', DEMO_BREAKING.length)
