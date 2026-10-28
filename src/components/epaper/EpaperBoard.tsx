@@ -33,7 +33,7 @@ const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font
 export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, ad, stories, editions, canEdit }: Props) {
   const d = t(lang)
   // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
-  const nameSize = /[a-z]/i.test(siteName) ? Math.min(62, Math.floor(1300 / siteName.length)) : 62
+  const nameSize = /[a-z]/i.test(siteName) ? Math.min(72, Math.floor(1450 / siteName.length)) : 76
   const weekday = new Intl.DateTimeFormat(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' }).format(new Date(`${date}T12:00:00+05:30`))
   const topLines = stories.filter((s) => !s.slot).slice(0, 4).map((s) => s.title).join('  ●  ')
   const router = useRouter()
@@ -242,21 +242,13 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column' }}>
-                    {/* Info strip: registration (shown once filled in Site Settings) · dateline · price */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 24, borderBottom: '1.5px solid #1a1a1a', fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
-                      <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : trustName || ''}</span>
-                      <span>
-                        {DATELINE_CITY[lang]}, {weekday}, {dateLabel}
-                      </span>
-                      <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
-                    </div>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
                       {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
                       <img src="/epaper-india-map.png" alt="भारत" width={112} height={112} style={{ width: 112, height: 112, objectFit: 'contain', flexShrink: 0 }} />
                       <div style={{ flex: 1, textAlign: 'center' }}>
                         {trustName && <div style={{ fontSize: 14, fontWeight: 700, color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</div>}
                         {/* Devanagari matras rise above the line box: leave room so the trust line above is never touched */}
-                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 800, fontSize: nameSize, lineHeight: 1.2, marginTop: 10, whiteSpace: 'nowrap' }}>
+                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 900, fontSize: nameSize, lineHeight: 1.15, marginTop: 8, whiteSpace: 'nowrap' }}>
                           <TricolorName name={siteName} />
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</div>
@@ -264,9 +256,17 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                       </div>
                       <Tula size={112} />
                     </div>
+                    {/* Info line under the name: dateline left · registration / trust centre · price right */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+                      <span>
+                        {DATELINE_CITY[lang]}, {weekday}, {dateLabel}
+                      </span>
+                      <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : trustName || ''}</span>
+                      <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
+                    </div>
                     {/* “मुख्य समाचार” strip: the edition's own headlines (never invented text) */}
                     {topLines && (
-                      <div style={{ display: 'flex', alignItems: 'stretch', height: 32, background: '#b3201c', color: '#fff', fontSize: 15, fontWeight: 700, overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'stretch', height: 32, flexShrink: 0, background: '#b3201c', color: '#fff', fontSize: 15, fontWeight: 700, overflow: 'hidden' }}>
                         <span style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: '#7a1512', fontSize: 17, whiteSpace: 'nowrap' }}>{lang === 'hi' ? 'मुख्य समाचार' : 'Top Stories'}</span>
                         <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{topLines}</span>
                       </div>
