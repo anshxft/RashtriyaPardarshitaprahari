@@ -7,5 +7,7 @@ export const PrivateFiles: CollectionConfig = {
   admin: { group: 'Inbox', description: 'Files attached by citizens. Not publicly accessible.' },
   access: { read: isEditor, create: () => false, update: isEditor, delete: isAdmin },
   upload: { mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] },
-  fields: [{ name: 'note', type: 'text' }],
+  // Storage key column the Blob storage plugin adds on production. Declared here too so local (no Blob token) and
+  // production share one database schema — migrations made on either machine then match.
+  fields: [{ name: 'note', type: 'text' }, { name: '_objectKey', type: 'text', admin: { hidden: true, readOnly: true } }],
 }
