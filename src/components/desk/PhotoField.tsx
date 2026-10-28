@@ -54,14 +54,14 @@ export function PhotoField({ photo, onChange, alt, credit, onCredit }: { photo: 
             {photo.busy && <div className="absolute inset-0 flex items-center justify-center bg-black/40 font-bold text-white">अपलोड हो रही है…</div>}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={chip} onClick={() => input.current?.click()}>🔄 बदलें</button>
-            {source.current && <button type="button" className={chip} onClick={() => setCrop(true)}>✂ क्रॉप</button>}
-            <button type="button" className={`${chip} text-alert-700`} onClick={() => (source.current = null, onChange({ id: null, url: null }))}>🗑 हटाएं</button>
+            <button type="button" className={chip} onClick={() => input.current?.click()}>बदलें</button>
+            {source.current && <button type="button" className={chip} onClick={() => setCrop(true)}>क्रॉप</button>}
+            <button type="button" className={`${chip} text-alert-700`} onClick={() => (source.current = null, onChange({ id: null, url: null }))}>हटाएं</button>
           </div>
         </div>
       ) : (
         <button type="button" onClick={() => input.current?.click()} className="flex min-h-28 w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-line bg-bg text-muted hover:bg-surface">
-          <span className="text-3xl">📷</span>
+          <span className="text-3xl leading-none">+</span>
           <span className="font-semibold">फोटो जोड़ें (वैकल्पिक)</span>
           <span className="text-xs">फोटो न हो तो पूरा पाठ-आधारित लेआउट बनेगा</span>
         </button>

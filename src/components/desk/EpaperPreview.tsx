@@ -66,11 +66,11 @@ export function EpaperPreview({ draft, edition, lang }: { draft: EpStory; editio
         </div>
         <ul className="min-w-0 flex-1 space-y-1.5 text-sm">
           <li>
-            📄 <b>पृष्ठ {page.number}</b> · कॉलम {colStart}–{colStart + pl.variant.cols - 1} <span className="text-muted">({pl.variant.cols} कॉलम की खबर)</span>
+            <b>पृष्ठ {page.number}</b> · कॉलम {colStart}–{colStart + pl.variant.cols - 1} <span className="text-muted">({pl.variant.cols} कॉलम की खबर)</span>
           </li>
-          <li>📏 इस पृष्ठ पर बची जगह: <b>{Math.round(page.freeH)} px</b> (≈ {lines} पंक्तियाँ)</li>
-          {pl.fitted && <li className="font-semibold text-saffron-600">⚡ ऑटो फिट: {pl.variant.cols} कॉलम, टेक्स्ट {Math.round(pl.variant.scale * 100)}%</li>}
-          {pl.pinFailed && <li className="font-semibold text-alert-600">⚠ चुना हुआ पृष्ठ भरा था; खबर अगले खाली पृष्ठ पर गई</li>}
+          <li>इस पृष्ठ पर बची जगह: <b>{Math.round(page.freeH)} px</b> (≈ {lines} पंक्तियाँ)</li>
+          {pl.fitted && <li className="font-semibold text-saffron-600">ऑटो फिट: {pl.variant.cols} कॉलम, टेक्स्ट {Math.round(pl.variant.scale * 100)}%</li>}
+          {pl.pinFailed && <li className="font-semibold text-alert-600">चुना हुआ पृष्ठ भरा था; खबर अगले खाली पृष्ठ पर गई</li>}
           {mine.length > 1 && <li className="font-semibold text-alert-600">↪ खबर बड़ी है: {mine.length} पृष्ठों पर जारी रहेगी</li>}
           <li>
             ➡ अगली खबर: {next ? <><b>{next.title.slice(0, 60)}</b>{nextAt ? <span className="text-muted"> — पृष्ठ {nextAt.page}, कॉलम {Math.round((nextAt.pl.x - GEO.margin) / (colW + GEO.gutter)) + 1}</span> : null}</> : <span className="text-muted">कोई नहीं (यह आख़िरी है)</span>}

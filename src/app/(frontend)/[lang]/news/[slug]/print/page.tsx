@@ -57,7 +57,7 @@ export default async function PrintStory({ params, searchParams }: { params: Pro
             </>
           )}
           {byline && a.location && ' · '}
-          {a.location && <>📍 {a.location}</>}
+          {a.location && <>{a.location}</>}
         </p>
       )}
       {img && (

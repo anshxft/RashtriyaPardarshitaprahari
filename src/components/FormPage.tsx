@@ -44,10 +44,10 @@ export async function FormPage({ lang, kind, fields, title, intro, defaults }: {
         {!s.offices?.length && s.address && <p className="whitespace-pre-line">{s.address}</p>}
         {s.email && (
           <p>
-            ✉ <a className="text-link underline" href={`mailto:${s.email}`}>{s.email}</a>
+            <a className="text-link underline" href={`mailto:${s.email}`}>{s.email}</a>
           </p>
         )}
-        {!s.offices?.length && s.phone && <p>☎ {s.phone}</p>}
+        {!s.offices?.length && s.phone && <p>{s.phone}</p>}
         {waBox && <div className="hidden border-t border-line pt-4 lg:block">{waBox}</div>}
         {s.grievanceOfficer?.name && (
           <p>

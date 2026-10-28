@@ -33,7 +33,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           <Offices offices={s.offices || []} lang={lang} waText={s.whatsappMessage} variant="cards" />
           {s.email && (
             <p className="mt-4 text-sm">
-              ✉ {lang === 'hi' ? 'ईमेल (सभी कार्यालय)' : 'Email (all offices)'}:{' '}
+              {lang === 'hi' ? 'ईमेल (सभी कार्यालय)' : 'Email (all offices)'}:{' '}
               <a className="font-semibold text-link underline" href={`mailto:${s.email}`}>
                 {s.email}
               </a>

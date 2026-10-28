@@ -67,10 +67,10 @@ export function LinkEditor({ categories, defaultCategory, mayPublish }: { catego
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="font-display text-2xl font-extrabold text-navy-900">🔗 लिंक आधारित न्यूज़ (संबंधित न्यूज़ पोर्टल)</h1>
+      <h1 className="font-display text-2xl font-extrabold text-navy-900">लिंक आधारित न्यूज़ (संबंधित न्यूज़ पोर्टल)</h1>
       {done && (
         <section role="status" className="rounded-xl border-2 border-india-600 bg-india-600/10 p-4">
-          <p className="text-lg font-extrabold text-india-600">🎉 प्रकाशित हो गया</p>
+          <p className="text-lg font-extrabold text-india-600">प्रकाशित हो गया</p>
           <p className="mt-1">News ID: <b className="font-mono">{done.newsId}</b></p>
           <div className="mt-2 flex gap-2 text-sm">
             <Link href="/hi/section/sambandhit-portal" target="_blank" className="rounded-full bg-navy-900 px-4 py-2 font-bold text-white">सेक्शन में देखें ↗</Link>
@@ -144,11 +144,11 @@ export function LinkEditor({ categories, defaultCategory, mayPublish }: { catego
       </section>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy || !title || !url} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">💾 ड्राफ्ट</button>
+        <button type="button" disabled={busy || !title || !url} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">ड्राफ्ट</button>
         {mayPublish ? (
-          <button type="button" disabled={busy || !title || !url || !categoryId} onClick={() => save('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none">🚀 प्रकाशित करें</button>
+          <button type="button" disabled={busy || !title || !url || !categoryId} onClick={() => save('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none">प्रकाशित करें</button>
         ) : (
-          <button type="button" disabled={busy || !title || !url || !categoryId} onClick={() => save('submit')} className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 text-lg font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none">📤 समीक्षा के लिए भेजें</button>
+          <button type="button" disabled={busy || !title || !url || !categoryId} onClick={() => save('submit')} className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 text-lg font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none">समीक्षा के लिए भेजें</button>
         )}
       </div>
     </div>

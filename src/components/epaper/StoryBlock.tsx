@@ -4,14 +4,15 @@ import { AD_LABEL_H, adHeight, BODY_PX, bylinePx, colW, headlinePx, spanW, subPx
 import { INK } from '@/lib/layout'
 import { t, type Lang } from '@/lib/i18n'
 
-const font = { body: 'var(--font-noto), "Noto Sans Devanagari", sans-serif', head: 'var(--font-mukta), var(--font-noto), sans-serif' }
+const font = { body: 'var(--font-noto), "Noto Sans Devanagari", sans-serif', head: 'var(--font-head), var(--font-noto), sans-serif' }
 const ink = (i: keyof typeof INK, fallback: string) => (i === 'default' ? fallback : INK[i])
 const FRAC = { s: 0.5, m: 0.75, l: 1, full: 1 } as const
 
 /** Tiny QR (server-made SVG) or a neutral square while the story is still unsaved. */
 function Qr({ svg, size }: { svg?: string | null; size: number }) {
   return svg ? (
-    <div style={{ width: size, height: size, flex: 'none' }} dangerouslySetInnerHTML={{ __html: svg }} />
+    // The SVG is generated at 60px; scale it to the box so it never spills over the News ID text.
+    <div style={{ width: size, height: size, flex: 'none', overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: svg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') }} />
   ) : (
     <div style={{ width: size, height: size, flex: 'none', border: '1px dashed #aaa', fontSize: 8, color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>QR</div>
   )
@@ -33,14 +34,14 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   const bodyCols = side ? (cols >= 3 ? cols - 1 : 1) : cols
   const align = L.align === 'center' ? 'center' : L.align === 'left' ? 'left' : 'justify'
   const hAlign: CSSProperties['textAlign'] = L.align === 'center' ? 'center' : 'left'
-  const byline = [s.reporter && `${d.reportBy}: ${s.reporter}`, s.location && `📍 ${s.location}`].filter(Boolean).join('  ·  ')
+  const byline = [s.reporter && `${d.reportBy}: ${s.reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
 
   const photo = showPhoto && (
     <figure style={{ margin: side ? 0 : '0 auto 8px', width: photoW, flex: 'none' }}>
       <div style={{ width: '100%', aspectRatio: L.photoSize === 'full' && !side ? '2 / 1' : side ? '4 / 5' : '3 / 2', overflow: 'hidden', background: '#e8e8e8' }}>
         <img src={s.photo!.src} alt={s.photo!.alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       </div>
-      {s.photo!.credit && <figcaption style={{ fontSize: 8.5, color: '#777', marginTop: 2, lineHeight: 1.2, maxHeight: 12, overflow: 'hidden' }}>{s.photo!.credit}</figcaption>}
+      {s.photo!.credit && <figcaption style={{ fontSize: 8.5, color: '#777', marginTop: 2, lineHeight: '11px', height: 11, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{s.photo!.credit}</figcaption>}
     </figure>
   )
 

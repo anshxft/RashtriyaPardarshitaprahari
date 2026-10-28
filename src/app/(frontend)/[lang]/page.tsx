@@ -69,7 +69,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       {videos.docs.length > 0 && (
         <section>
           <SectionTitle lang={lang} href={paths.videos(lang)}>
-            🎬 {d.videos}
+            {d.videos}
           </SectionTitle>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {videos.docs.map((v) => {
@@ -95,7 +95,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       {investigations.docs.length > 0 && (
         <section className="-mx-4 bg-navy-900 px-4 py-8 text-white sm:rounded-xl">
           <div className="mb-5 flex items-end justify-between border-b border-white/20 pb-2">
-            <h2 className="font-display text-2xl font-bold text-gold-300">🔍 {d.investigations}</h2>
+            <h2 className="font-display text-2xl font-bold text-gold-300">{d.investigations}</h2>
             <Link href={paths.category(lang, 'jaanch')} className="text-sm font-semibold text-gold-300 hover:underline">
               {d.viewAll} →
             </Link>
@@ -177,7 +177,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       {positive.docs.length > 0 && (
         <section className="rounded-xl border-2 border-india-600/30 bg-india-600/5 p-5">
           <SectionTitle lang={lang} href={paths.category(lang, 'sakaratmak-bharat')} accent="green">
-            🌱 {d.positiveIndia}
+            {d.positiveIndia}
           </SectionTitle>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {positive.docs.map((a) => (

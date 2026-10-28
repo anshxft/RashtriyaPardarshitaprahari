@@ -31,6 +31,8 @@ const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font
 
 export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, stories, editions, canEdit }: Props) {
   const d = t(lang)
+  // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
+  const nameSize = /[a-z]/i.test(siteName) ? Math.min(62, Math.floor(1300 / siteName.length)) : 62
   const router = useRouter()
   const [patches, setPatches] = useState<Record<string, Layout>>({})
   const [view, setView] = useState<'page' | 'all'>('page')
@@ -135,7 +137,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
             <button type="button" className={tool} title="Later" onClick={() => move(baseId, 1)}>↓</button>
             <button type="button" className={tool} title="Pin to previous page" onClick={() => patch(baseId, { epaperPage: Math.max(1, pageNo - 1) })}>{d.pageWord}−</button>
             <button type="button" className={tool} title="Pin to next page" onClick={() => patch(baseId, { epaperPage: pageNo + 1 })}>{d.pageWord}+</button>
-            <button type="button" className={tool} title="Auto Fit" onClick={() => patch(baseId, { autoFit: !cur.layout.autoFit })}>{cur.layout.autoFit ? '⚡ on' : '⚡ off'}</button>
+            <button type="button" className={tool} title="Auto Fit" onClick={() => patch(baseId, { autoFit: !cur.layout.autoFit })}>{cur.layout.autoFit ? 'on' : 'off'}</button>
             <button type="button" className={tool} title="Reset" onClick={() => patch(baseId, { columns: null, bodyScale: 100, epaperPage: null, epaperOrder: null, autoFit: true })}>↺</button>
             <Link href={`/desk/news/${baseId}`} className={`${tool} inline-flex items-center`} title="Edit in Desk">✎</Link>
           </div>
@@ -190,23 +192,23 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
           </button>
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" />
           <button type="button" className={btn} onClick={() => window.print()}>
-            🖨 {d.printA3}
+            {d.printA3}
           </button>
           <button type="button" className={btn} onClick={() => pageImage(pages[idx]?.number ?? 1)} disabled={!pages.length}>
-            🖼 {d.pageImage}
+            {d.pageImage}
           </button>
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" />
           {[1, 1.5, 2].map((z) => (
             <button key={z} type="button" className={`${btn} ${zoom === z ? '!bg-navy-900 !text-white' : ''}`} onClick={() => setZoom(z)} aria-label={`zoom ${z}x`}>
-              🔍 {z}×
+              {z}×
             </button>
           ))}
           {canEdit && (
             <Link href={`/desk/epaper-share?date=${date}`} className={btn}>
-              📣 {lang === 'hi' ? 'शेयर करें' : 'Share'}
+              {lang === 'hi' ? 'शेयर करें' : 'Share'}
             </Link>
           )}
-          {canEdit && <span className="text-sm font-semibold text-saffron-600">🛠 {d.layoutTools}</span>}
+          {canEdit && <span className="text-sm font-semibold text-saffron-600">{d.layoutTools}</span>}
           {note && (
             <span role="status" className="text-sm font-semibold text-india-600">
               ✓ {note}
@@ -227,13 +229,13 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
                     {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
                     <img src="/epaper-india-map.png" alt="भारत" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain', flexShrink: 0 }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 62, lineHeight: 1.08 }}>
+                      <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 800, fontSize: nameSize, lineHeight: 1.08, whiteSpace: 'nowrap' }}>
                         <TricolorName name={siteName} />
                       </div>
                       {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#0b1f4d', marginTop: 2 }}>{descriptor}</div>}
                       <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 2 }}>{TAGLINE_SHORT}</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginTop: 2 }}>
-                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #0b1f4d', padding: '0 6px', color: '#0b1f4d' }}>मूल्य: निःशुल्क</span>
+                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #0b1f4d', padding: '0 6px', color: '#0b1f4d' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
                       </div>
                     </div>
                     <Tula size={120} />

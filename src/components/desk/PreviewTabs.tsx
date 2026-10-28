@@ -5,10 +5,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 /** Desktop / Mobile / Social (/ Video) preview of the exact public page. Iframes are scaled down to fit the phone or laptop. */
 export function PreviewTabs({ src, social, video }: { src: string; social: ReactNode; video?: ReactNode }) {
   const tabs = [
-    ['desktop', '🖥 डेस्कटॉप'],
-    ['mobile', '📱 मोबाइल'],
-    ...(video ? [['video', '🎬 वीडियो'] as const] : []),
-    ['social', '📣 सोशल शेयर'],
+    ['desktop', 'डेस्कटॉप'],
+    ['mobile', 'मोबाइल'],
+    ...(video ? [['video', 'वीडियो'] as const] : []),
+    ['social', 'सोशल शेयर'],
   ] as const
   const [tab, setTab] = useState<string>('desktop')
   return (

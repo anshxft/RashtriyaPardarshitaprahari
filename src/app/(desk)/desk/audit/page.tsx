@@ -28,7 +28,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-2xl font-extrabold text-navy-900">📜 ऑडिट लॉग</h1>
+      <h1 className="font-display text-2xl font-extrabold text-navy-900">ऑडिट लॉग</h1>
       <form className="grid gap-2 rounded-xl bg-bg p-3 sm:grid-cols-5">
         <input name="q" defaultValue={q} placeholder="News ID / हेडलाइन / नाम" className="rounded-lg border border-line px-3 py-2.5 sm:col-span-2" />
         <select name="action" defaultValue={sp.action || ''} className="rounded-lg border border-line px-3 py-2.5">

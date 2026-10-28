@@ -50,9 +50,9 @@ export default async function NewsList({ searchParams }: { searchParams: Promise
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">📰 खबरें</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">खबरें</h1>
         <Link href="/desk/news/new" className="ml-auto rounded-full bg-india-600 px-5 py-2.5 font-bold text-white shadow">
-          ➕ नई खबर
+          नई खबर
         </Link>
       </div>
 

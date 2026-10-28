@@ -35,7 +35,7 @@ export default async function DeskPreview({ params }: { params: Promise<{ id: st
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-xl font-extrabold text-navy-900">👁 प्रीव्यू</h1>
+        <h1 className="font-display text-xl font-extrabold text-navy-900">प्रीव्यू</h1>
         <Link href={`/desk/news/${id}`} className="ml-auto rounded-full border border-line px-4 py-2 text-sm font-bold">
           ✎ संपादित करें
         </Link>

@@ -11,7 +11,7 @@ import { StoryBlock } from './StoryBlock'
 async function fontsReady() {
   const probe = document.createElement('div')
   probe.style.cssText = 'position:absolute;left:-99999px;top:0;font-family:var(--font-noto),sans-serif;font-size:13px'
-  probe.innerHTML = '<span>नमूना पाठ ऑनलाइन</span><b style="font-family:var(--font-mukta),sans-serif;font-weight:800">शीर्षक</b>'
+  probe.innerHTML = '<span>नमूना पाठ ऑनलाइन</span><b style="font-family:var(--font-head),sans-serif;font-weight:800">शीर्षक</b>'
   document.body.appendChild(probe)
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
   await document.fonts.ready

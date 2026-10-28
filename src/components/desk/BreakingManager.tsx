@@ -24,7 +24,7 @@ export function BreakingManager({ items, stories }: { items: Item[]; stories: { 
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="font-display text-2xl font-extrabold text-navy-900">🔴 ब्रेकिंग न्यूज़ पट्टी</h1>
+      <h1 className="font-display text-2xl font-extrabold text-navy-900">ब्रेकिंग न्यूज़ पट्टी</h1>
       <section className="space-y-3 rounded-xl border border-line bg-bg p-4">
         <label className="block text-sm font-semibold">
           नई पट्टी (छोटी, एक पंक्ति)
@@ -53,7 +53,7 @@ export function BreakingManager({ items, stories }: { items: Item[]; stories: { 
         </label>
         {note && <p className="text-sm font-semibold text-alert-600">{note}</p>}
         <button type="button" disabled={busy || !text.trim()} onClick={() => run(async () => { const r = await addBreakingAction(text, link, hours || undefined); if (r.ok) setText(''); return r })} className="min-h-12 w-full rounded-lg bg-alert-600 px-6 text-lg font-extrabold text-white disabled:opacity-60">
-          🔴 पट्टी में डालें
+          पट्टी में डालें
         </button>
       </section>
 
@@ -74,7 +74,7 @@ export function BreakingManager({ items, stories }: { items: Item[]; stories: { 
                     {b.active ? 'बंद करें' : 'चालू करें'}
                   </button>
                   <button type="button" disabled={busy} className="rounded-full border border-line px-3 py-1.5 text-sm text-alert-700" onClick={() => confirm('यह पट्टी हटाएं?') && run(() => deleteBreakingAction(b.id))}>
-                    🗑
+                    हटाएं
                   </button>
                 </li>
               )

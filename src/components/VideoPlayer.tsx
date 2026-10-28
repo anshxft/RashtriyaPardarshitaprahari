@@ -17,7 +17,7 @@ export function VideoPlayer({ v, flash, aiNote }: { v: Video; wm?: WM; flash?: F
   return (
     <div>
       <VideoStage src={`/api/v/${v.id}/play`} poster={videoPoster(v)} flash={burned ? null : flash} breaking={Boolean(flash?.breaking)} />
-      {aiNote && flash?.voice && <p className="mt-1 text-xs text-muted">🔊 इस वीडियो में कृत्रिम (AI) आवाज़ का उपयोग किया गया है / AI voice</p>}
+      {aiNote && flash?.voice && <p className="mt-1 text-xs text-muted">इस वीडियो में कृत्रिम (AI) आवाज़ का उपयोग किया गया है / AI voice</p>}
     </div>
   )
 }
