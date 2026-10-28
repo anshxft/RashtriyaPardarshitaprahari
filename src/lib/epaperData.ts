@@ -51,7 +51,7 @@ export async function getEditionStories(lang: Lang, date: string): Promise<EpSto
   const res = await (await db()).find({
     collection: 'articles',
     locale: lang,
-    where: { and: [publicArticleWhere(), { firstPublishedAt: { greater_than_equal: from } }, { firstPublishedAt: { less_than: to } }] },
+    where: { and: [publicArticleWhere(lang), { firstPublishedAt: { greater_than_equal: from } }, { firstPublishedAt: { less_than: to } }] },
     limit: 300,
     depth: 1,
     pagination: false,

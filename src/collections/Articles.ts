@@ -23,9 +23,18 @@ const is = (...formats: string[]) => (data: Record<string, unknown>) => formats.
 /** Not archived / not in the trash (rows from before Round 4 have no lifecycle value = active). */
 export const liveLifecycle = (): Where => ({ or: [{ lifecycle: { equals: 'active' } }, { lifecycle: { exists: false } }] })
 
-/** Public visitors only ever see published, non-archived articles whose publish time has arrived (= scheduled publishing). */
-export const publicArticleWhere = (): Where => ({
-  and: [{ _status: { equals: 'published' } }, { publishedAt: { less_than_equal: new Date().toISOString() } }, liveLifecycle()],
+/**
+ * Public visitors only ever see published, non-archived articles whose publish time has arrived (= scheduled publishing).
+ * For English (query with locale 'en') only stories that really have an English version are listed — no Hindi text
+ * under an English menu. Untranslated stories show a "available in Hindi" note on their English URL.
+ */
+export const publicArticleWhere = (lang?: 'hi' | 'en'): Where => ({
+  and: [
+    { _status: { equals: 'published' } },
+    { publishedAt: { less_than_equal: new Date().toISOString() } },
+    liveLifecycle(),
+    ...(lang === 'en' ? [{ title: { exists: true } }] : []),
+  ],
 })
 
 export const Articles: CollectionConfig = {
