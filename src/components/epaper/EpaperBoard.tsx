@@ -259,7 +259,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
                       <span>
-                        {DATELINE_CITY[lang]}, {weekday}, {dateLabel}
+                        {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : trustName || ''}</span>
                       <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
