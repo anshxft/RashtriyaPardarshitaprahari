@@ -80,10 +80,13 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
 
   if (variant === 'compact')
     return (
-      <article className={`group relative border-b border-line py-3 last:border-0 ${frame}`}>
-        <Meta a={a} lang={lang} />
-        <h3 className="mt-1 font-display text-base leading-snug font-bold">{title}</h3>
-        {source}
+      <article className={`group relative flex gap-3 border-b border-line py-3 last:border-0 ${frame}`}>
+        {img && <Cover img={img} sizes="112px" className="aspect-[4/3] w-24 shrink-0 sm:w-28" />}
+        <div className="min-w-0">
+          <Meta a={a} lang={lang} />
+          <h3 className="mt-1 line-clamp-3 font-display text-base leading-snug font-bold">{title}</h3>
+          {source}
+        </div>
       </article>
     )
 
