@@ -64,7 +64,7 @@ export async function Header({ lang }: { lang: Lang }) {
           <Link href={paths.home(lang)} className="flex min-w-0 items-center gap-3 md:gap-4">
             <Image src="/logo-160.webp" alt="" width={84} height={84} priority className="h-14 w-14 shrink-0 md:h-[84px] md:w-[84px]" />
             <span className="min-w-0">
-              <span className="block truncate font-display text-xl leading-tight font-extrabold sm:text-2xl md:text-4xl">
+              <span className="block truncate py-0.5 font-display text-xl leading-normal font-extrabold sm:text-2xl md:text-4xl">
                 <TricolorName name={settings.siteName || d.siteName} />
               </span>
               {settings.descriptor && <span className="block text-xs leading-snug font-semibold text-navy-700 sm:text-sm dark:text-white/80">{settings.descriptor}</span>}
