@@ -244,7 +244,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
                       {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
-                      <img src="/epaper-india-map.png" alt="भारत" width={112} height={112} style={{ width: 112, height: 112, objectFit: 'contain', flexShrink: 0 }} />
+                      <img src="/epaper-india-map.png" alt="भारत" width={150} height={150} style={{ width: 150, height: 150, objectFit: 'contain', flexShrink: 0 }} />
                       <div style={{ flex: 1, textAlign: 'center' }}>
                         {trustName && <div style={{ fontSize: 14, fontWeight: 700, color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</div>}
                         {/* Devanagari matras rise above the line box: leave room so the trust line above is never touched */}
@@ -254,7 +254,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: '#c25a00', marginTop: 1 }}>{TAGLINE_SHORT}</div>
                       </div>
-                      <Tula size={112} />
+                      <Tula size={150} />
                     </div>
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
