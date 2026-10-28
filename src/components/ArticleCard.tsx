@@ -11,7 +11,7 @@ const Meta = ({ a, lang }: { a: Card; lang: Lang }) => {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
       {cat && (
-        <Link href={paths.category(lang, cat.slug)} className="relative z-10 font-bold uppercase tracking-wide text-saffron-600 hover:underline">
+        <Link href={paths.category(lang, cat.slug)} className="relative z-10 font-bold uppercase tracking-wide text-brand-600 hover:underline">
           {cat.title}
         </Link>
       )}
@@ -35,7 +35,7 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
   const img: Img | undefined = cardImage(a, variant === 'lead' ? 'hero' : 'card') ?? (external?.imageUrl ? { src: external.imageUrl, alt: a.title } : undefined)
   const linkProps = external ? { target: '_blank', rel: 'noopener noreferrer nofollow' } : {}
   const title = (
-    <Link href={href} {...linkProps} className="after:absolute after:inset-0 hover:text-navy-700 dark:hover:text-gold-300">
+    <Link href={href} {...linkProps} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
       {a.title}
       {external && <span aria-hidden> ↗</span>}
     </Link>

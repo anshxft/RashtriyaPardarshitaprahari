@@ -13,7 +13,7 @@ export function EditorMessage({ page, name, lang }: { page: Page; name?: string 
   const photo = asMedia(page.image)
   return (
     <div>
-      <SectionTitle lang={lang} accent="green">
+      <SectionTitle lang={lang}>
         {d.editorMessage}
       </SectionTitle>
       <div className="flex gap-4">
@@ -22,7 +22,7 @@ export function EditorMessage({ page, name, lang }: { page: Page; name?: string 
           <p className="text-base leading-relaxed">{teaser(page.content, 260)}</p>
           {name && (
             <p className="mt-2 text-sm font-semibold">
-              — {name}, <span className="text-saffron-600">{d.editor}</span>
+              — {name}, <span className="text-brand-600">{d.editor}</span>
             </p>
           )}
           <Link href={paths.page(lang, page.slug)} className="mt-2 inline-block text-sm font-semibold text-link hover:underline">

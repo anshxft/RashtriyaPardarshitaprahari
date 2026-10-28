@@ -34,26 +34,26 @@ export async function Header({ lang }: { lang: Lang }) {
       <a href="#main" className="sr-only z-[200] bg-gold-400 p-2 text-navy-950 focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
         Skip to content
       </a>
-      <div className="bg-navy-950 text-white">
+      <div className="border-b border-line bg-surface text-fg">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 text-sm">
           <span className="hidden lg:inline">{formatDate(new Date().toISOString(), lang)}</span>
-          <nav aria-label={d.quickLinks} className="flex items-center gap-3 text-xs font-semibold text-gold-300 sm:gap-4 sm:text-sm">
+          <nav aria-label={d.quickLinks} className="flex items-center gap-3 text-xs font-semibold sm:gap-4 sm:text-sm">
             <Link href={paths.epaper(lang)} className="hover:underline">{d.epaper}</Link>
             <Link href={paths.videos(lang)} className="hover:underline">{d.videos}</Link>
             <Link href={paths.team(lang)} className="hover:underline">{d.team}</Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-gold-300 md:block">
+            <span className="hidden md:block">
               <SocialLinks social={settings.social} whatsapp={waHref} variant="icons" />
             </span>
-            <Link href={paths.search(lang)} className="rounded px-2 py-0.5 hover:bg-white/10" aria-label={d.search}>
+            <Link href={paths.search(lang)} className="rounded px-2 py-0.5 hover:bg-black/5 dark:hover:bg-white/10" aria-label={d.search}>
               <span aria-hidden>⌕</span> <span className="hidden sm:inline">{d.search}</span>
             </Link>
             <ThemeToggle label={d.darkMode} />
             <LangSwitch lang={lang} />
           </div>
           {/* Phones: the official social icons get their own thin row */}
-          <div className="flex w-full justify-center border-t border-white/10 pt-1 text-gold-300 md:hidden">
+          <div className="flex w-full justify-center border-t border-line pt-1 md:hidden">
             <SocialLinks social={settings.social} whatsapp={waHref} variant="icons" />
           </div>
         </div>
@@ -73,7 +73,7 @@ export async function Header({ lang }: { lang: Lang }) {
           </Link>
           <Link
             href={paths.submit(lang)}
-            className="ml-auto hidden shrink-0 rounded-md bg-saffron-500 px-4 py-2.5 font-bold text-navy-950 shadow hover:bg-saffron-600 hover:text-white md:block"
+            className="ml-auto hidden shrink-0 rounded-md bg-brand-600 px-4 py-2.5 font-bold text-white shadow hover:bg-brand-700 md:block"
           >
             {d.submitIssueShort}
           </Link>
@@ -81,7 +81,7 @@ export async function Header({ lang }: { lang: Lang }) {
       </div>
       <div className="tricolor-rule" />
 
-      <div className="sticky top-0 z-40 bg-navy-900 text-white shadow-md">
+      <div className="sticky top-0 z-40 border-b border-line bg-bg text-fg shadow-sm">
         <div className="mx-auto max-w-7xl px-2 lg:px-4">
           <Nav lang={lang} primary={nav.slice(0, PRIMARY_COUNT)} groups={groups} labels={{ all: d.allSections, menu: d.menu, close: d.close, home: d.home }} />
         </div>

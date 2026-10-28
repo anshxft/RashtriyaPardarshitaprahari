@@ -31,7 +31,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
           {photo?.url && <Image src={photo.url} alt="" width={72} height={72} className="h-18 w-18 rounded-full object-cover" />}
           <span>
             {author.name}
-            {author.designation && <span className="block text-base font-semibold text-saffron-600">{author.designation}</span>}
+            {author.designation && <span className="block text-base font-semibold text-brand-600">{author.designation}</span>}
           </span>
         </span>
       }

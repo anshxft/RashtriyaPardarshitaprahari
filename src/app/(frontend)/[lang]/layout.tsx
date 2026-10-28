@@ -16,7 +16,7 @@ const display = Noto_Serif_Devanagari({ subsets: ['devanagari', 'latin'], variab
 
 // Empty list = nothing prerendered at build (no DB needed); pages render on first request, then cached (ISR).
 export const generateStaticParams = async () => []
-export const viewport: Viewport = { themeColor: '#0b1f4d', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = { themeColor: '#ffffff', width: 'device-width', initialScale: 1 }
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang: l } = await params

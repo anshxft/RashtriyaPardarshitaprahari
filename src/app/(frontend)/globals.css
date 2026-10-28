@@ -2,13 +2,17 @@
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Brand palette — taken from the logo */
+/* Brand palette — taken from the logo (maroon + gold). The “navy” names are kept for the existing classes but are a
+   neutral charcoal ink now: no blue anywhere. Saffron/green stay for the tricolour accents only. */
 @theme {
-  --color-navy-950: #061231;
-  --color-navy-900: #0b1f4d;
-  --color-navy-800: #132f6e;
-  --color-navy-700: #1c4196;
-  --color-navy-100: #e6ecf8;
+  --color-navy-950: #121212;
+  --color-navy-900: #1c1c1c;
+  --color-navy-800: #2b2b2b;
+  --color-navy-700: #404040;
+  --color-navy-100: #f1f1ef;
+  --color-brand-50: #fbf3f2;
+  --color-brand-600: #8f1d1f;
+  --color-brand-700: #721618;
   --color-saffron-500: #f28c1b;
   --color-saffron-600: #d9730a;
   --color-india-500: #1fa637;
@@ -23,19 +27,19 @@
 /* Surface tokens — swapped in dark mode */
 :root {
   --bg: #ffffff;
-  --fg: #111831;
-  --muted: #566078;
-  --surface: #f4f6fb;
-  --line: #e2e6ef;
-  --link: #1c4196;
+  --fg: #1a1a1a;
+  --muted: #5c5c5c;
+  --surface: #f6f5f3;
+  --line: #e4e2de;
+  --link: #8f1d1f;
 }
 .dark {
-  --bg: #0a0f1f;
-  --fg: #e9edf5;
-  --muted: #a1abc0;
-  --surface: #121a31;
-  --line: #243052;
-  --link: #9fbaf5;
+  --bg: #121212;
+  --fg: #ececea;
+  --muted: #a6a6a2;
+  --surface: #1c1c1b;
+  --line: #2f2f2d;
+  --link: #f0a9a6;
 }
 
 @theme inline {

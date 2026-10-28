@@ -46,7 +46,7 @@ export default async function TeamPage({ params, searchParams }: Props) {
   return (
     <div>
       <header className="mb-6 border-b-4 border-gold-400 pb-4">
-        <h1 className="font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-gold-300">{d.team}</h1>
+        <h1 className="font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{d.team}</h1>
         <p className="mt-2 text-lg text-muted">{d.teamIntro}</p>
       </header>
       <TeamFilters
@@ -66,7 +66,7 @@ export default async function TeamPage({ params, searchParams }: Props) {
           if (!list.length) return null
           return (
             <section key={tier.value} className="mb-10">
-              <h2 className="mb-4 border-b-2 border-line pb-2 font-display text-2xl font-bold text-navy-900 dark:text-gold-300">{tier[lang]}</h2>
+              <h2 className="mb-4 border-b-2 border-line pb-2 font-display text-2xl font-bold text-navy-900 dark:text-white">{tier[lang]}</h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {list.map((m) => (
                   <TeamCard key={m.id} m={m} lang={lang} featured={tier.value === 'editor-in-chief'} />

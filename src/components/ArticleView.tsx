@@ -99,7 +99,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       {ld(jsonLd)}
       {claim && ld(claim)}
       {preview && (
-        <p role="note" className="mb-4 rounded-md border border-dashed border-saffron-600 bg-saffron-500/10 p-3 text-sm font-semibold">
+        <p role="note" className="mb-4 rounded-md border border-dashed border-line bg-surface p-3 text-sm font-semibold">
           {d.previewBanner}
         </p>
       )}
@@ -110,7 +110,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
           <> › <Link href={paths.category(lang, parentCat.slug)} className="hover:underline">{parentCat.title}</Link></>
         )}
         {cat && (
-          <> › <Link href={paths.category(lang, cat.slug)} className="font-semibold text-saffron-600 hover:underline">{cat.title}</Link></>
+          <> › <Link href={paths.category(lang, cat.slug)} className="font-semibold text-brand-600 hover:underline">{cat.title}</Link></>
         )}
       </nav>
 
@@ -154,7 +154,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
           <FontSizer target="story-body" labels={{ smaller: lang === 'hi' ? 'अक्षर छोटे करें' : 'Smaller text', larger: lang === 'hi' ? 'अक्षर बड़े करें' : 'Larger text' }} />
         </span>
         {revisions[0] && (
-          <span className="font-semibold text-saffron-600">
+          <span className="font-semibold text-brand-600">
             {d.revised}: <time dateTime={revisions[0].at}>{formatDate(revisions[0].at, lang, true)}</time>
           </span>
         )}
@@ -197,14 +197,14 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       )}
 
       {(a.demoContent || a.sample) && (
-        <p className="mt-6 rounded-md border border-dashed border-saffron-600 bg-saffron-500/10 p-3 text-sm">
+        <p className="mt-6 rounded-md border border-dashed border-line bg-surface p-3 text-sm">
           <strong>{a.sample ? d.sample : d.demo}:</strong> {a.sample ? d.sampleNote : d.demoNote}
         </p>
       )}
 
       {revisions.length > 0 && (
-        <section aria-label={d.revised} className="mt-6 rounded-md border border-saffron-600/40 bg-saffron-500/5 p-3 text-sm">
-          <p className="font-bold text-saffron-600">✎ {d.revised}</p>
+        <section aria-label={d.revised} className="mt-6 rounded-md border border-line bg-surface p-3 text-sm">
+          <p className="font-bold text-brand-600">✎ {d.revised}</p>
           <ul className="mt-1 space-y-0.5">
             {revisions.map((v) => (
               <li key={v.id}>
@@ -282,8 +282,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       {!preview && related.docs[0] && (
         <Link href={paths.article(lang, related.docs[0].slug)} className="group mt-10 flex items-center gap-4 rounded-xl border-2 border-navy-900/20 bg-surface p-4 hover:border-saffron-500 dark:border-gold-300/30">
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold tracking-wide text-saffron-600 uppercase">{lang === 'hi' ? 'अगली खबर' : 'Next story'}</span>
-            <span className="mt-1 block font-display text-lg leading-snug font-bold group-hover:text-navy-700 dark:group-hover:text-gold-300">{related.docs[0].title}</span>
+            <span className="block text-xs font-bold tracking-wide text-brand-600 uppercase">{lang === 'hi' ? 'अगली खबर' : 'Next story'}</span>
+            <span className="mt-1 block font-display text-lg leading-snug font-bold group-hover:text-brand-600 dark:group-hover:text-gold-300">{related.docs[0].title}</span>
           </span>
           <span aria-hidden className="text-2xl transition-transform group-hover:translate-x-1">→</span>
         </Link>

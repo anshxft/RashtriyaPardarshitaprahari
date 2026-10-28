@@ -48,7 +48,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
           <ArticleCard a={lead} lang={lang} variant="lead" priority />
         </div>
         <aside>
-          <SectionTitle lang={lang} accent="red">{d.latest}</SectionTitle>
+          <SectionTitle lang={lang}>{d.latest}</SectionTitle>
           {rest.slice(0, 6).map((a) => (
             <ArticleCard key={a.id} a={a} lang={lang} variant="compact" />
           ))}
@@ -81,7 +81,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
                     <span className="absolute inset-0 flex items-center justify-center text-4xl text-white/90 drop-shadow">▶</span>
                   </div>
                   <h3 className="mt-2 font-display leading-snug font-bold">
-                    <Link href={paths.video(lang, v.slug)} className="after:absolute after:inset-0 hover:text-navy-700 dark:hover:text-gold-300">
+                    <Link href={paths.video(lang, v.slug)} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
                       {v.title}
                     </Link>
                   </h3>
@@ -93,14 +93,11 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       )}
 
       {investigations.docs.length > 0 && (
-        <section className="-mx-4 bg-navy-900 px-4 py-8 text-white sm:rounded-xl">
-          <div className="mb-5 flex items-end justify-between border-b border-white/20 pb-2">
-            <h2 className="font-display text-2xl font-bold text-gold-300">{d.investigations}</h2>
-            <Link href={paths.category(lang, 'jaanch')} className="text-sm font-semibold text-gold-300 hover:underline">
-              {d.viewAll} →
-            </Link>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 [&_.text-muted]:text-white/70 [&_h3]:text-white">
+        <section>
+          <SectionTitle lang={lang} href={paths.category(lang, 'jaanch')}>
+            {d.investigations}
+          </SectionTitle>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {investigations.docs.map((a) => (
               <ArticleCard key={a.id} a={a} lang={lang} />
             ))}
@@ -112,7 +109,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
       {questions.docs.length > 0 && (
         <section>
-          <SectionTitle lang={lang} href={paths.category(lang, 'sarkar-se-sawal')} accent="saffron">
+          <SectionTitle lang={lang} href={paths.category(lang, 'sarkar-se-sawal')}>
             {lang === 'hi' ? 'सरकार से सीधा सवाल · शिकायत से समाधान' : 'Direct Questions · Complaint to Resolution'}
           </SectionTitle>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -152,7 +149,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
             .filter((c) => c.docs.length)
             .map((c) => (
               <div key={c.slug}>
-                <SectionTitle lang={lang} href={paths.category(lang, c.slug)} accent="saffron">
+                <SectionTitle lang={lang} href={paths.category(lang, c.slug)}>
                   {asCat(c.docs[0].category)?.title}
                 </SectionTitle>
                 {c.docs.map((a) => (
@@ -166,7 +163,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       {/* Public forum + submit CTA */}
       <section className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <SectionTitle lang={lang} href={paths.category(lang, 'jan-manch')} accent="green">
+          <SectionTitle lang={lang} href={paths.category(lang, 'jan-manch')}>
             {d.publicForum}
           </SectionTitle>
           {forum.docs.length ? forum.docs.map((a) => <ArticleCard key={a.id} a={a} lang={lang} variant="row" />) : <p className="text-muted">{d.comingSoon}</p>}
@@ -175,8 +172,8 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       </section>
 
       {positive.docs.length > 0 && (
-        <section className="rounded-xl border-2 border-india-600/30 bg-india-600/5 p-5">
-          <SectionTitle lang={lang} href={paths.category(lang, 'sakaratmak-bharat')} accent="green">
+        <section>
+          <SectionTitle lang={lang} href={paths.category(lang, 'sakaratmak-bharat')}>
             {d.positiveIndia}
           </SectionTitle>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -195,7 +192,7 @@ function FactCheckStrip({ items, lang }: { items: Card[]; lang: Lang }) {
   const d = t(lang)
   return (
     <section className="rounded-xl border border-line bg-surface p-5">
-      <SectionTitle lang={lang} href={paths.category(lang, 'fact-check')} accent="red">
+      <SectionTitle lang={lang} href={paths.category(lang, 'fact-check')}>
         ✔ {d.factCheck}
       </SectionTitle>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -203,7 +200,7 @@ function FactCheckStrip({ items, lang }: { items: Card[]; lang: Lang }) {
           <li key={a.id} className="group relative rounded-lg border border-line bg-bg p-4 shadow-sm">
             <VerdictBadge verdict={a.factCheck?.verdict} lang={lang} large />
             <h3 className="mt-3 font-display text-lg leading-snug font-bold">
-              <Link href={paths.article(lang, a.slug)} className="after:absolute after:inset-0 hover:text-navy-700 dark:hover:text-gold-300">
+              <Link href={paths.article(lang, a.slug)} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
                 {a.title}
               </Link>
             </h3>

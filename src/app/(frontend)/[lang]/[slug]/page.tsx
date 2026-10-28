@@ -25,9 +25,9 @@ export default async function StaticPage({ params }: Props) {
   const d = t(lang)
   return (
     <article className="mx-auto max-w-3xl">
-      <h1 className="border-b-4 border-gold-400 pb-4 font-display text-4xl font-extrabold text-navy-900 dark:text-gold-300">{page.title}</h1>
+      <h1 className="border-b-4 border-gold-400 pb-4 font-display text-4xl font-extrabold text-navy-900 dark:text-white">{page.title}</h1>
       {page.legalReviewPending && (
-        <p role="note" className="mt-4 rounded-md border border-saffron-600 bg-saffron-500/10 p-3 text-sm font-semibold">
+        <p role="note" className="mt-4 rounded-md border border-line bg-surface p-3 text-sm font-semibold">
           {d.lawyerReview}
         </p>
       )}

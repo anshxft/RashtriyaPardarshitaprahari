@@ -10,7 +10,7 @@ import type { Lang } from './i18n'
 import { resolveLayout } from './layout'
 import { paths, siteUrl } from './paths'
 
-const qr = (v: string) => QRCode.toString(v, { type: 'svg', margin: 0, width: 60, errorCorrectionLevel: 'M', color: { dark: '#0b1f4d', light: '#ffffff' } })
+const qr = (v: string) => QRCode.toString(v, { type: 'svg', margin: 0, width: 60, errorCorrectionLevel: 'M', color: { dark: '#1a1a1a', light: '#ffffff' } })
 
 /** The edition (one IST day) as plain, serialisable data for the e-paper board. */
 export async function toEpStory(a: Article, lang: Lang): Promise<EpStory> {

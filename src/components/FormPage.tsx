@@ -34,13 +34,13 @@ export async function FormPage({ lang, kind, fields, title, intro, defaults }: {
   return (
     <div className="grid gap-10 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <h1 className="border-b-4 border-gold-400 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-gold-300">{title}</h1>
+        <h1 className="border-b-4 border-gold-400 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{title}</h1>
         <div className="mt-4 mb-8 text-lg text-muted">{intro}</div>
         {waBox && <div className="-mt-4 mb-8 rounded-xl bg-surface p-4 text-sm lg:hidden">{waBox}</div>}
         <PublicForm kind={kind} fields={fields} lang={lang} d={d} renderedAt={Date.now()} defaults={defaults} privacyHref={paths.page(lang, 'privacy-policy')} />
       </div>
       <aside className="space-y-4 self-start rounded-xl bg-surface p-5 text-sm">
-        <p className="font-display text-lg font-bold text-navy-900 dark:text-gold-300">{d.contact}</p>
+        <p className="font-display text-lg font-bold text-navy-900 dark:text-white">{d.contact}</p>
         {!s.offices?.length && s.address && <p className="whitespace-pre-line">{s.address}</p>}
         {s.email && (
           <p>

@@ -20,7 +20,7 @@ const Box = ({ title, children, tone = 'navy' }: { title: string; children: Reac
   const border = { navy: 'border-navy-700', gold: 'border-gold-500', red: 'border-alert-600', green: 'border-india-600' }[tone]
   return (
     <section className={`my-8 rounded-lg border border-line border-l-4 ${border} bg-surface p-5`}>
-      <h2 className="mb-3 font-display text-xl font-bold text-navy-900 dark:text-gold-300">{title}</h2>
+      <h2 className="mb-3 font-display text-xl font-bold text-navy-900 dark:text-white">{title}</h2>
       {children}
     </section>
   )
@@ -102,7 +102,7 @@ export function InvestigationSections({ a, lang }: { a: Article; lang: Lang }) {
       </nav>
       {present.map((k, i) => (
         <section key={k} id={`inv-${k}`} className="mb-8">
-          <h2 className="mb-3 flex items-center gap-3 font-display text-2xl font-bold text-navy-900 dark:text-gold-300">
+          <h2 className="mb-3 flex items-center gap-3 font-display text-2xl font-bold text-navy-900 dark:text-white">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-900 text-sm text-gold-300 dark:bg-gold-400 dark:text-navy-950">{i + 1}</span>
             {d.investigation[k]}
           </h2>

@@ -163,7 +163,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
       <div className="no-print mb-4 space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-3xl font-extrabold text-navy-900 dark:text-gold-300">{d.epaper}</h1>
+            <h1 className="font-display text-3xl font-extrabold text-navy-900 dark:text-white">{d.epaper}</h1>
             <p className="text-muted">
               {dateLabel} · {stories.length} {d.storiesWord} · {pages.length || '…'} {d.pageWord.toLowerCase()}
             </p>
@@ -208,7 +208,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
               {lang === 'hi' ? 'शेयर करें' : 'Share'}
             </Link>
           )}
-          {canEdit && <span className="text-sm font-semibold text-saffron-600">{d.layoutTools}</span>}
+          {canEdit && <span className="text-sm font-semibold text-brand-600">{d.layoutTools}</span>}
           {note && (
             <span role="status" className="text-sm font-semibold text-india-600">
               ✓ {note}
@@ -225,17 +225,17 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
             <div className="ep-wrap" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
-                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #0b1f4d', display: 'flex', alignItems: 'center', gap: 22 }}>
+                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #1a1a1a', display: 'flex', alignItems: 'center', gap: 22 }}>
                     {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
                     <img src="/epaper-india-map.png" alt="भारत" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain', flexShrink: 0 }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
                       <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 800, fontSize: nameSize, lineHeight: 1.08, whiteSpace: 'nowrap' }}>
                         <TricolorName name={siteName} />
                       </div>
-                      {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#0b1f4d', marginTop: 2 }}>{descriptor}</div>}
+                      {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a', marginTop: 2 }}>{descriptor}</div>}
                       <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 2 }}>{TAGLINE_SHORT}</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginTop: 2 }}>
-                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #0b1f4d', padding: '0 6px', color: '#0b1f4d' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
+                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #1a1a1a', padding: '0 6px', color: '#1a1a1a' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
                       </div>
                     </div>
                     <Tula size={120} />

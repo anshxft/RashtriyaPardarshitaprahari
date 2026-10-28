@@ -50,7 +50,7 @@ export default async function ArticlePage({ params }: Props) {
     if (hi)
       return (
         <div className="mx-auto max-w-2xl rounded-xl border border-line bg-surface p-6 text-center">
-          <p className="text-sm font-bold text-saffron-600">This story is available in Hindi</p>
+          <p className="text-sm font-bold text-brand-600">This story is available in Hindi</p>
           <h1 lang="hi" className="mt-2 font-display text-2xl font-bold">{hi.title}</h1>
           <p className="mt-3 text-muted">An English version has not been published yet.</p>
           <Link href={paths.article('hi', hi.slug)} className="mt-5 inline-block rounded-md bg-navy-900 px-5 py-3 font-bold text-white hover:bg-navy-700">
@@ -64,7 +64,7 @@ export default async function ArticlePage({ params }: Props) {
     if (!stub) notFound()
     return (
       <div className="mx-auto max-w-2xl rounded-xl border border-line bg-surface p-6 text-center">
-        <p className="text-sm font-bold text-saffron-600">{lang === 'hi' ? 'आर्काइव की गई खबर' : 'Archived story'}</p>
+        <p className="text-sm font-bold text-brand-600">{lang === 'hi' ? 'आर्काइव की गई खबर' : 'Archived story'}</p>
         <h1 className="mt-2 font-display text-2xl font-bold">{stub.title}</h1>
         <p className="mt-2 text-sm text-muted">
           {stub.newsId && <span className="font-mono">{stub.newsId}</span>}
