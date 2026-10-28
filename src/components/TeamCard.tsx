@@ -24,13 +24,13 @@ export const tierLabel = (tier: string | null | undefined, lang: Lang) => {
 export function TeamCard({ m, lang, featured }: { m: TeamMember; lang: Lang; featured?: boolean }) {
   const d = t(lang)
   const photo = asMedia(m.photo)
-  const src = photo?.sizes?.card?.url || photo?.url
+  const src = photo?.url || photo?.sizes?.card?.url // original: the card size is a 16:9 crop that cuts portrait faces
   const place = [m.bureau, m.district, stateLabel(m.state, lang)].filter(Boolean).join(' · ')
   return (
     <article id={m.slug || undefined} className={`scroll-mt-24 flex gap-4 rounded-xl border border-line bg-bg p-4 shadow-sm ${featured ? 'md:col-span-2 lg:col-span-3 md:p-6' : ''}`}>
       <div className={`relative shrink-0 overflow-hidden rounded-full bg-navy-900 ${featured ? 'h-28 w-28 md:h-36 md:w-36' : 'h-20 w-20'}`}>
         {src ? (
-          <Image src={src} alt={m.name} fill sizes="150px" className="object-cover" />
+          <Image src={src} alt={m.name} fill sizes="150px" className="object-cover object-top" />
         ) : (
           <span className="flex h-full w-full items-center justify-center font-display text-2xl font-bold text-gold-300">{initials(m.name)}</span>
         )}

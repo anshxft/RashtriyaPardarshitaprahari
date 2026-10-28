@@ -44,7 +44,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const shortUrl = a.newsId ? `${siteUrl()}${paths.newsShort(a.newsId)}` : url
   const parentId = typeof a.followUpOf === 'object' ? a.followUpOf?.id : a.followUpOf
   const stamp = a.firstPublishedAt || a.publishedAt
-  const memberPhoto = member ? asMedia(member.photo)?.sizes?.thumb?.url || asMedia(member.photo)?.url : undefined
+  const memberPhoto = member ? asMedia(member.photo)?.url : undefined
   const text = storyText(a) // a story pasted into the sub-headline box is shown as the story, not as a giant sub-headline
   const readMin = readingMinutes(text.paragraphs.join('\n\n'))
 
@@ -133,7 +133,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       <div className={`mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-line py-3 text-sm ${L.reporterAlign === 'center' ? 'justify-center' : L.reporterAlign === 'right' ? 'justify-end' : ''}`}>
         {byline && (
           <span className={`inline-flex items-center gap-2 ${BY[L.reporterSize]} ${L.reporterWeight === 'normal' ? '[&_*]:!font-normal' : ''} ${r.className}`} style={r.style}>
-            {memberPhoto && <Image src={memberPhoto} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />}
+            {memberPhoto && <Image src={memberPhoto} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover object-top" />}
             <span>
               {d.reportBy}:{' '}
               {member?.slug ? (
