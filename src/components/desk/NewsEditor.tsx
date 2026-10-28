@@ -60,6 +60,8 @@ export function bodyToParagraphs(body: string): string[] {
 
 const STEP = (cur: Size | null | undefined, d: 1 | -1, fallback: Size): Size => SIZES[Math.min(3, Math.max(0, SIZES.indexOf(cur || fallback) + d))]
 
+const AUTOSAVE_MS = 2000
+
 export function NewsEditor({ initial, locale, categories, team, edition, mayPublish, reference }: Props) {
   const [f, setF] = useState<NewsForm>(initial)
   const [busy, start] = useTransition()
@@ -78,6 +80,31 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
 
   const set = <K extends keyof NewsForm>(k: K, v: NewsForm[K]) => (setF((x) => ({ ...x, [k]: v })), setDirty(true))
   const setLayout = (p: Layout) => (setF((x) => ({ ...x, layout: { ...x.layout, ...p } })), setDirty(true))
+
+  // ── Auto-save: unsaved typing is kept on this device every few seconds, so a lost network / closed tab loses nothing.
+  const draftKey = `news-autosave:${initial.id ?? 'new'}:${locale}`
+  const [restore, setRestore] = useState<{ f: NewsForm; at: number } | null>(null)
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(draftKey) || 'null') as { f: NewsForm; at: number } | null
+      if (saved?.f && (saved.f.title !== initial.title || saved.f.body !== initial.body)) setRestore(saved)
+    } catch {}
+  }, [draftKey, initial.title, initial.body])
+  useEffect(() => {
+    if (!dirty) return
+    const id = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ f, at: Date.now() }))
+      } catch {}
+    }, AUTOSAVE_MS)
+    return () => clearTimeout(id)
+  }, [dirty, f, draftKey])
+  const forgetDraft = () => {
+    try {
+      localStorage.removeItem(draftKey)
+      localStorage.removeItem(`news-autosave:new:${locale}`)
+    } catch {}
+  }
 
   useEffect(() => {
     if (!dirty) return
@@ -134,6 +161,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       if (!r.ok) return setMsg({ kind: 'err', text: r.error })
       setF((x) => ({ ...x, id: r.id, newsId: r.newsId, slug: r.slug, published: x.published || r.status === 'published' || r.status === 'scheduled', editNote: '' }))
       setDirty(false)
+      forgetDraft()
       setWebKey((k) => k + 1)
       window.history.replaceState(null, '', `/desk/news/${r.id}${locale === 'en' ? '?lang=en' : ''}`)
       if (r.status === 'draft' || r.status === 'submitted') {
@@ -190,6 +218,19 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
   return (
     <div className="space-y-4">
       {result && <PublishedCard r={result} locale={locale} onClose={() => setResult(null)} />}
+      {restore && (
+        <div role="status" className="flex flex-wrap items-center gap-3 rounded-lg border border-gold-400 bg-gold-300/20 p-3 text-sm">
+          <span className="font-semibold">
+            इस खबर का बिना सेव किया हुआ काम मिला ({new Date(restore.at).toLocaleString('hi-IN', { timeZone: 'Asia/Kolkata', hour12: false })})
+          </span>
+          <button type="button" className="rounded-full bg-navy-900 px-3 py-1.5 font-semibold text-white" onClick={() => (setF({ ...restore.f, id: f.id }), setDirty(true), setRestore(null))}>
+            वापस लाएँ
+          </button>
+          <button type="button" className="rounded-full border border-line px-3 py-1.5 font-semibold" onClick={() => (forgetDraft(), setRestore(null))}>
+            हटाएँ
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'खबर संपादित करें' : 'नई खबर'}</h1>

@@ -45,11 +45,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   return (
     <div className="space-y-12">
-      {flash.length > 0 && (
-        <div className="-mb-6">
-          <FlashBox initial={flash} lang={lang} />
-        </div>
-      )}
+      {flash.length > 0 && <FlashBox initial={flash} lang={lang} />}
 
       {/* Lead + latest list */}
       <section className="grid gap-8 lg:grid-cols-3" aria-label={d.topStories}>
