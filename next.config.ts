@@ -23,6 +23,21 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/desk/**': ['./node_modules/@ffmpeg-installer/**/*', './public/logo-watermark.png'],
   },
+  // Basic hardening for every response: no framing by other sites, no MIME sniffing, no full URLs leaked to other
+  // sites, no camera / mic / location. (HTTPS-only is already enforced by Vercel.)
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [{ source: '/', destination: '/hi', permanent: false }]
   },

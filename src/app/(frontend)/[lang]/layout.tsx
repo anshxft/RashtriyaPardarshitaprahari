@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
@@ -58,6 +59,8 @@ export default async function Layout({ children, params }: { children: ReactNode
           label={lang === 'hi' ? 'व्हाट्सएप्प पर संपर्क करें' : 'Contact us on WhatsApp'}
           choose={lang === 'hi' ? 'किस कार्यालय से बात करनी है?' : 'Which office would you like to reach?'}
         />
+        {/* Cookie-free visitor counts (Vercel Web Analytics) — no personal data, so no cookie banner needed. */}
+        <Analytics />
       </body>
     </html>
   )
