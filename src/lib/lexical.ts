@@ -36,6 +36,20 @@ export function isPlainBody(data: unknown): boolean {
 
 export const lexicalToText = (data: unknown) => lexicalToParagraphs(data).join('\n\n')
 
+/** Longer than this, a “sub-headline” is really the story pasted into the wrong box. */
+export const SUB_MAX = 240
+
+/**
+ * A story's text even when the editor pasted it into the wrong box: with an empty body and a sub-headline longer than
+ * SUB_MAX, that sub-headline IS the body (and is not repeated as a sub-headline). Otherwise the excerpt fills in.
+ */
+export function storyText(a: { content?: unknown; subheadline?: string | null; excerpt?: string | null }) {
+  const body = lexicalToParagraphs(a.content)
+  const misplaced = !body.length && (a.subheadline?.trim().length ?? 0) > SUB_MAX
+  const paragraphs = body.length ? body : misplaced ? a.subheadline!.split(/\n+/).map((p) => p.trim()).filter(Boolean) : a.excerpt ? [a.excerpt] : []
+  return { subheadline: misplaced ? undefined : a.subheadline || undefined, paragraphs, bodyFromSubheadline: misplaced }
+}
+
 /** Short plain-text teaser (used on cards / home). */
 export function teaser(data: unknown, max = 240): string {
   const t = lexicalToParagraphs(data).join(' ')

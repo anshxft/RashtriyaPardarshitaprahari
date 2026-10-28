@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { asAuthor, asCat, asMedia, cardImage, getArticles, getCategories, getCorrections, getSettings, type Card } from '@/lib/data'
 import { formatDate, readingMinutes, t, type Lang } from '@/lib/i18n'
-import { lexicalToText } from '@/lib/lexical'
+import { paragraphsToLexical, storyText } from '@/lib/lexical'
 import { FontSizer, ReadingProgress } from './ReadingTools'
 import { INK, resolveLayout, type Ink, type Size } from '@/lib/layout'
 import { paths, siteUrl } from '@/lib/paths'
@@ -45,7 +45,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const parentId = typeof a.followUpOf === 'object' ? a.followUpOf?.id : a.followUpOf
   const stamp = a.firstPublishedAt || a.publishedAt
   const memberPhoto = member ? asMedia(member.photo)?.sizes?.thumb?.url || asMedia(member.photo)?.url : undefined
-  const readMin = readingMinutes(lexicalToText(a.content))
+  const text = storyText(a) // a story pasted into the sub-headline box is shown as the story, not as a giant sub-headline
+  const readMin = readingMinutes(text.paragraphs.join('\n\n'))
 
   const [related, followUps, parent, corrections, categories, settings] = await Promise.all([
     getArticles(lang, { where: { and: [{ category: { equals: cat?.id } }, { id: { not_equals: a.id } }] }, limit: 4 }),
@@ -123,9 +124,9 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       <h1 className={`${L.headlineFont === 'sans' ? 'font-sans' : 'font-display'} leading-tight ${L.headlineWeight === 'normal' ? 'font-medium' : 'font-extrabold'} ${H1[L.headlineSize]} ${EL_ALIGN[L.headlineAlign]} ${h.className}`} style={h.style}>
         {a.title}
       </h1>
-      {(a.subheadline || a.excerpt) && (
+      {(text.subheadline || a.excerpt) && (
         <p className={`mt-4 leading-relaxed ${SUB[L.subheadlineSize]} ${L.subheadlineWeight === 'bold' ? 'font-bold' : ''} ${EL_ALIGN[L.subheadlineAlign]} ${s.className}`} style={s.style}>
-          {a.subheadline || a.excerpt}
+          {text.subheadline || a.excerpt}
         </p>
       )}
 
@@ -244,7 +245,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       {a.format === 'tracker' && a.tracker && <TrackerTimeline steps={a.tracker} lang={lang} />}
 
       <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
-        <RichText data={a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
+        <RichText data={text.bodyFromSubheadline ? paragraphsToLexical(text.paragraphs) : a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
       </div>
       <Slot name="ad-article-inline" />
       {a.format === 'investigation' && <InvestigationSections a={a} lang={lang} />}

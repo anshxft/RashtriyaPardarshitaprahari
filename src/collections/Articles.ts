@@ -57,9 +57,9 @@ export const Articles: CollectionConfig = {
   },
   hooks: { beforeChange: [articleBeforeChange], afterChange: [articleAfterChange] },
   fields: [
-    { name: 'title', type: 'text', required: true, localized: true },
-    { name: 'subheadline', type: 'text', localized: true, admin: { description: 'Optional second line under the headline' } },
-    { name: 'excerpt', type: 'textarea', localized: true, admin: { description: '1–2 line summary for cards and SEO' } },
+    { name: 'title', type: 'text', required: true, localized: true, label: 'मुख्य शीर्षक / Headline' },
+    { name: 'subheadline', type: 'text', localized: true, label: 'उपशीर्षक / Sub-headline', admin: { description: 'केवल एक छोटी लाइन (वैकल्पिक)। पूरी खबर यहाँ नहीं — नीचे “मुख्य खबर” बॉक्स में लिखें/पेस्ट करें।' } },
+    { name: 'excerpt', type: 'textarea', localized: true, label: 'सारांश / Summary', admin: { description: '1–2 लाइन का सार (कार्ड और Google के लिए), वैकल्पिक।' } },
     // Section + photo right under the headline (they used to sit in the sidebar, which drops below the whole form on
     // smaller screens — editors could not find them and Publish failed with “invalid: Category”).
     {
@@ -79,9 +79,9 @@ export const Articles: CollectionConfig = {
       type: 'tabs',
       tabs: [
         {
-          label: 'Story',
+          label: 'मुख्य खबर / Story',
           fields: [
-            { name: 'content', type: 'richText', localized: true },
+            { name: 'content', type: 'richText', localized: true, label: 'मुख्य खबर / Full story', admin: { description: 'पूरी खबर यहाँ पेस्ट करें — यही वेबसाइट और ई-पेपर में छपती है। ई-पेपर में वही खबर आती है जिसमें यहाँ लिखा हो।' } },
             {
               name: 'sources',
               type: 'array',
