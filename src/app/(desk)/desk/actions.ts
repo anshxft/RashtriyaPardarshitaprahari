@@ -72,7 +72,7 @@ export async function saveNewsAction(input: NewsInput): Promise<SaveResult> {
       newsId: doc.newsId,
       slug: doc.slug,
       urls: { web, print: `${web}/print`, short, preview: `/${input.locale}/preview/${doc.id}` },
-      qrSvg: short ? await QRCode.toString(short, { type: 'svg', margin: 1, width: 160, errorCorrectionLevel: 'M', color: { dark: '#0b1f4d', light: '#ffffff' } }) : undefined,
+      qrSvg: short ? await QRCode.toString(short, { type: 'svg', margin: 1, width: 160, errorCorrectionLevel: 'M', color: { dark: '#1a1a1a', light: '#ffffff' } }) : undefined,
     }
   } catch (e) {
     return { ok: false, error: msg(e) }

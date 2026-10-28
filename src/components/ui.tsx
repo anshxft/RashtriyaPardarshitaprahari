@@ -36,15 +36,14 @@ export const FormatBadge = ({ format, lang }: { format?: string | null; lang: La
   ) : null
 
 export const SampleBadge = ({ lang }: { lang: Lang }) => (
-  <span className={`${pill} border border-dashed border-saffron-600 text-saffron-600`}>{t(lang).sample}</span>
+  <span className={`${pill} border border-dashed border-brand-600 text-brand-600`}>{t(lang).sample}</span>
 )
 
-export const SectionTitle = ({ children, href, lang, accent = 'gold' }: { children: ReactNode; href?: string; lang: Lang; accent?: 'gold' | 'saffron' | 'green' | 'red' }) => {
-  const bar = { gold: 'bg-gold-500', saffron: 'bg-saffron-500', green: 'bg-india-600', red: 'bg-alert-600' }[accent]
+export const SectionTitle = ({ children, href, lang }: { children: ReactNode; href?: string; lang: Lang }) => {
   return (
     <div className="mb-4 flex items-end justify-between gap-4 border-b-2 border-line pb-2">
-      <h2 className="flex items-center gap-2 font-display text-2xl font-bold text-navy-900 dark:text-gold-300">
-        <span aria-hidden className={`inline-block h-6 w-1.5 rounded ${bar}`} />
+      <h2 className="flex items-center gap-2 font-display text-2xl font-bold text-navy-900 dark:text-white">
+        <span aria-hidden className="inline-block h-6 w-1.5 rounded bg-brand-600" />
         {children}
       </h2>
       {href && (
@@ -107,7 +106,7 @@ export async function Slot({ name, lang }: { name: `ad-${string}` | 'donate'; la
       <aside aria-label="विज्ञापन / Advertisement" className="rounded-lg border-2 border-dashed border-line bg-surface px-4 py-6 text-center">
         <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">विज्ञापन / Advertisement</p>
         <p className="font-display text-lg font-bold">{lang === 'hi' ? 'यहाँ आपका विज्ञापन हो सकता है' : 'Your advertisement could be here'}</p>
-        <Link href={`/${lang}/contact`} className="mt-3 inline-block rounded-md bg-saffron-500 px-4 py-2 font-bold text-navy-950 hover:bg-saffron-600 hover:text-white">
+        <Link href={`/${lang}/contact`} className="mt-3 inline-block rounded-md bg-brand-600 px-4 py-2 font-bold text-white hover:bg-brand-700">
           {lang === 'hi' ? 'विज्ञापन के लिए संपर्क करें' : 'Contact us to advertise'}
         </Link>
       </aside>

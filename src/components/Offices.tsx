@@ -27,7 +27,7 @@ export function Offices({ offices, lang, waText, variant }: { offices: Office[];
     <div className="grid gap-4 md:grid-cols-3">
       {list.map((o, i) => (
         <section key={i} className="flex flex-col rounded-lg border border-line bg-bg p-4">
-          <h2 className="font-display text-lg font-bold text-navy-900 dark:text-gold-300">{o.title}</h2>
+          <h2 className="font-display text-lg font-bold text-navy-900 dark:text-white">{o.title}</h2>
           {o.address && <p className="mt-1 text-sm whitespace-pre-line">{o.address}</p>}
           {o.unit && <p className="mt-1 text-xs text-muted">{o.unit}</p>}
           <p className="mt-3 text-xs font-semibold text-muted">{l.helpline}</p>

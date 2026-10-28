@@ -36,8 +36,8 @@ export function TeamCard({ m, lang, featured }: { m: TeamMember; lang: Lang; fea
         )}
       </div>
       <div className="min-w-0 space-y-1">
-        <h3 className={`font-display leading-tight font-bold text-navy-900 dark:text-gold-300 ${featured ? 'text-2xl' : 'text-lg'}`}>{m.name}</h3>
-        <p className="text-sm font-semibold text-saffron-600">{m.designation}</p>
+        <h3 className={`font-display leading-tight font-bold text-navy-900 dark:text-white ${featured ? 'text-2xl' : 'text-lg'}`}>{m.name}</h3>
+        <p className="text-sm font-semibold text-brand-600">{m.designation}</p>
         {m.workArea && <p className="text-sm">{m.workArea}</p>}
         {place && <p className="text-sm text-muted">{place}</p>}
         {m.idNumber && (

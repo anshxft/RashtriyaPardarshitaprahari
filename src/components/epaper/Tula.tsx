@@ -17,7 +17,7 @@ export function Tula({ size = 120 }: { size?: number }) {
           <stop offset="1" stopColor="#a17a1c" />
         </radialGradient>
       </defs>
-      <ellipse cx="60" cy="110" rx="30" ry="5" fill="#0b1f4d" opacity=".25" />
+      <ellipse cx="60" cy="110" rx="30" ry="5" fill="#1a1a1a" opacity=".25" />
       <path d="M38 108 h44 l-6 -8 h-32 z" fill="url(#tula-metal)" stroke="#5c4310" strokeWidth=".8" />
       <rect x="57" y="24" width="6" height="77" rx="2" fill="url(#tula-metal)" stroke="#5c4310" strokeWidth=".8" />
       <rect x="14" y="26" width="92" height="5" rx="2.5" fill="url(#tula-metal)" stroke="#5c4310" strokeWidth=".8" />
@@ -32,7 +32,7 @@ export function Tula({ size = 120 }: { size?: number }) {
       <ellipse cx="102" cy="70" rx="14" ry="2.2" fill="#fff3c4" opacity=".7" />
       {/* digital accent: tricolour dots on the base */}
       <circle cx="52" cy="104" r="1.6" fill="#f47c20" />
-      <circle cx="60" cy="104" r="1.6" fill="#fff" stroke="#0b1f4d" strokeWidth=".5" />
+      <circle cx="60" cy="104" r="1.6" fill="#fff" stroke="#1a1a1a" strokeWidth=".5" />
       <circle cx="68" cy="104" r="1.6" fill="#138808" />
     </svg>
   )

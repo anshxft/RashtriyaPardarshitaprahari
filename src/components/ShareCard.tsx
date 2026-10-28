@@ -28,7 +28,7 @@ export async function ShareCard({ lang, title, subtitle, category, date, img, ne
   const clamp = (n: number) => ({ display: '-webkit-box', WebkitLineClamp: n, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' })
   return (
     <div style={{ width: 1080, height: 1350, background: '#ffffff', color: '#111831', display: 'flex', flexDirection: 'column', fontFamily: body }}>
-      <div style={{ background: '#0b1f4d', padding: '28px 44px', display: 'flex', alignItems: 'center', gap: 28, borderBottom: '8px solid #e2b63f' }}>
+      <div style={{ background: '#8f1d1f', padding: '28px 44px', display: 'flex', alignItems: 'center', gap: 28, borderBottom: '8px solid #e2b63f' }}>
         <img src="/logo-160.webp" alt="" width={104} height={104} />
         <div>
           <div style={{ fontFamily: font, fontWeight: 800, fontSize: 52, color: '#f1d27a', lineHeight: 1.15 }}>{siteName}</div>
@@ -44,15 +44,15 @@ export async function ShareCard({ lang, title, subtitle, category, date, img, ne
       {img && <img src={proxied(img.src)} alt="" style={{ margin: '24px 48px 0', width: 984, height: 500, objectFit: 'cover', borderRadius: 14 }} />}
 
       <div style={{ padding: '28px 48px 0', flex: 1, minHeight: 0 }}>
-        <div style={{ fontFamily: font, fontWeight: 800, fontSize: img ? 58 : 76, lineHeight: 1.25, color: '#0b1f4d', ...clamp(img ? 4 : 6) }}>{title}</div>
+        <div style={{ fontFamily: font, fontWeight: 800, fontSize: img ? 58 : 76, lineHeight: 1.25, color: '#1a1a1a', ...clamp(img ? 4 : 6) }}>{title}</div>
         {subtitle && <div style={{ marginTop: 18, fontSize: img ? 32 : 38, lineHeight: 1.55, color: '#334', ...clamp(img ? 4 : 9) }}>{subtitle}</div>}
       </div>
 
-      <div style={{ margin: '0 48px 40px', padding: 22, border: '3px solid #0b1f4d', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 28 }}>
+      <div style={{ margin: '0 48px 40px', padding: 22, border: '3px solid #1a1a1a', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 28 }}>
         <Qr value={shortUrl} size={210} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 28, color: '#566078' }}>{d.newsId}</div>
-          <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 40, color: '#0b1f4d' }}>{newsId || '—'}</div>
+          <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 40, color: '#1a1a1a' }}>{newsId || '—'}</div>
           <div style={{ marginTop: 10, fontSize: 27, lineHeight: 1.4 }}>{d.verifyScan}</div>
           <div style={{ marginTop: 8, fontSize: 23, color: '#566078', wordBreak: 'break-all' }}>{shortUrl.replace(/^https?:\/\//, '')}</div>
         </div>
