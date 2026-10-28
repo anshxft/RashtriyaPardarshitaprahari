@@ -47,7 +47,7 @@ export const getArticles = async (lang: Lang, opts: { where?: Where; limit?: num
   const res = await (await db()).find({
     collection: 'articles',
     locale: lang,
-    where: opts.where ? { and: [publicArticleWhere(), opts.where] } : publicArticleWhere(),
+    where: opts.where ? { and: [publicArticleWhere(lang), opts.where] } : publicArticleWhere(lang),
     limit: opts.limit ?? 12,
     page: opts.page ?? 1,
     sort: '-publishedAt',
@@ -62,7 +62,7 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   const res = await (await db()).find({
     collection: 'articles',
     locale: lang,
-    where: { and: [publicArticleWhere(), { slug: { equals: slug } }] },
+    where: { and: [publicArticleWhere(lang), { slug: { equals: slug } }] },
     limit: 1,
     depth: 2,
   })
@@ -193,7 +193,9 @@ export const getTeam = cache(async (lang: Lang): Promise<TeamMember[]> => {
 })
 
 export const getVideos = async (lang: Lang, opts: { limit?: number; page?: number } = {}) => {
-  const res = await (await db()).find({ collection: 'videos', locale: lang, where: publicVideoWhere(), sort: '-publishedAt', limit: opts.limit ?? 12, page: opts.page ?? 1, depth: 1 })
+  // English lists only videos that have an English title (same rule as stories)
+  const where = lang === 'en' ? { and: [publicVideoWhere(), { title: { exists: true } }] } : publicVideoWhere()
+  const res = await (await db()).find({ collection: 'videos', locale: lang, where, sort: '-publishedAt', limit: opts.limit ?? 12, page: opts.page ?? 1, depth: 1 })
   return { ...res, docs: res.docs as Video[] }
 }
 
