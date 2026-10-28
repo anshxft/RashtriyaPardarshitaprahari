@@ -125,6 +125,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
     return (
       <div key={pl.id} className="ep-cell" style={{ position: 'absolute', left: pl.x, top: pl.y, width: pl.w, height: pl.h, overflow: 'hidden' }}>
         <StoryBlock s={pl.story} cols={pl.variant.cols} scale={pl.variant.scale} take={pl.variant.take} lang={lang} />
+        {/* Readers: the whole story block opens only that story's own page (Read / Download / Print / Share live there). */}
+        {!canEdit && pl.story.slot !== 'ad' && pl.story.url && <a href={pl.story.url} className="ep-open no-print" aria-label={pl.story.title} />}
         {canEdit && cur && pl.story.slot !== 'ad' && (
           <div className="ep-tools no-print" style={{ position: 'absolute', top: 3, right: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: pl.w - 6 }}>
             {pl.fitted && <span style={{ background: '#f28c1b', color: '#000', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>{d.autoFitted}</span>}
@@ -140,6 +142,11 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
             <button type="button" className={tool} title="Auto Fit" onClick={() => patch(baseId, { autoFit: !cur.layout.autoFit })}>{cur.layout.autoFit ? 'on' : 'off'}</button>
             <button type="button" className={tool} title="Reset" onClick={() => patch(baseId, { columns: null, bodyScale: 100, epaperPage: null, epaperOrder: null, autoFit: true })}>↺</button>
             <Link href={`/desk/news/${baseId}`} className={`${tool} inline-flex items-center`} title="Edit in Desk">✎</Link>
+            {pl.story.url && (
+              <a href={pl.story.url} target="_blank" rel="noreferrer" className={`${tool} inline-flex items-center`} title={d.openStory}>
+                ↗
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -150,6 +157,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
     <div>
       <style>{`
         .ep-cell .ep-tools { opacity: 0; transition: opacity .15s }
+        .ep-open { position: absolute; inset: 0; z-index: 1; border-radius: 2px }
+        .ep-open:hover, .ep-open:focus-visible { outline: 2px solid #8f1d1f; outline-offset: -2px; background: rgba(143, 29, 31, .04) }
         .ep-cell:hover .ep-tools, .ep-cell:focus-within .ep-tools { opacity: 1 }
         @media (hover: none) { .ep-cell .ep-tools { opacity: 1 } }
         @media print {
