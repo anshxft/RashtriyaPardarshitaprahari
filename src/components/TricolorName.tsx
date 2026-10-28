@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react'
 
 const SAFFRON: CSSProperties = { color: '#f47c20' }
-// White word stays readable on a white page: a thin dark outline drawn behind the letters (text-shadow, so the
-// fine serif strokes stay solid white instead of looking hollow like -webkit-text-stroke does).
-const O = '0.025em'
-const WHITE: CSSProperties = { color: '#fff', textShadow: `${O} 0 #1a1a1a, -${O} 0 #1a1a1a, 0 ${O} #1a1a1a, 0 -${O} #1a1a1a, ${O} ${O} #1a1a1a, -${O} -${O} #1a1a1a, ${O} -${O} #1a1a1a, -${O} ${O} #1a1a1a` }
+// White word stays readable on a white page: a soft dark outline drawn behind the letters. Blurred shadows (not hard
+// offsets or -webkit-text-stroke) keep the thin serif strokes clean and solid white at every size.
+const EDGE = '#1a1a1a'
+const WHITE: CSSProperties = { color: '#fff', textShadow: `0 0 1px ${EDGE}, 0 0 1px ${EDGE}, 0 0 1px ${EDGE}, 0 0 1px ${EDGE}, 0 0 2px ${EDGE}` }
 const GREEN: CSSProperties = { color: '#138808' }
 const BANDS = [SAFFRON, WHITE, GREEN]
 
