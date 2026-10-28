@@ -37,6 +37,9 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
+    // Keep the Blob client-upload handler in the import map even on machines without a Blob token (local dev
+    // regenerates the map on start and would otherwise drop it — production then could not upload from /admin).
+    dependencies: { blobClientUpload: { path: '@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler', type: 'component' } },
     meta: { titleSuffix: ' — प्रहरी Admin', icons: [{ url: '/icon.png' }] },
     components: {
       graphics: { Logo: '/components/admin/Graphics#Logo', Icon: '/components/admin/Graphics#Icon' },
