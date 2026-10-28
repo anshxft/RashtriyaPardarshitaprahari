@@ -252,20 +252,20 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                           <TricolorName name={siteName} />
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
-                          {lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}
-                          {trustName && <span style={{ color: '#8f1d1f' }}>{' · '}{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</span>}
+                          {trustName && <span style={{ color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
+                          {lang === 'hi' ? 'आधिकारिक ई-पेपर संस्करण' : 'Official E-Paper Edition'}
                         </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: '#c25a00', marginTop: 1 }}>{TAGLINE_SHORT}</div>
                       </div>
                       <Tula size={150} />
                     </div>
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
                       <span>
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
-                      <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
+                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
                     </div>
                     {/* “मुख्य समाचार” strip: the edition's own headlines (never invented text) */}
                     {topLines && (
