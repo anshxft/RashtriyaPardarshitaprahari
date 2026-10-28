@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 }
 
 // Sets the dark class before paint to avoid a flash.
-const themeScript = `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`
+// Light by default; dark only when the reader picked it with the ◐ button (remembered on this device).
+const themeScript = `try{if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang: l } = await params
