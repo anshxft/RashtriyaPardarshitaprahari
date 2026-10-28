@@ -68,10 +68,11 @@ export const Placeholder = ({ label }: { label?: string }) => (
 const isKnownHost = (src: string) =>
   !src.startsWith('http') || /^https:\/\/[^/]*(wikimedia\.org|unsplash\.com|pexels\.com|vercel-storage\.com)\//.test(src)
 
-export const Cover = ({ img, label, sizes, priority, className = 'aspect-video' }: { img?: Img; label?: string; sizes: string; priority?: boolean; className?: string }) => (
-  <div className={`relative overflow-hidden rounded-lg bg-surface ${className}`}>
+/** Image in a fixed frame. `ratio` (width/height) overrides the frame's aspect, e.g. the photo's own shape on a story page. */
+export const Cover = ({ img, label, sizes, priority, className = 'aspect-video', ratio }: { img?: Img; label?: string; sizes: string; priority?: boolean; className?: string; ratio?: number }) => (
+  <div className={`relative overflow-hidden rounded-lg bg-surface ${className}`} style={ratio ? { aspectRatio: ratio } : undefined}>
     {img ? (
-      <Image src={img.src} alt={img.alt} fill sizes={sizes} priority={priority} unoptimized={!isKnownHost(img.src)} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+      <Image src={img.src} alt={img.alt} fill sizes={sizes} priority={priority} unoptimized={!isKnownHost(img.src)} className="object-cover object-[50%_30%] transition-transform duration-300 group-hover:scale-[1.03]" />
     ) : (
       <Placeholder label={label} />
     )}

@@ -34,7 +34,7 @@ export async function FormPage({ lang, kind, fields, title, intro, defaults }: {
   return (
     <div className="grid gap-10 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <h1 className="border-b-4 border-gold-400 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{title}</h1>
+        <h1 className="border-b-2 border-brand-600 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{title}</h1>
         <div className="mt-4 mb-8 text-lg text-muted">{intro}</div>
         {waBox && <div className="-mt-4 mb-8 rounded-xl bg-surface p-4 text-sm lg:hidden">{waBox}</div>}
         <PublicForm kind={kind} fields={fields} lang={lang} d={d} renderedAt={Date.now()} defaults={defaults} privacyHref={paths.page(lang, 'privacy-policy')} />

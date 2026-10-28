@@ -56,7 +56,7 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
         {img && <Cover img={img} sizes="(min-width:1024px) 60vw, 100vw" priority={priority} className="mb-4 aspect-[16/9]" />}
         <div className="space-y-2">
           <Meta a={a} lang={lang} />
-          <h2 className={`font-display leading-tight font-extrabold text-navy-900 dark:text-fg ${img ? 'text-3xl md:text-4xl' : 'border-l-8 border-gold-400 pl-4 text-4xl md:text-5xl'}`}>{title}</h2>
+          <h2 className={`font-display leading-tight font-extrabold text-navy-900 dark:text-fg ${img ? 'text-3xl md:text-4xl' : 'border-l-8 border-brand-600 pl-4 text-4xl md:text-5xl'}`}>{title}</h2>
           {sub && <p className="text-lg text-muted">{sub}</p>}
           {source}
           {date}
@@ -70,7 +70,7 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
         {img && <Cover img={img} sizes="160px" className="aspect-video w-32 shrink-0 sm:w-44" />}
         <div className="min-w-0 space-y-1">
           <Meta a={a} lang={lang} />
-          <h3 className="font-display text-lg leading-snug font-bold">{title}</h3>
+          <h3 className="line-clamp-3 font-display text-lg leading-snug font-bold">{title}</h3>
           {sub && <p className="line-clamp-2 hidden text-sm text-muted sm:block">{sub}</p>}
           {source}
           {date}
@@ -88,11 +88,11 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
     )
 
   return (
-    <article className={`group relative flex flex-col ${img ? '' : 'border-t-4 border-gold-400 pt-3'} ${frame}`}>
+    <article className={`group relative flex flex-col ${img ? '' : 'border-t-4 border-brand-600 pt-3'} ${frame}`}>
       {img && <Cover img={img} sizes="(min-width:1024px) 25vw, (min-width:640px) 50vw, 100vw" />}
       <div className={`${img ? 'mt-3' : ''} space-y-1.5`}>
         <Meta a={a} lang={lang} />
-        <h3 className="font-display text-lg leading-snug font-bold">{title}</h3>
+        <h3 className="line-clamp-3 font-display text-lg leading-snug font-bold">{title}</h3>
         {sub && <p className="line-clamp-2 text-sm text-muted">{sub}</p>}
         {source}
         {date}

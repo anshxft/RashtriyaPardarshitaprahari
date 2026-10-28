@@ -24,7 +24,7 @@ export default async function VideosPage({ params, searchParams }: Props) {
   const res = await getVideos(lang, { limit: 12, page })
   return (
     <div>
-      <h1 className="mb-6 border-b-4 border-gold-400 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{d.videos}</h1>
+      <h1 className="mb-6 border-b-2 border-brand-600 pb-4 font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{d.videos}</h1>
       {res.docs.length === 0 ? (
         <p className="py-12 text-center text-muted">{d.noResults}</p>
       ) : (
