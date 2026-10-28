@@ -420,6 +420,13 @@ export interface Article {
     subheadlineInk?: ('default' | 'black' | 'navy' | 'red' | 'saffron' | 'green' | 'gray') | null;
     reporterSize?: ('sm' | 'md' | 'lg' | 'xl') | null;
     reporterInk?: ('default' | 'black' | 'navy' | 'red' | 'saffron' | 'green' | 'gray') | null;
+    headlineWeight?: ('bold' | 'normal') | null;
+    headlineAlign?: ('left' | 'center' | 'right') | null;
+    headlineFont?: ('serif' | 'sans') | null;
+    subheadlineWeight?: ('bold' | 'normal') | null;
+    subheadlineAlign?: ('left' | 'center' | 'right') | null;
+    reporterWeight?: ('bold' | 'normal') | null;
+    reporterAlign?: ('left' | 'center' | 'right') | null;
     align?: ('left' | 'center' | 'justify') | null;
     photoSize?: ('s' | 'm' | 'l' | 'full') | null;
     photoPos?: ('top' | 'left' | 'right') | null;
@@ -1475,6 +1482,13 @@ export interface ArticlesSelect<T extends boolean = true> {
         subheadlineInk?: T;
         reporterSize?: T;
         reporterInk?: T;
+        headlineWeight?: T;
+        headlineAlign?: T;
+        headlineFont?: T;
+        subheadlineWeight?: T;
+        subheadlineAlign?: T;
+        reporterWeight?: T;
+        reporterAlign?: T;
         align?: T;
         photoSize?: T;
         photoPos?: T;

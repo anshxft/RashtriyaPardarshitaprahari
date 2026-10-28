@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { saveNewsAction } from '@/app/(desk)/desk/actions'
 import type { CategoryOption, NewsInput, SaveMode, SaveResult, TeamOption } from '@/lib/deskTypes'
 import type { EpStory } from '@/lib/epaper'
-import { INK, INK_OPTIONS, resolveLayout, TEMPLATES, type Ink, type Layout, type Size } from '@/lib/layout'
+import { INK, INK_OPTIONS, resolveLayout, TEMPLATES, type ElAlign, type Ink, type Layout, type Size, type Weight } from '@/lib/layout'
 import { parsePastedStory } from '@/lib/paste'
 import { EpaperPreview } from './EpaperPreview'
 import { PhotoField, type Photo } from './PhotoField'
@@ -214,6 +214,25 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       </span>
     </div>
   )
+  // Bold / normal + left / centre / right for one element only (headline, sub-headline or reporter).
+  const styler = (weight: Weight, setWeight: (w: Weight) => void, align: ElAlign, setAlign: (a: ElAlign) => void) => (
+    <span className="flex flex-wrap gap-1.5">
+      <button type="button" className={`${chip} ${weight === 'bold' ? on : ''}`} onClick={() => setWeight(weight === 'bold' ? 'normal' : 'bold')} aria-pressed={weight === 'bold'}>
+        <b>मोटा</b>
+      </button>
+      {(
+        [
+          ['left', 'बाएँ'],
+          ['center', 'बीच'],
+          ['right', 'दाएँ'],
+        ] as const
+      ).map(([a, label]) => (
+        <button key={a} type="button" className={`${chip} ${align === a ? on : ''}`} onClick={() => setAlign(a)} aria-pressed={align === a}>
+          {label}
+        </button>
+      ))}
+    </span>
+  )
 
   return (
     <div className="space-y-4">
@@ -417,14 +436,29 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
                 <div className="space-y-2">
                   {sizer('हेडलाइन साइज़', f.layout.headlineSize, L.headlineSize, (s) => setLayout({ headlineSize: s }))}
                   {inkSwatch(f.layout.headlineInk, (i) => setLayout({ headlineInk: i }))}
+                  {styler(L.headlineWeight, (w) => setLayout({ headlineWeight: w }), L.headlineAlign, (a) => setLayout({ headlineAlign: a }))}
+                  <span className="flex flex-wrap gap-1.5">
+                    {(
+                      [
+                        ['serif', 'अख़बारी शैली'],
+                        ['sans', 'सादी शैली'],
+                      ] as const
+                    ).map(([v, label]) => (
+                      <button key={v} type="button" className={`${chip} ${L.headlineFont === v ? on : ''} ${v === 'serif' ? 'font-display' : 'font-sans'}`} onClick={() => setLayout({ headlineFont: v })}>
+                        {label}
+                      </button>
+                    ))}
+                  </span>
                 </div>
                 <div className="space-y-2">
                   {sizer('उपशीर्षक साइज़', f.layout.subheadlineSize, L.subheadlineSize, (s) => setLayout({ subheadlineSize: s }))}
                   {inkSwatch(f.layout.subheadlineInk, (i) => setLayout({ subheadlineInk: i }))}
+                  {styler(L.subheadlineWeight, (w) => setLayout({ subheadlineWeight: w }), L.subheadlineAlign, (a) => setLayout({ subheadlineAlign: a }))}
                 </div>
                 <div className="space-y-2">
                   {sizer('संवाददाता नाम साइज़', f.layout.reporterSize, L.reporterSize, (s) => setLayout({ reporterSize: s }))}
                   {inkSwatch(f.layout.reporterInk, (i) => setLayout({ reporterInk: i }))}
+                  {styler(L.reporterWeight, (w) => setLayout({ reporterWeight: w }), L.reporterAlign, (a) => setLayout({ reporterAlign: a }))}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold">मुख्य पाठ साइज़ ({L.bodyScale}%)</span>

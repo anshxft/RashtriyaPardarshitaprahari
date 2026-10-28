@@ -22,7 +22,7 @@ const H1: Record<Size, string> = { sm: 'text-2xl md:text-4xl', md: 'text-3xl md:
 const SUB: Record<Size, string> = { sm: 'text-base', md: 'text-xl', lg: 'text-2xl', xl: 'text-3xl' }
 const BY: Record<Size, string> = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' }
 const PHOTO = { s: 'max-w-xs', m: 'max-w-xl', l: 'max-w-3xl', full: 'max-w-3xl' } as const
-const ALIGN = { left: 'text-left', center: 'text-center', justify: 'text-left' } as const
+const EL_ALIGN = { left: 'text-left', center: 'text-center', right: 'text-right' } as const
 
 /** Custom ink only in light mode (dark mode keeps its readable text colour). */
 const ink = (i: Ink, fallback: string) => (i === 'default' ? { className: fallback, style: undefined } : { className: 'text-(--ink) dark:text-fg', style: { ['--ink' as string]: INK[i] } })
@@ -120,18 +120,18 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
         <QuestionBadge status={a.questionStatus} lang={lang} />
         {a.sample && <SampleBadge lang={lang} />}
       </div>
-      <h1 className={`font-display leading-tight font-extrabold ${H1[L.headlineSize]} ${ALIGN[L.align]} ${h.className}`} style={h.style}>
+      <h1 className={`${L.headlineFont === 'sans' ? 'font-sans' : 'font-display'} leading-tight ${L.headlineWeight === 'normal' ? 'font-medium' : 'font-extrabold'} ${H1[L.headlineSize]} ${EL_ALIGN[L.headlineAlign]} ${h.className}`} style={h.style}>
         {a.title}
       </h1>
       {(a.subheadline || a.excerpt) && (
-        <p className={`mt-4 leading-relaxed ${SUB[L.subheadlineSize]} ${ALIGN[L.align]} ${s.className}`} style={s.style}>
+        <p className={`mt-4 leading-relaxed ${SUB[L.subheadlineSize]} ${L.subheadlineWeight === 'bold' ? 'font-bold' : ''} ${EL_ALIGN[L.subheadlineAlign]} ${s.className}`} style={s.style}>
           {a.subheadline || a.excerpt}
         </p>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-line py-3 text-sm">
+      <div className={`mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-line py-3 text-sm ${L.reporterAlign === 'center' ? 'justify-center' : L.reporterAlign === 'right' ? 'justify-end' : ''}`}>
         {byline && (
-          <span className={`inline-flex items-center gap-2 ${BY[L.reporterSize]} ${r.className}`} style={r.style}>
+          <span className={`inline-flex items-center gap-2 ${BY[L.reporterSize]} ${L.reporterWeight === 'normal' ? '[&_*]:!font-normal' : ''} ${r.className}`} style={r.style}>
             {memberPhoto && <Image src={memberPhoto} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover" />}
             <span>
               {d.reportBy}:{' '}
