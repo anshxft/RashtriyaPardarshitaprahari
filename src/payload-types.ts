@@ -169,11 +169,11 @@ export interface Article {
   id: number;
   title: string;
   /**
-   * Optional second line under the headline
+   * केवल एक छोटी लाइन (वैकल्पिक)। पूरी खबर यहाँ नहीं — नीचे “मुख्य खबर” बॉक्स में लिखें/पेस्ट करें।
    */
   subheadline?: string | null;
   /**
-   * 1–2 line summary for cards and SEO
+   * 1–2 लाइन का सार (कार्ड और Google के लिए), वैकल्पिक।
    */
   excerpt?: string | null;
   category: number | Category;
@@ -181,6 +181,9 @@ export interface Article {
    * लैपटॉप या मोबाइल से फोटो चुनें (बड़ी फोटो भी चलेगी)। फोटो न हो तो खाली छोड़ें।
    */
   heroImage?: (number | null) | Media;
+  /**
+   * पूरी खबर यहाँ पेस्ट करें — यही वेबसाइट और ई-पेपर में छपती है। ई-पेपर में वही खबर आती है जिसमें यहाँ लिखा हो।
+   */
   content?: {
     root: {
       type: string;

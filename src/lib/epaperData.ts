@@ -5,7 +5,7 @@ import type { Article } from '@/payload-types'
 import { istDate } from './articleHooks'
 import { asCat, cardImage, db, getAd } from './data'
 import type { EpStory } from './epaper'
-import { lexicalToParagraphs } from './lexical'
+import { storyText } from './lexical'
 import type { Lang } from './i18n'
 import { resolveLayout } from './layout'
 import { paths, siteUrl } from './paths'
@@ -21,17 +21,18 @@ export async function toEpStory(a: Article, lang: Lang): Promise<EpStory> {
   const known = img && (img.src.startsWith('/') || /^https:\/\/[^/]*(wikimedia\.org|unsplash\.com|pexels\.com|vercel-storage\.com)\//.test(img.src))
   const photoSrc = img ? (known ? proxied(img.src, 1920) : img.src) : undefined // sharp when zoomed / Full HD export
   const linkImg = isLink && a.linkCard?.imageUrl ? a.linkCard.imageUrl : undefined
+  const text = storyText(a) // a story pasted into the sub-headline box still reaches the e-paper
   return {
     id: String(a.id),
     title: a.title,
-    subheadline: a.subheadline,
+    subheadline: text.subheadline,
     reporter: a.reporterName || member,
     location: a.location,
     category: asCat(a.category)?.title,
     categorySlug: asCat(a.category)?.slug,
     newsId: a.newsId,
     url,
-    paragraphs: lexicalToParagraphs(a.content).length ? lexicalToParagraphs(a.content) : a.excerpt ? [a.excerpt] : [],
+    paragraphs: text.paragraphs,
     photo: photoSrc ? { src: photoSrc, alt: img!.alt, credit: img!.credit } : linkImg ? { src: linkImg, alt: a.title } : undefined,
     layout: resolveLayout(a.layout, { hasPhoto: Boolean(photoSrc || linkImg), format: a.format }),
     format: a.format,
