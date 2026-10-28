@@ -13,7 +13,7 @@ export default async function AppointmentPage({ params }: Props) {
   const lang = assertLang((await params).lang)
   const intro =
     lang === 'hi'
-      ? 'संपादक, संवाददाता या ट्रस्ट प्रतिनिधि से मिलने के लिए अनुरोध भेजें। हम उपलब्धता के अनुसार पुष्टि करेंगे।'
+      ? 'प्रधान संपादक, संवाददाता या ट्रस्ट प्रतिनिधि से मिलने के लिए अनुरोध भेजें। हम उपलब्धता के अनुसार पुष्टि करेंगे।'
       : 'Request a meeting with the editor, a reporter or a Trust representative. We will confirm based on availability.'
   return <FormPage lang={lang} kind="appointment" fields={appointmentFields} title={t(lang).appointment} intro={intro} />
 }
