@@ -71,13 +71,14 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   return (
     <article
       data-ep-block={s.id}
-      style={{ width, boxSizing: 'border-box', background: s.slot === 'aina' ? '#fffaf2' : '#fff', color: '#111', fontFamily: font.body, borderBottom: '1px solid #bbb', paddingBottom: 6, ...(s.slot === 'aina' ? { borderTop: '2px solid #c25a00', borderLeft: '2px solid #c25a00', borderRight: '2px solid #c25a00', borderBottom: '2px solid #c25a00', paddingLeft: 8, paddingRight: 8 } : {}) }}
+      style={{ width, boxSizing: 'border-box', background: s.slot === 'aina' ? '#fffaf2' : s.slot === 'filler' ? '#f6f5f3' : '#fff', ...(s.slot === 'filler' ? { borderTop: '3px solid #8f1d1f', padding: '8px 10px 6px' } : {}), color: '#111', fontFamily: font.body, borderBottom: '1px solid #bbb', paddingBottom: 6, ...(s.slot === 'aina' ? { borderTop: '2px solid #c25a00', borderLeft: '2px solid #c25a00', borderRight: '2px solid #c25a00', borderBottom: '2px solid #c25a00', paddingLeft: 8, paddingRight: 8 } : {}) }}
     >
       {s.slot === 'aina' && (
         <div style={{ margin: '0 -8px 8px', background: '#c25a00', color: '#fff', fontFamily: font.head, fontWeight: 800, fontSize: 20, lineHeight: '34px', textAlign: 'center' }}>{lang === 'hi' ? 'समाज का आइना' : 'Samaj Ka Aaina'}</div>
       )}
-      {!side && photo}
       {head}
+      {/* Newspaper order: headline → photo → text */}
+      {!side && photo && <div style={{ marginTop: 8 }}>{photo}</div>}
       {side ? (
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexDirection: L.photoPos === 'right' ? 'row-reverse' : 'row', marginTop: 4 }}>
           {photo}

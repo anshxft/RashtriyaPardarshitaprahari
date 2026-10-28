@@ -3,10 +3,10 @@ import { publicArticleWhere } from '@/collections/Articles'
 import { proxied } from '@/components/ShareCard'
 import type { Article } from '@/payload-types'
 import { istDate } from './articleHooks'
-import { asCat, cardImage, db, getAd } from './data'
+import { asCat, cardImage, db, getAd, getBySlug, getSettings } from './data'
 import type { EpStory } from './epaper'
-import { storyText } from './lexical'
-import type { Lang } from './i18n'
+import { lexicalToParagraphs, storyText } from './lexical'
+import { t, type Lang } from './i18n'
 import { resolveLayout } from './layout'
 import { paths, siteUrl } from './paths'
 
@@ -96,4 +96,24 @@ export async function getEpaperAd(): Promise<EpStory | null> {
     slot: 'ad',
     ad: { link: ad.link, aspect: ad.w && ad.h ? Math.min(2.2, Math.max(0.5, ad.h / ad.w)) : 1.4 },
   }
+}
+
+/**
+ * The paper's own standing blocks, used only to fill space a thin edition leaves empty: the editor's message (first
+ * paragraphs, from Pages) and the “send your issue” box. Real site content only — nothing written here for filling.
+ */
+export async function getEpaperFillers(lang: Lang): Promise<EpStory[]> {
+  const d = t(lang)
+  const [page, settings] = await Promise.all([getBySlug('pages', lang, 'editor-in-chief-message'), getSettings(lang)])
+  const out: EpStory[] = []
+  const now = new Date().toISOString()
+  const base = { layout: resolveLayout({ columns: 2, autoFit: false }, { hasPhoto: false }), publishedAt: now, slot: 'filler' as const }
+  const msg = page ? lexicalToParagraphs(page.content).filter((p) => !p.startsWith('—')).slice(0, 3) : []
+  if (msg.length) {
+    const url = `${siteUrl()}${paths.page(lang, 'editor-in-chief-message')}`
+    out.push({ ...base, id: 'filler-editor', title: d.editorMessage, paragraphs: msg, reporter: settings.editorName || undefined, url, qrSvg: await qr(url) })
+  }
+  const submit = `${siteUrl()}${paths.submit(lang)}`
+  out.push({ ...base, id: 'filler-submit', title: d.submitIssue, paragraphs: [d.submitIssueCta], url: submit, qrSvg: await qr(submit) })
+  return out
 }

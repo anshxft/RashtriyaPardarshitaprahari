@@ -20,6 +20,8 @@ type Props = {
   dateLabel: string
   siteName: string
   trustName?: string | null
+  /** standing blocks that fill leftover space (editor's message, send-your-issue) */
+  fillers?: EpStory[]
   regNo?: string | null
   ad?: EpStory | null
   stories: EpStory[]
@@ -30,7 +32,7 @@ type Props = {
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font-bold text-white hover:bg-navy-700'
 
-export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, ad, stories, editions, canEdit }: Props) {
+export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, fillers, ad, stories, editions, canEdit }: Props) {
   const d = t(lang)
   // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
   const nameSize = /[a-z]/i.test(siteName) ? Math.min(72, Math.floor(1450 / siteName.length)) : 76
@@ -49,7 +51,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
     () => stories.map((s) => (patches[s.id] ? { ...s, layout: { ...s.layout, ...Object.fromEntries(Object.entries(patches[s.id]).filter(([, v]) => v !== undefined)) } as EpStory['layout'] } : s)),
     [stories, patches],
   )
-  const packed = usePack(eff, lang, ad)
+  const packed = usePack(eff, lang, ad, fillers)
   const ready = packed.ready
   const pages = stories.length ? packed.pages : [] // no stories that day → no empty masthead-only page
   const [zoom, setZoom] = useState(1)

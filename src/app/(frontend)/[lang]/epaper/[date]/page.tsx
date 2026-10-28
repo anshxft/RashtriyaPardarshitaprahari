@@ -4,7 +4,7 @@ import { canPublish } from '@/access'
 import { EpaperBoard } from '@/components/epaper/EpaperBoard'
 import { currentUser } from '@/lib/auth'
 import { getSettings } from '@/lib/data'
-import { getEditionStories, getEpaperAd, listEditions } from '@/lib/epaperData'
+import { getEditionStories, getEpaperAd, getEpaperFillers, listEditions } from '@/lib/epaperData'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic' // depends on who is looking (editors get the layout tools)
@@ -21,7 +21,7 @@ export default async function EpaperPage({ params }: Props) {
   const p = await params
   const lang = assertLang(p.lang)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date)) notFound()
-  const [stories, editions, settings, user, ad] = await Promise.all([getEditionStories(lang, p.date), listEditions(), getSettings(lang), currentUser(), getEpaperAd()])
+  const [stories, editions, settings, user, ad, fillers] = await Promise.all([getEditionStories(lang, p.date), listEditions(), getSettings(lang), currentUser(), getEpaperAd(), getEpaperFillers(lang)])
   return (
     <EpaperBoard
       lang={lang}
@@ -29,6 +29,7 @@ export default async function EpaperPage({ params }: Props) {
       dateLabel={label(p.date, lang)}
       siteName={settings.siteName || t(lang).siteName}
       trustName={settings.trustName}
+      fillers={fillers}
       regNo={settings.trustRegistrationNo && !/^\[.*\]$/.test(settings.trustRegistrationNo.trim()) ? settings.trustRegistrationNo : null}
       ad={ad}
       stories={stories}
