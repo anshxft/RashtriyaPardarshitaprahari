@@ -21,7 +21,6 @@ import { Cover, Credit, FormatBadge, QuestionBadge, SampleBadge, SectionTitle, S
 const H1: Record<Size, string> = { sm: 'text-2xl md:text-4xl', md: 'text-3xl md:text-5xl', lg: 'text-4xl md:text-6xl', xl: 'text-5xl md:text-7xl' }
 const SUB: Record<Size, string> = { sm: 'text-base', md: 'text-xl', lg: 'text-2xl', xl: 'text-3xl' }
 const BY: Record<Size, string> = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' }
-const PHOTO = { s: 'max-w-xs', m: 'max-w-xl', l: 'max-w-3xl', full: 'max-w-3xl' } as const
 const EL_ALIGN = { left: 'text-left', center: 'text-center', right: 'text-right' } as const
 
 /** Custom ink only in light mode (dark mode keeps its readable text colour). */
@@ -193,7 +192,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
 
       {img && L.showPhoto && a.format !== 'video' && (
         // The photo keeps its own shape (no cropping) within 3:4 … 21:9; tall photos are shown narrower instead of huge.
-        <figure className={`mt-6 ${L.photoSize === 'l' || L.photoSize === 'full' ? '' : 'mx-auto'} ${heroRatio < 1 ? 'mx-auto max-w-md' : PHOTO[L.photoSize]}`}>
+        <figure className={`mt-6 ${heroRatio < 1 ? 'mx-auto max-w-md' : 'w-full'}`}>
           <Cover img={img} sizes="(min-width:768px) 768px, 100vw" priority className="" ratio={heroRatio} />
           <Credit img={img} lang={lang} />
         </figure>

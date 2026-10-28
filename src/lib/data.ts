@@ -35,7 +35,7 @@ const cardSelect = {
 const cardPopulate = {
   categories: { title: true, slug: true },
   authors: { name: true, slug: true },
-  media: { url: true, alt: true, sizes: true, credit: true, width: true, height: true },
+  media: { url: true, filename: true, alt: true, sizes: true, credit: true, width: true, height: true },
 } as const
 
 export type Card = Pick<
