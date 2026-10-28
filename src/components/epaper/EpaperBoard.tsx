@@ -248,12 +248,13 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                       {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
                       <img src="/epaper-india-map.png" alt="भारत" width={150} height={150} style={{ width: 150, height: 150, objectFit: 'contain', flexShrink: 0 }} />
                       <div style={{ flex: 1, textAlign: 'center' }}>
-                        {trustName && <div style={{ fontSize: 14, fontWeight: 700, color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</div>}
-                        {/* Devanagari matras rise above the line box: leave room so the trust line above is never touched */}
-                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 900, fontSize: nameSize, lineHeight: 1.15, marginTop: 8, whiteSpace: 'nowrap' }}>
+                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 900, fontSize: nameSize, lineHeight: 1.15, whiteSpace: 'nowrap' }}>
                           <TricolorName name={siteName} />
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
+                          {lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}
+                          {trustName && <span style={{ color: '#8f1d1f' }}>{' · '}{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</span>}
+                        </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: '#c25a00', marginTop: 1 }}>{TAGLINE_SHORT}</div>
                       </div>
                       <Tula size={150} />
@@ -263,7 +264,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                       <span>
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
-                      <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : trustName || ''}</span>
+                      <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
                       <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
                     </div>
                     {/* “मुख्य समाचार” strip: the edition's own headlines (never invented text) */}
