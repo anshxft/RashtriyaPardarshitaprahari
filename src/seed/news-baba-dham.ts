@@ -14,7 +14,7 @@ if (process.env.DATABASE_URL?.startsWith('postgres') && !process.env.BLOB_READ_W
 }
 
 const TITLE = 'छत्तीसगढ़ के रायगढ़ जिले के श्री श्री 108 श्री सत्यनारायण बाबाधाम पहुंची राष्ट्रीय पारदर्शिता प्रहरी की संपादकीय टीम, गणमान्य लोगों के साथ किया परिसर का निरीक्षण'
-const exists = await payload.find({ collection: 'articles', where: { title: { equals: TITLE } }, locale: 'hi', limit: 1, depth: 0, draft: true })
+const exists = await payload.find({ collection: 'articles', where: { title: { equals: TITLE } }, locale: 'hi', limit: 1, depth: 0 }) // live docs only (old versions of deleted tests must not count)
 if (exists.docs[0]) {
   log('story already there — id', exists.docs[0].id)
   process.exit(0)
