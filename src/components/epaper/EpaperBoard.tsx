@@ -168,7 +168,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
           @page { size: A3 portrait; margin: 0 }
           .ep-sheet { display: block !important; break-after: page }
           .ep-wrap { width: ${GEO.pageW}px !important; height: ${GEO.pageH}px !important }
-          .ep-page { transform: none !important; box-shadow: none !important }
+          .ep-page { transform: none !important; box-shadow: none !important; outline: none !important }
         }
       `}</style>
 
@@ -229,13 +229,15 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
         </div>
       </div>
 
+      {/* Grey “desk” behind the white A3 sheets so the page edges are always clear (not printed). */}
+      <div className="rounded-xl bg-[#dcd8d1] p-2 sm:p-5 print:bg-transparent print:p-0 dark:bg-[#2b2925]">
       <div ref={wrap} className="w-full overflow-x-auto">
         {!ready && <p className="animate-pulse py-16 text-center text-muted motion-reduce:animate-none">{d.preparing}</p>}
         {ready && stories.length === 0 && <p className="py-16 text-center text-muted">{d.noEdition}</p>}
         {pages.map((pg, i) => (
-          <section key={pg.number} className="ep-sheet anim-fade mb-6" style={{ display: view === 'all' || idx === i ? 'block' : 'none' }} aria-label={`${d.pageWord} ${pg.number}`}>
-            <div className="ep-wrap" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
-              <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
+          <section key={pg.number} className="ep-sheet anim-fade mb-6 last:mb-0" style={{ display: view === 'all' || idx === i ? 'block' : 'none' }} aria-label={`${d.pageWord} ${pg.number}`}>
+            <div className="ep-wrap mx-auto" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
+              <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column' }}>
                     {/* Info strip: registration (shown once filled in Site Settings) · dateline · price */}
@@ -282,6 +284,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
             </div>
           </section>
         ))}
+      </div>
       </div>
 
       {/* Plain list for screen readers / crawlers: the e-paper itself is drawn in the browser. */}

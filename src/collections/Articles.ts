@@ -60,6 +60,21 @@ export const Articles: CollectionConfig = {
     { name: 'title', type: 'text', required: true, localized: true },
     { name: 'subheadline', type: 'text', localized: true, admin: { description: 'Optional second line under the headline' } },
     { name: 'excerpt', type: 'textarea', localized: true, admin: { description: '1–2 line summary for cards and SEO' } },
+    // Section + photo right under the headline (they used to sit in the sidebar, which drops below the whole form on
+    // smaller screens — editors could not find them and Publish failed with “invalid: Category”).
+    {
+      type: 'row',
+      fields: [
+        { name: 'category', type: 'relationship', relationTo: 'categories', required: true, index: true, label: 'श्रेणी / Section (ज़रूरी)', admin: { width: '50%' } },
+        {
+          name: 'heroImage',
+          type: 'upload',
+          relationTo: 'media',
+          label: 'मुख्य फोटो / Hero image',
+          admin: { width: '50%', description: 'लैपटॉप या मोबाइल से फोटो चुनें (बड़ी फोटो भी चलेगी)। फोटो न हो तो खाली छोड़ें।' },
+        },
+      ],
+    },
     {
       type: 'tabs',
       tabs: [
@@ -211,16 +226,16 @@ export const Articles: CollectionConfig = {
           ],
         },
         {
-          label: 'Layout',
+          label: 'ई-पेपर / Layout',
           fields: [
             {
               name: 'layout',
               type: 'group',
               admin: { description: 'Newspaper layout. The Desk sets this from the template; change only to fix a layout.' },
               fields: [
+                { name: 'inEpaper', type: 'checkbox', defaultValue: true, label: 'ई-पेपर में डालें / Include in the e-paper', admin: { description: 'टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।' } },
                 { name: 'template', type: 'select', defaultValue: '1', options: Object.entries(TEMPLATES).map(([value, t]) => ({ value, label: `${value} — ${t.hi} / ${t.en}` })) },
                 { name: 'columns', type: 'number', min: 1, max: 4, admin: { description: 'Text columns in the e-paper (1–4). Blank = template default.' } },
-                { name: 'inEpaper', type: 'checkbox', defaultValue: true, label: 'Include in the e-paper' },
                 { name: 'epaperPage', type: 'number', min: 1, admin: { description: 'Pin to a page. Blank = automatic.' } },
                 { name: 'epaperOrder', type: 'number', admin: { description: 'Order inside the edition (lower = earlier). Blank = automatic.' } },
                 { name: 'autoFit', type: 'checkbox', defaultValue: true },
@@ -250,7 +265,6 @@ export const Articles: CollectionConfig = {
     // Sidebar
     slugField('title'),
     { name: 'format', type: 'select', required: true, defaultValue: 'news', options: [...FORMATS], admin: { position: 'sidebar' } },
-    { name: 'category', type: 'relationship', relationTo: 'categories', required: true, index: true, admin: { position: 'sidebar' } },
     { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, admin: { position: 'sidebar' } },
     { name: 'author', type: 'relationship', relationTo: 'authors', admin: { position: 'sidebar', description: 'Legacy byline (use Reporter below)' } },
     { name: 'reporterName', type: 'text', localized: true, admin: { position: 'sidebar', description: 'Reporter / correspondent shown in the byline' } },
@@ -266,7 +280,6 @@ export const Articles: CollectionConfig = {
       defaultValue: () => new Date().toISOString(),
       admin: { position: 'sidebar', date: { pickerAppearance: 'dayAndTime' }, description: 'Future date = scheduled; goes live automatically.' },
     },
-    { name: 'heroImage', type: 'upload', relationTo: 'media', admin: { position: 'sidebar' } },
     {
       name: 'social',
       type: 'group',
