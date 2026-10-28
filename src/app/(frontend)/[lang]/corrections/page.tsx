@@ -18,7 +18,7 @@ export default async function CorrectionsPage({ params }: { params: Promise<{ la
   const types = { correction: hi ? 'सुधार' : 'Correction', clarification: hi ? 'स्पष्टीकरण' : 'Clarification', update: hi ? 'अपडेट' : 'Update' }
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="border-b-4 border-gold-400 pb-4 font-display text-4xl font-extrabold text-navy-900 dark:text-white">{d.correctionsLog}</h1>
+      <h1 className="border-b-2 border-brand-600 pb-4 font-display text-4xl font-extrabold text-navy-900 dark:text-white">{d.correctionsLog}</h1>
       <p className="mt-4 text-muted">
         {hi
           ? 'हम अपनी गलतियां सार्वजनिक रूप से स्वीकार करते हैं। प्रकाशित खबरों में किए गए सभी सुधार यहां दर्ज हैं।'

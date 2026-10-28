@@ -38,6 +38,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const member = typeof a.reporter === 'object' && a.reporter ? (a.reporter as TeamMember) : undefined
   const byline = a.reporterName || member?.name || author?.name
   const img = cardImage(a, 'hero')
+  const heroRatio = img?.w && img.h ? Math.min(21 / 9, Math.max(3 / 4, img.w / img.h)) : 16 / 9
   const L = resolveLayout(a.layout, { hasPhoto: Boolean(img), format: a.format })
   const url = `${siteUrl()}${paths.article(lang, a.slug)}`
   const shortUrl = a.newsId ? `${siteUrl()}${paths.newsShort(a.newsId)}` : url
@@ -190,8 +191,9 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       )}
 
       {img && L.showPhoto && a.format !== 'video' && (
-        <figure className={`mt-6 ${L.photoSize === 'l' || L.photoSize === 'full' ? '' : 'mx-auto'} ${PHOTO[L.photoSize]}`}>
-          <Cover img={img} sizes="(min-width:768px) 768px, 100vw" priority className="aspect-video" />
+        // The photo keeps its own shape (no cropping) within 3:4 … 21:9; tall photos are shown narrower instead of huge.
+        <figure className={`mt-6 ${L.photoSize === 'l' || L.photoSize === 'full' ? '' : 'mx-auto'} ${heroRatio < 1 ? 'mx-auto max-w-md' : PHOTO[L.photoSize]}`}>
+          <Cover img={img} sizes="(min-width:768px) 768px, 100vw" priority className="" ratio={heroRatio} />
           <Credit img={img} lang={lang} />
         </figure>
       )}

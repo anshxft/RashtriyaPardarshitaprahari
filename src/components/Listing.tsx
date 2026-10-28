@@ -27,7 +27,7 @@ export function Listing({
   const [first, ...rest] = docs
   return (
     <div>
-      <header className="mb-8 border-b-4 border-gold-400 pb-4">
+      <header className="mb-8 border-b-2 border-brand-600 pb-4">
         <h1 className="font-display text-3xl font-extrabold text-navy-900 md:text-4xl dark:text-white">{title}</h1>
         {intro && <div className="mt-2 text-lg text-muted">{intro}</div>}
         {children}
