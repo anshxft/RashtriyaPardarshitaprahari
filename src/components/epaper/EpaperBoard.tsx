@@ -224,8 +224,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #0b1f4d', display: 'flex', alignItems: 'center', gap: 22 }}>
-                    {/* Left: India map. ponytail: empty slot until the client sends an official (Survey of India) map image — never draw borders ourselves */}
-                    <div style={{ width: 120, height: 120, flexShrink: 0 }} />
+                    {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
+                    <img src="/epaper-india-map.png" alt="भारत" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain', flexShrink: 0 }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
                       <div style={{ fontFamily: 'var(--font-mukta), sans-serif', fontWeight: 800, fontSize: 62, lineHeight: 1.08 }}>
                         <TricolorName name={siteName} />
