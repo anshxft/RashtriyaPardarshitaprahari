@@ -28,7 +28,8 @@ export default async function EpaperPage({ params }: Props) {
       date={p.date}
       dateLabel={label(p.date, lang)}
       siteName={settings.siteName || t(lang).siteName}
-      descriptor={settings.descriptor}
+      trustName={settings.trustName}
+      regNo={settings.trustRegistrationNo && !/^\[.*\]$/.test(settings.trustRegistrationNo.trim()) ? settings.trustRegistrationNo : null}
       ad={ad}
       stories={stories}
       editions={editions.map((e) => ({ ...e, label: label(e.date, lang) }))}

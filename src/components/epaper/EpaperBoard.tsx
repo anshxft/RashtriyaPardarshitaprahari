@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { reorderAction, saveLayoutAction } from '@/app/(frontend)/[lang]/epaper/actions'
-import { TAGLINE_SHORT } from '@/content/brand'
+import { DATELINE_CITY, TAGLINE_SHORT } from '@/content/brand'
 import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
@@ -19,7 +19,8 @@ type Props = {
   date: string
   dateLabel: string
   siteName: string
-  descriptor?: string | null
+  trustName?: string | null
+  regNo?: string | null
   ad?: EpStory | null
   stories: EpStory[]
   editions: { date: string; label: string; count: number }[]
@@ -29,10 +30,12 @@ type Props = {
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font-bold text-white hover:bg-navy-700'
 
-export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, stories, editions, canEdit }: Props) {
+export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, ad, stories, editions, canEdit }: Props) {
   const d = t(lang)
   // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
   const nameSize = /[a-z]/i.test(siteName) ? Math.min(62, Math.floor(1300 / siteName.length)) : 62
+  const weekday = new Intl.DateTimeFormat(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' }).format(new Date(`${date}T12:00:00+05:30`))
+  const topLines = stories.filter((s) => !s.slot).slice(0, 4).map((s) => s.title).join('  ●  ')
   const router = useRouter()
   const [patches, setPatches] = useState<Record<string, Layout>>({})
   const [view, setView] = useState<'page' | 'all'>('page')
@@ -234,20 +237,36 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
             <div className="ep-wrap" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 18px rgba(0,0,0,.25)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
-                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, borderBottom: '4px double #1a1a1a', display: 'flex', alignItems: 'center', gap: 22 }}>
-                    {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
-                    <img src="/epaper-india-map.png" alt="भारत" width={120} height={120} style={{ width: 120, height: 120, objectFit: 'contain', flexShrink: 0 }} />
-                    <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 800, fontSize: nameSize, lineHeight: 1.08, whiteSpace: 'nowrap' }}>
-                        <TricolorName name={siteName} />
-                      </div>
-                      {descriptor && <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a', marginTop: 2 }}>{descriptor}</div>}
-                      <div style={{ fontSize: 21, fontWeight: 700, color: '#c25a00', marginTop: 2 }}>{TAGLINE_SHORT}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginTop: 2 }}>
-                        {dateLabel} · {d.epaper} · <span style={{ border: '1.5px solid #1a1a1a', padding: '0 6px', color: '#1a1a1a' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
-                      </div>
+                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column' }}>
+                    {/* Info strip: registration (shown once filled in Site Settings) · dateline · price */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, height: 24, borderBottom: '1.5px solid #1a1a1a', fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+                      <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : trustName || ''}</span>
+                      <span>
+                        {DATELINE_CITY[lang]}, {weekday}, {dateLabel}
+                      </span>
+                      <span>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
                     </div>
-                    <Tula size={120} />
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
+                      {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
+                      <img src="/epaper-india-map.png" alt="भारत" width={112} height={112} style={{ width: 112, height: 112, objectFit: 'contain', flexShrink: 0 }} />
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        {trustName && <div style={{ fontSize: 14, fontWeight: 700, color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित` : `Run and published by ${trustName}`}</div>}
+                        {/* Devanagari matras rise above the line box: leave room so the trust line above is never touched */}
+                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 800, fontSize: nameSize, lineHeight: 1.2, marginTop: 10, whiteSpace: 'nowrap' }}>
+                          <TricolorName name={siteName} />
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#c25a00', marginTop: 1 }}>{TAGLINE_SHORT}</div>
+                      </div>
+                      <Tula size={112} />
+                    </div>
+                    {/* “मुख्य समाचार” strip: the edition's own headlines (never invented text) */}
+                    {topLines && (
+                      <div style={{ display: 'flex', alignItems: 'stretch', height: 32, background: '#b3201c', color: '#fff', fontSize: 15, fontWeight: 700, overflow: 'hidden' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: '#7a1512', fontSize: 17, whiteSpace: 'nowrap' }}>{lang === 'hi' ? 'मुख्य समाचार' : 'Top Stories'}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{topLines}</span>
+                      </div>
+                    )}
                   </header>
                 )}
                 {pg.placed.map((pl) => cell(pl, pg.number))}
