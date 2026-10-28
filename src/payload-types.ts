@@ -176,6 +176,11 @@ export interface Article {
    * 1–2 line summary for cards and SEO
    */
   excerpt?: string | null;
+  category: number | Category;
+  /**
+   * लैपटॉप या मोबाइल से फोटो चुनें (बड़ी फोटो भी चलेगी)। फोटो न हो तो खाली छोड़ें।
+   */
+  heroImage?: (number | null) | Media;
   content?: {
     root: {
       type: string;
@@ -395,12 +400,15 @@ export interface Article {
    * Newspaper layout. The Desk sets this from the template; change only to fix a layout.
    */
   layout?: {
+    /**
+     * टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।
+     */
+    inEpaper?: boolean | null;
     template?: ('1' | '2' | '3' | '4' | '5' | '6') | null;
     /**
      * Text columns in the e-paper (1–4). Blank = template default.
      */
     columns?: number | null;
-    inEpaper?: boolean | null;
     /**
      * Pin to a page. Blank = automatic.
      */
@@ -436,7 +444,6 @@ export interface Article {
    */
   slug?: string | null;
   format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion' | 'link' | 'video';
-  category: number | Category;
   tags?: (number | Tag)[] | null;
   /**
    * Legacy byline (use Reporter below)
@@ -466,7 +473,6 @@ export interface Article {
    * Future date = scheduled; goes live automatically.
    */
   publishedAt: string;
-  heroImage?: (number | null) | Media;
   /**
    * Made from this news (Desk → Social share). Edit before sharing; the link and News ID are always added.
    */
@@ -569,6 +575,34 @@ export interface Article {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  title: string;
+  /**
+   * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
+   */
+  slug?: string | null;
+  description?: string | null;
+  /**
+   * Set for sub-categories
+   */
+  parent?: (number | null) | Category;
+  /**
+   * Main menu position (lower = first). Sub-categories are ordered the same way.
+   */
+  menuOrder?: number | null;
+  showInMenu?: boolean | null;
+  /**
+   * Column in the desktop mega-menu
+   */
+  menuGroup?: ('news' | 'accountability' | 'public' | 'people') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Images and public documents (PDF). Always fill credit + licence for third-party files.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -623,34 +657,6 @@ export interface Media {
       filename?: string | null;
     };
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  title: string;
-  /**
-   * URL. Blank = auto from title. Roman letters recommended (e.g. kisan-mandi-bhav).
-   */
-  slug?: string | null;
-  description?: string | null;
-  /**
-   * Set for sub-categories
-   */
-  parent?: (number | null) | Category;
-  /**
-   * Main menu position (lower = first). Sub-categories are ordered the same way.
-   */
-  menuOrder?: number | null;
-  showInMenu?: boolean | null;
-  /**
-   * Column in the desktop mega-menu
-   */
-  menuGroup?: ('news' | 'accountability' | 'public' | 'people') | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1410,6 +1416,8 @@ export interface ArticlesSelect<T extends boolean = true> {
   title?: T;
   subheadline?: T;
   excerpt?: T;
+  category?: T;
+  heroImage?: T;
   content?: T;
   sources?:
     | T
@@ -1469,9 +1477,9 @@ export interface ArticlesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
+        inEpaper?: T;
         template?: T;
         columns?: T;
-        inEpaper?: T;
         epaperPage?: T;
         epaperOrder?: T;
         autoFit?: T;
@@ -1495,7 +1503,6 @@ export interface ArticlesSelect<T extends boolean = true> {
       };
   slug?: T;
   format?: T;
-  category?: T;
   tags?: T;
   author?: T;
   reporterName?: T;
@@ -1504,7 +1511,6 @@ export interface ArticlesSelect<T extends boolean = true> {
   newsId?: T;
   firstPublishedAt?: T;
   publishedAt?: T;
-  heroImage?: T;
   social?:
     | T
     | {
