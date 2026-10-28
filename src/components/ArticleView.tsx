@@ -100,7 +100,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       {claim && ld(claim)}
       {preview && (
         <p role="note" className="mb-4 rounded-md border border-dashed border-saffron-600 bg-saffron-500/10 p-3 text-sm font-semibold">
-          👁 {d.previewBanner}
+          {d.previewBanner}
         </p>
       )}
 
@@ -145,11 +145,11 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
             </span>
           </span>
         )}
-        {a.location && <span>📍 {a.location}</span>}
+        {a.location && <span>{a.location}</span>}
         <span>
           {d.published}: <time dateTime={stamp}>{formatDate(stamp, lang, true)}</time>
         </span>
-        <span className="text-muted">⏱ {readMin} {lang === 'hi' ? 'मिनट में पढ़ें' : 'min read'}</span>
+        <span className="text-muted">{readMin} {lang === 'hi' ? 'मिनट में पढ़ें' : 'min read'}</span>
         <span className="ml-auto">
           <FontSizer target="story-body" labels={{ smaller: lang === 'hi' ? 'अक्षर छोटे करें' : 'Smaller text', larger: lang === 'hi' ? 'अक्षर बड़े करें' : 'Larger text' }} />
         </span>

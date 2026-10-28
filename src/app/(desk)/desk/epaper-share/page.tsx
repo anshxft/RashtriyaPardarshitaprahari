@@ -22,7 +22,7 @@ export default async function EpaperShare({ searchParams }: { searchParams: Prom
   const logs = await payload.find({ collection: 'share-log', where: { kind: { equals: 'epaper' } }, sort: '-createdAt', limit: 20, depth: 0, overrideAccess: true })
   return (
     <div className="mx-auto max-w-2xl space-y-3">
-      <h1 className="font-display text-xl font-extrabold text-navy-900">📣 ई-पेपर शेयर · {date}</h1>
+      <h1 className="font-display text-xl font-extrabold text-navy-900">ई-पेपर शेयर · {date}</h1>
       <SharePanel
         epaperDate={date}
         item={await epaperItem(date)}

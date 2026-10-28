@@ -74,13 +74,13 @@ export function StoryTools({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Link href={printHref} target="_blank" className={btn}>
-        🖨 {labels.print}
+        {labels.print}
       </Link>
       <button type="button" onClick={image} disabled={busy} className={btn}>
-        🖼 {busy ? labels.busy : labels.image}
+        {busy ? labels.busy : labels.image}
       </button>
       <button type="button" onClick={share} className={btn}>
-        🔗 {labels.share}
+        {labels.share}
       </button>
       {note && (
         <span role="status" className="text-sm text-muted">

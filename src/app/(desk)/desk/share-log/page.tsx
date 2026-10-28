@@ -16,7 +16,7 @@ export default async function ShareLogPage({ searchParams }: { searchParams: Pro
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">🧾 शेयर लॉग</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">शेयर लॉग</h1>
         <Link href={failed ? '/desk/share-log' : '/desk/share-log?failed=1'} className="ml-auto rounded-full border border-line px-4 py-2 text-sm font-bold">
           {failed ? 'सभी दिखाएं' : 'सिर्फ़ विफल'}
         </Link>

@@ -24,7 +24,7 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   const videoId = typeof a.video === 'object' ? a.video?.id : a.video
   return (
     <div className="mx-auto max-w-2xl space-y-3">
-      <h1 className="font-display text-xl font-extrabold text-navy-900">📣 सोशल शेयर</h1>
+      <h1 className="font-display text-xl font-extrabold text-navy-900">सोशल शेयर</h1>
       <p className="font-semibold">{a.title}</p>
       <SharePanel
         articleId={a.id}

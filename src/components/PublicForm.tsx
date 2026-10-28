@@ -141,7 +141,7 @@ export function PublicForm({
 
       {siteKey && <div className="cf-turnstile" data-sitekey={siteKey} data-language={lang} />}
 
-      <p className="text-sm text-muted">🔒 {f.privacyNote}</p>
+      <p className="text-sm text-muted">{f.privacyNote}</p>
       <button type="submit" disabled={pending} className="rounded-md bg-saffron-500 px-8 py-3 text-lg font-bold text-navy-950 shadow hover:bg-saffron-600 hover:text-white disabled:opacity-60">
         {pending ? f.sending : f.submit}
       </button>

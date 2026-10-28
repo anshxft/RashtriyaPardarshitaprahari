@@ -23,7 +23,7 @@ export async function ShareCard({ lang, title, subtitle, category, date, img, ne
   siteName: string
 }) {
   const d = t(lang)
-  const font = 'var(--font-mukta), var(--font-noto), sans-serif'
+  const font = 'var(--font-head), var(--font-noto), sans-serif'
   const body = 'var(--font-noto), sans-serif'
   const clamp = (n: number) => ({ display: '-webkit-box', WebkitLineClamp: n, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' })
   return (

@@ -29,8 +29,8 @@ export default async function DeskTeam({ searchParams }: { searchParams: Promise
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">👥 हमारी टीम ({all.length})</h1>
-        <Link href="/desk/team/new" className="min-h-12 rounded-lg bg-india-600 px-5 py-3 font-extrabold text-white">➕ नया सदस्य</Link>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">हमारी टीम ({all.length})</h1>
+        <Link href="/desk/team/new" className="min-h-12 rounded-lg bg-india-600 px-5 py-3 font-extrabold text-white">नया सदस्य</Link>
       </div>
       <TeamFilters
         base="/desk/team"

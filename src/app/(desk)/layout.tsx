@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { Mukta, Noto_Sans_Devanagari } from 'next/font/google'
+import { Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
 import '../(frontend)/globals.css'
 
 const body = Noto_Sans_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-noto', display: 'swap' })
-const display = Mukta({ subsets: ['devanagari', 'latin'], weight: ['700', '800'], variable: '--font-mukta', display: 'swap' })
+const display = Noto_Serif_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-head', display: 'swap' })
 
 export const metadata: Metadata = { title: { default: 'प्रहरी डेस्क', template: '%s | प्रहरी डेस्क' }, robots: { index: false, follow: false } }
 export const viewport: Viewport = { themeColor: '#0b1f4d', width: 'device-width', initialScale: 1 }

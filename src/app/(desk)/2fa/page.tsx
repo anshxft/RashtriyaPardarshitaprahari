@@ -29,7 +29,7 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
   const enrolling = !u.totpEnabled
   return (
     <main className="mx-auto max-w-md px-4 py-10">
-      <h1 className="font-display text-2xl font-extrabold text-navy-900">🔐 2-स्टेप सत्यापन</h1>
+      <h1 className="font-display text-2xl font-extrabold text-navy-900">2-स्टेप सत्यापन</h1>
       <p className="mt-2 text-muted">{user.name}, सुरक्षा के लिए पासवर्ड के बाद फ़ोन के ऑथेंटिकेटर ऐप का 6 अंकों का कोड भी चाहिए।</p>
       {enrolling && (
         <div className="mt-5 rounded-lg border border-line bg-bg p-4">

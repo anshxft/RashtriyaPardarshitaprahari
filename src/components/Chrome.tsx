@@ -75,7 +75,7 @@ export async function Header({ lang }: { lang: Lang }) {
             href={paths.submit(lang)}
             className="ml-auto hidden shrink-0 rounded-md bg-saffron-500 px-4 py-2.5 font-bold text-navy-950 shadow hover:bg-saffron-600 hover:text-white md:block"
           >
-            ✍ {d.submitIssueShort}
+            {d.submitIssueShort}
           </Link>
         </div>
       </div>

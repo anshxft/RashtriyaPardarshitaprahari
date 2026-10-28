@@ -13,8 +13,8 @@ export default async function DeskVideos() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">🎬 वीडियो</h1>
-        <Link href="/desk/video/new" className="min-h-12 rounded-lg bg-saffron-500 px-5 py-3 font-extrabold text-navy-950">➕ नया वीडियो</Link>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">वीडियो</h1>
+        <Link href="/desk/video/new" className="min-h-12 rounded-lg bg-saffron-500 px-5 py-3 font-extrabold text-navy-950">नया वीडियो</Link>
       </div>
       <ul className="divide-y divide-line rounded-xl border border-line bg-bg">
         {list.docs.length === 0 && <li className="p-8 text-center text-muted">अभी कोई वीडियो नहीं।</li>}

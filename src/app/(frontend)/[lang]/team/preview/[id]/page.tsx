@@ -22,7 +22,7 @@ export default async function TeamPreview({ params }: { params: Promise<{ lang: 
   return (
     <div className="mx-auto max-w-2xl">
       <p role="note" className="mb-6 rounded-md border border-dashed border-saffron-600 bg-saffron-500/10 p-3 text-sm font-semibold">
-        👁 {t(lang).previewBanner}
+        {t(lang).previewBanner}
       </p>
       <TeamCard m={m as TeamMember} lang={lang} featured />
     </div>

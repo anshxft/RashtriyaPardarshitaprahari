@@ -25,7 +25,7 @@ export default async function History({ params }: { params: Promise<{ id: string
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-xl font-extrabold text-navy-900">🕘 संस्करण इतिहास</h1>
+        <h1 className="font-display text-xl font-extrabold text-navy-900">संस्करण इतिहास</h1>
         <Link href={`/desk/news/${a.id}`} className="ml-auto rounded-full border border-line px-4 py-2 text-sm font-bold">✎ संपादित करें</Link>
       </div>
       <div className="rounded-xl bg-bg p-4">

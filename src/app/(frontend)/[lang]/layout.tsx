@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Mukta, Noto_Sans_Devanagari } from 'next/font/google'
+import { Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer, Header } from '@/components/Chrome'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
@@ -9,10 +9,10 @@ import { isLang, t, type Lang } from '@/lib/i18n'
 import { siteUrl } from '@/lib/paths'
 import '../globals.css'
 
-// Noto = one variable font file per subset; Mukta only in the two heading weights (fewer font downloads → faster LCP).
+// Body: Noto Sans; headlines: Noto Serif (newspaper look). Both are one variable font file per subset.
 // 'optional': on a slow first visit the system Devanagari font is kept instead of a late swap (better LCP); cached afterwards.
 const body = Noto_Sans_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-noto', display: 'optional' })
-const display = Mukta({ subsets: ['devanagari', 'latin'], weight: ['700', '800'], variable: '--font-mukta', display: 'swap' })
+const display = Noto_Serif_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-head', display: 'swap' })
 
 // Empty list = nothing prerendered at build (no DB needed); pages render on first request, then cached (ISR).
 export const generateStaticParams = async () => []

@@ -57,7 +57,7 @@ function Numbers({ o, lang, waText, dark }: { o: Office; lang: Lang; waText?: st
             )}
             {kind !== 'whatsapp' && (
               <a href={telLink(n)} className={`${btn} ${dark ? '' : 'border border-line hover:bg-surface'}`}>
-                📞 {l.call}
+                {l.call}
               </a>
             )}
           </li>

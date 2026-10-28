@@ -8,7 +8,7 @@ export function PrintButton({ label, auto }: { label: string; auto?: boolean }) 
   }, [auto])
   return (
     <button type="button" onClick={() => window.print()} className="no-print rounded-md bg-navy-900 px-5 py-2.5 font-bold text-white hover:bg-navy-700">
-      🖨 {label}
+      {label}
     </button>
   )
 }

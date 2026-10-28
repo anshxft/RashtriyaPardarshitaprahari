@@ -57,7 +57,7 @@ export function TrackerTimeline({ steps, lang }: { steps: NonNullable<Article['t
   const d = t(lang)
   const byStage = new Map(steps.map((s) => [s.stage, s]))
   return (
-    <Box title={`📍 ${d.tracker}`} tone="green">
+    <Box title={`${d.tracker}`} tone="green">
       <ol className="relative ml-4 border-l-2 border-line md:ml-0 md:flex md:border-t-2 md:border-l-0">
         {STAGES.map((stage, i) => {
           const s = byStage.get(stage)
@@ -117,7 +117,7 @@ export function DocumentsBox({ docs, lang }: { docs: NonNullable<Article['docume
   const d = t(lang)
   if (!docs.length) return null
   return (
-    <Box title={`📄 ${d.documentsSpeak}`} tone="gold">
+    <Box title={`${d.documentsSpeak}`} tone="gold">
       <ul className="grid gap-4 sm:grid-cols-2">
         {docs.map((doc) => {
           const m = asMedia(doc.file)
@@ -161,7 +161,7 @@ export function DocumentsBox({ docs, lang }: { docs: NonNullable<Article['docume
 export function SourcesBox({ sources, lang }: { sources: NonNullable<Article['sources']>; lang: Lang }) {
   if (!sources.length) return null
   return (
-    <Box title={`🔗 ${t(lang).sources}`}>
+    <Box title={`${t(lang).sources}`}>
       <ul className="list-disc space-y-1 pl-5">
         {sources.map((s) => (
           <li key={s.id}>
@@ -184,7 +184,7 @@ export function FollowUps({ parent, next, lang, current }: { parent?: Card; next
   if (!parent && !next.length) return null
   const chain = [...(parent ? [{ a: parent, label: d.originalQuestion }] : []), { a: current as unknown as Card, label: '' }, ...next.map((a) => ({ a, label: '' }))]
   return (
-    <Box title={`❓ ${d.followUps}`} tone="gold">
+    <Box title={`${d.followUps}`} tone="gold">
       <ol className="space-y-3">
         {chain.map(({ a, label }) => (
           <li key={a.id} className="flex flex-wrap items-center gap-2">
@@ -211,7 +211,7 @@ export function CorrectionsBox({ items, lang }: { items: { id: number; date: str
   const d = t(lang)
   if (!items.length) return null
   return (
-    <Box title={`⚠ ${d.correctionNote}`} tone="red">
+    <Box title={`${d.correctionNote}`} tone="red">
       <ul className="space-y-2">
         {items.map((c) => (
           <li key={c.id}>

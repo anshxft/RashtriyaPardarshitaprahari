@@ -41,7 +41,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
       </div>
       <div className="space-y-2">
         <div className="rounded-xl border border-line bg-bg p-4">
-          <p className="mb-2 font-semibold">🖼 न्यूज़ कार्ड (फोटो, QR और News ID के साथ)</p>
+          <p className="mb-2 font-semibold">न्यूज़ कार्ड (फोटो, QR और News ID के साथ)</p>
           <StoryTools
             onDownload={log}
             title={a.title}
@@ -54,16 +54,16 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
           </StoryTools>
         </div>
         <a className={row} href={`/api/desk/download?id=${a.id}&kind=copy`}>
-          📄 प्रकाशित कॉपी (टेक्स्ट) <span aria-hidden>⬇</span>
+          प्रकाशित कॉपी (टेक्स्ट) <span aria-hidden>⬇</span>
         </a>
         {live && (
           <Link className={row} href={`${paths.article('hi', a.slug)}/print?auto=1`} target="_blank">
-            🖨 PDF (प्रिंट → “Save as PDF”) <span aria-hidden>↗</span>
+            PDF (प्रिंट → “Save as PDF”) <span aria-hidden>↗</span>
           </Link>
         )}
         {img && (
           <a className={row} href={`/api/desk/download?id=${a.id}&kind=photo`}>
-            🏞 फोटो / थंबनेल <span aria-hidden>⬇</span>
+            फोटो / थंबनेल <span aria-hidden>⬇</span>
           </a>
         )}
       </div>

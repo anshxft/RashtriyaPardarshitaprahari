@@ -49,10 +49,10 @@ const input = 'w-full rounded-md border border-line bg-bg px-3 py-3 text-base'
 const card = 'rounded-xl border border-line bg-bg p-4 shadow-sm'
 const chip = 'min-h-11 rounded-full border border-line bg-bg px-4 py-2 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const STATUS: Record<string, [string, string]> = {
-  queued: ['⏳ कतार में', 'bg-slate-200 text-slate-800'],
-  processing: ['⚙ प्रोसेसिंग: लोगो और थंबनेल…', 'bg-saffron-500 text-navy-950 animate-pulse motion-reduce:animate-none'],
+  queued: ['कतार में', 'bg-slate-200 text-slate-800'],
+  processing: ['प्रोसेसिंग: लोगो और थंबनेल…', 'bg-saffron-500 text-navy-950 animate-pulse motion-reduce:animate-none'],
   ready: ['✔ तैयार (लोगो के साथ)', 'bg-india-600 text-white'],
-  failed: ['⚠ प्रोसेसिंग विफल', 'bg-alert-600 text-white'],
+  failed: ['प्रोसेसिंग विफल', 'bg-alert-600 text-white'],
 }
 const JOB_HI: Record<string, string> = { queued: 'कतार में', running: 'बन रहा है…', done: 'तैयार', failed: 'विफल' }
 
@@ -128,7 +128,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       if (!r.ok) return setNote({ kind: 'err', text: r.error })
       const live = r.status === 'published' || r.status === 'scheduled'
       setF((x) => ({ ...x, articleId: r.articleId, newsId: r.newsId, slug: r.url, published: x.published || live, jobs: live ? { ...x.jobs, social: { status: 'queued' }, ...(x.flash || x.voice ? { flash: { status: 'queued' } } : {}) } : x.jobs }))
-      setNote({ kind: 'ok', text: { draft: 'ड्राफ्ट सेव ✔', submitted: 'समीक्षा के लिए भेजी गई ✔', scheduled: 'शेड्यूल हो गई ⏰', published: `प्रकाशित हो गई 🎉 ${r.newsId ? `News ID: ${r.newsId}` : ''} — सोशल वीडियो बन रहा है` }[r.status] || 'सेव ✔' })
+      setNote({ kind: 'ok', text: { draft: 'ड्राफ्ट सेव ✔', submitted: 'समीक्षा के लिए भेजी गई ✔', scheduled: 'शेड्यूल हो गई ', published: `प्रकाशित हो गई ${r.newsId ? `News ID: ${r.newsId}` : ''} — सोशल वीडियो बन रहा है` }[r.status] || 'सेव ✔' })
     })
   }
 
@@ -145,7 +145,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-28">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">🎬 {f.id ? 'वीडियो खबर' : 'नई वीडियो खबर'}</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'वीडियो खबर' : 'नई वीडियो खबर'}</h1>
         <div className="flex gap-2">
           {f.newsId && <span className="rounded-full bg-surface px-3 py-1 font-mono text-sm">{f.newsId}</span>}
           {f.slug && f.published && (
@@ -170,24 +170,24 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           </div>
         ) : f.id ? (
           <div className="space-y-2">
-            <p className="font-semibold">📁 {f.fileName || 'अपलोड की गई फ़ाइल'}</p>
+            <p className="font-semibold">{f.fileName || 'अपलोड की गई फ़ाइल'}</p>
             {st && <p className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${st[1]}`}>{st[0]}</p>}
             {f.processing === 'failed' && (
               <div className="rounded-md bg-alert-600/10 p-3 text-sm">
                 <p className="font-semibold text-alert-700">{f.processError || 'प्रोसेसिंग विफल'}</p>
                 <button type="button" className={`${chip} mt-2`} onClick={async () => (await retryVideoAction(f.id!), set('processing', 'queued'))}>
-                  🔁 दोबारा कोशिश
+                  दोबारा कोशिश
                 </button>
               </div>
             )}
             {pending && <p className="text-sm text-muted">यह बैकग्राउंड में चल रहा है; आप जानकारी भरते रहें या दूसरा काम करें।</p>}
             <button type="button" className={chip} onClick={() => ((replacing.current = true), pick.current?.click())}>
-              🔄 वीडियो बदलें (पुराना इतिहास में रहेगा)
+              वीडियो बदलें (पुराना इतिहास में रहेगा)
             </button>
           </div>
         ) : (
           <button type="button" onClick={() => pick.current?.click()} className="flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface text-muted hover:bg-white">
-            <span className="text-4xl">🎬</span>
+            <span className="text-4xl"></span>
             <span className="text-lg font-bold text-navy-900">वीडियो चुनें / रिकॉर्ड करें</span>
             <span className="text-xs">मोबाइल या लैपटॉप से · लोगो अपने-आप ऊपर दाएं कोने में लगेगा · मूल फ़ाइल अलग सुरक्षित रहेगी</span>
           </button>
@@ -257,9 +257,9 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         <div className="grid gap-2 sm:grid-cols-3">
           {(
             [
-              ['breaking', '🔴 ब्रेकिंग न्यूज़'],
-              ['flash', '⚡ फ्लैश पट्टी'],
-              ['voice', '🔊 महिला आवाज़'],
+              ['breaking', 'ब्रेकिंग न्यूज़'],
+              ['flash', 'फ्लैश पट्टी'],
+              ['voice', 'महिला आवाज़'],
             ] as const
           ).map(([k, l]) => (
             <label key={k} className={`flex min-h-12 items-center gap-3 rounded-lg border px-3 ${f[k] ? 'border-alert-600 bg-alert-600/5' : 'border-line'}`}>
@@ -310,7 +310,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       {/* 4 · one-screen preview: VIDEO → FLASH → VOICE */}
       {f.id && (
         <section className={card}>
-          <h2 className="mb-2 font-display text-lg font-bold">👁 प्रीव्यू: वीडियो → फ्लैश → आवाज़</h2>
+          <h2 className="mb-2 font-display text-lg font-bold">प्रीव्यू: वीडियो → फ्लैश → आवाज़</h2>
           {f.previewUrl ? (
             <FlashPreview src={f.previewUrl} poster={f.posterUrl} script={f.flashScript} on={f.flash || f.breaking} breaking={f.breaking} voice={f.voice} repeat={f.repeat} intervalSec={f.intervalSec} rate={f.voiceRate} volume={f.voiceVolume} pauseMs={f.pauseMs} articleId={f.articleId} />
           ) : (
@@ -323,7 +323,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       {/* 5 · exports (editor only) */}
       {f.id && f.articleId && (
         <section className={`${card} space-y-2`}>
-          <h2 className="font-display text-lg font-bold">📦 सोशल वीडियो और डाउनलोड</h2>
+          <h2 className="font-display text-lg font-bold">सोशल वीडियो और डाउनलोड</h2>
           {(
             [
               ['social', 'सोशल वीडियो 1920×1080', true],
@@ -342,7 +342,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
                   </a>
                 )}
                 <button type="button" disabled={busy || !ready || !f.published} onClick={() => gen(k)} className={chip}>
-                  {f.exports[k] ? '🔁 फिर बनाएं' : '⚙ बनाएं'}
+                  {f.exports[k] ? 'फिर बनाएं' : 'बनाएं'}
                 </button>
               </div>
             ) : null,
@@ -374,7 +374,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         <section className={card}>
           <label className="flex min-h-11 items-center gap-3">
             <input type="checkbox" className="h-5 w-5" checked={schedule} onChange={(e) => setSchedule(e.target.checked)} />
-            <span className="text-sm font-semibold">⏰ शेड्यूल करें</span>
+            <span className="text-sm font-semibold">शेड्यूल करें</span>
           </label>
           {schedule && <input type="datetime-local" value={f.scheduleAt} onChange={(e) => set('scheduleAt', e.target.value)} className={`${input} mt-2`} />}
         </section>
@@ -383,15 +383,15 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       <div className="fixed inset-x-0 bottom-14 z-20 border-t border-line bg-bg/95 p-3 backdrop-blur md:sticky md:bottom-0 md:rounded-xl md:border">
         <div className="mx-auto flex max-w-3xl flex-wrap gap-2">
           <button type="button" disabled={busy || !f.id} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">
-            💾 ड्राफ्ट
+            ड्राफ्ट
           </button>
           {mayPublish ? (
             <button type="button" disabled={busy || !f.id || (schedule && !f.scheduleAt)} onClick={() => setConfirm(schedule ? 'schedule' : 'publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none">
-              {schedule ? '⏰ शेड्यूल' : f.published ? '✔ अपडेट प्रकाशित करें' : '🚀 प्रकाशित करें'}
+              {schedule ? 'शेड्यूल' : f.published ? '✔ अपडेट प्रकाशित करें' : 'प्रकाशित करें'}
             </button>
           ) : (
             <button type="button" disabled={busy || !f.id} onClick={() => save('submit')} className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none">
-              📤 समीक्षा के लिए भेजें
+              समीक्षा के लिए भेजें
             </button>
           )}
         </div>
@@ -400,11 +400,11 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       {confirm && (
         <div role="dialog" aria-modal className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={() => setConfirm(null)}>
           <div className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <p className="mb-3 font-display text-lg font-bold">✅ प्रकाशन से पहले जांच</p>
+            <p className="mb-3 font-display text-lg font-bold">प्रकाशन से पहले जांच</p>
             <ul className="space-y-1.5 text-sm">
               {[...items, { key: 'ready', label: 'वीडियो प्रोसेसिंग पूरी', ok: ready, required: true, note: undefined }, ...((f.flash || f.voice) ? [{ key: 'script', label: 'फ्लैश स्क्रिप्ट', ok: Boolean(f.flashScript.trim()), required: true, note: undefined }] : [])].map((i) => (
                 <li key={i.key} className="flex gap-2">
-                  <span className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>{i.ok ? '✔' : i.required ? '✘' : '⚠'}</span>
+                  <span className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>{i.ok ? '✔' : i.required ? '✘' : ''}</span>
                   <span>{i.label}</span>
                 </li>
               ))}
@@ -510,7 +510,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
       {p.voice && (
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={chip} disabled={!p.script.trim()} onClick={async () => speak(await loadVoice())}>
-            🔊 आवाज़ सुनें
+            आवाज़ सुनें
           </button>
           {voiceNote && <span className="text-xs text-muted">{voiceNote}</span>}
         </div>

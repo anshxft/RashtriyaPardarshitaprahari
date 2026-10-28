@@ -192,7 +192,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       {result && <PublishedCard r={result} locale={locale} onClose={() => setResult(null)} />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'खबर संपादित करें' : '➕ नई खबर'}</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'खबर संपादित करें' : 'नई खबर'}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {f.newsId && <span className="rounded bg-navy-100 px-2 py-1 font-mono text-navy-900">{f.newsId}</span>}
           <span className="rounded bg-white px-2 py-1 font-semibold ring-1 ring-line">{f.published ? '● प्रकाशित' : f.status === 'submitted' ? '◐ समीक्षा में' : '○ ड्राफ्ट'}</span>
@@ -270,7 +270,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
                 {paragraphs.length} पैराग्राफ · {words} शब्द
               </span>
               <button type="button" className={chip} onClick={() => autoFormat(f.body, true)}>
-                ✨ ऑटो फॉर्मेट
+                ऑटो फॉर्मेट
               </button>
             </div>
           </section>
@@ -355,7 +355,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
             </div>
             <label className="flex min-h-11 items-center gap-3 rounded-md bg-surface px-3">
               <input type="checkbox" checked={L.autoFit} onChange={(e) => setLayout({ autoFit: e.target.checked })} className="h-5 w-5" />
-              <span className="text-sm font-semibold">⚡ ऑटो फिट (जगह के हिसाब से फॉन्ट/कॉलम अपने-आप)</span>
+              <span className="text-sm font-semibold">ऑटो फिट (जगह के हिसाब से फॉन्ट/कॉलम अपने-आप)</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-sm font-semibold">
@@ -369,7 +369,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
             </div>
 
             <button type="button" className={chip} onClick={() => setMore((m) => !m)} aria-expanded={more}>
-              🎨 {more ? 'सजावट छिपाएं' : 'सजावट (साइज़ / रंग / फोटो)'}
+              {more ? 'सजावट छिपाएं' : 'सजावट (साइज़ / रंग / फोटो)'}
             </button>
             {more && (
               <div className="space-y-4 rounded-lg bg-surface p-3">
@@ -428,7 +428,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
               <div>
                 <label className="flex min-h-11 items-center gap-3">
                   <input type="checkbox" className="h-5 w-5" checked={schedule} onChange={(e) => (setSchedule(e.target.checked), !e.target.checked && set('scheduleAt', ''))} />
-                  <span className="text-sm font-semibold">⏰ बाद के लिए शेड्यूल करें</span>
+                  <span className="text-sm font-semibold">बाद के लिए शेड्यूल करें</span>
                 </label>
                 {schedule && <input type="datetime-local" value={f.scheduleAt} onChange={(e) => set('scheduleAt', e.target.value)} className={`${input} mt-2`} />}
               </div>
@@ -441,8 +441,8 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
         <aside className="space-y-3 lg:sticky lg:top-16 lg:self-start">
           <div className={card}>
             <div className="mb-3 flex gap-2">
-              <button type="button" className={`${chip} flex-1 ${tab === 'epaper' ? on : ''}`} onClick={() => setTab('epaper')}>📰 ई-पेपर प्रीव्यू</button>
-              <button type="button" className={`${chip} flex-1 ${tab === 'web' ? on : ''}`} onClick={() => setTab('web')}>🌐 वेब पेज</button>
+              <button type="button" className={`${chip} flex-1 ${tab === 'epaper' ? on : ''}`} onClick={() => setTab('epaper')}>ई-पेपर प्रीव्यू</button>
+              <button type="button" className={`${chip} flex-1 ${tab === 'web' ? on : ''}`} onClick={() => setTab('web')}>वेब पेज</button>
             </div>
             {tab === 'epaper' ? (
               <EpaperPreview draft={draft} edition={edition} lang={locale} />
@@ -462,24 +462,24 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       <div className="fixed inset-x-0 bottom-14 z-20 border-t border-line bg-bg/95 p-3 shadow-[0_-4px_12px_rgba(0,0,0,.08)] backdrop-blur md:sticky md:bottom-0 md:rounded-xl md:border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
           <button type="button" disabled={busy} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">
-            💾 ड्राफ्ट सेव
+            ड्राफ्ट सेव
           </button>
           {mayPublish ? (
             <>
               {schedule && !f.published && (
                 <button type="button" disabled={busy || !f.scheduleAt} onClick={() => setConfirm('schedule')} className="min-h-12 flex-1 rounded-lg bg-gold-400 px-5 font-bold text-navy-950 disabled:opacity-60 sm:flex-none">
-                  ⏰ शेड्यूल करें
+                  शेड्यूल करें
                 </button>
               )}
               {!(schedule && !f.published) && (
                 <button type="button" disabled={busy} onClick={() => setConfirm('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white hover:bg-india-600/90 disabled:opacity-60 sm:flex-none">
-                  {f.published ? '✔ अपडेट प्रकाशित करें' : '🚀 प्रकाशित करें'}
+                  {f.published ? '✔ अपडेट प्रकाशित करें' : 'प्रकाशित करें'}
                 </button>
               )}
             </>
           ) : (
             <button type="button" disabled={busy} onClick={() => save('submit')} className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 text-lg font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none">
-              📤 समीक्षा के लिए भेजें
+              समीक्षा के लिए भेजें
             </button>
           )}
           {busy && <span className="text-sm text-muted">सेव हो रहा है…</span>}
@@ -509,7 +509,7 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
     <section role="status" className="rounded-xl border-2 border-india-600 bg-india-600/10 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-extrabold text-india-600">{r.status === 'scheduled' ? '⏰ शेड्यूल हो गई' : '🎉 प्रकाशित हो गई'}</p>
+          <p className="text-lg font-extrabold text-india-600">{r.status === 'scheduled' ? 'शेड्यूल हो गई' : 'प्रकाशित हो गई'}</p>
           {r.newsId && (
             <p className="mt-1">
               News ID: <b className="font-mono text-lg">{r.newsId}</b>
@@ -517,11 +517,11 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
           )}
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
             <Link href={r.urls.web} target="_blank" className="rounded-full bg-navy-900 px-4 py-2 font-bold text-white">वेब पेज खोलें ↗</Link>
-            <Link href={r.urls.print} target="_blank" className="rounded-full border border-line bg-bg px-4 py-2 font-semibold">🖨 प्रिंट / PDF</Link>
-            <Link href={`/${locale}/epaper`} target="_blank" className="rounded-full border border-line bg-bg px-4 py-2 font-semibold">📰 ई-पेपर में देखें</Link>
+            <Link href={r.urls.print} target="_blank" className="rounded-full border border-line bg-bg px-4 py-2 font-semibold">प्रिंट / PDF</Link>
+            <Link href={`/${locale}/epaper`} target="_blank" className="rounded-full border border-line bg-bg px-4 py-2 font-semibold">ई-पेपर में देखें</Link>
             {r.urls.short && (
               <button type="button" onClick={() => copy(r.urls.short!)} className="rounded-full border border-line bg-bg px-4 py-2 font-semibold">
-                🔗 शेयर लिंक कॉपी
+                शेयर लिंक कॉपी
               </button>
             )}
           </div>
@@ -547,12 +547,12 @@ function PublishConfirm({ items, republish, schedule, onCancel, onOk }: { items:
   return (
     <div role="dialog" aria-modal aria-label="प्रकाशन की पुष्टि" className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={onCancel}>
       <div className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <p className="mb-3 font-display text-lg font-bold">✅ प्रकाशन से पहले जांच</p>
+        <p className="mb-3 font-display text-lg font-bold">प्रकाशन से पहले जांच</p>
         <ul className="space-y-1.5 text-sm">
           {items.map((i) => (
             <li key={i.key} className="flex items-start gap-2">
               <span aria-hidden className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>
-                {i.ok ? '✔' : i.required ? '✘' : '⚠'}
+                {i.ok ? '✔' : i.required ? '✘' : '!'}
               </span>
               <span>
                 {i.label}

@@ -28,7 +28,7 @@ export default async function StaticPage({ params }: Props) {
       <h1 className="border-b-4 border-gold-400 pb-4 font-display text-4xl font-extrabold text-navy-900 dark:text-gold-300">{page.title}</h1>
       {page.legalReviewPending && (
         <p role="note" className="mt-4 rounded-md border border-saffron-600 bg-saffron-500/10 p-3 text-sm font-semibold">
-          ⚖ {d.lawyerReview}
+          {d.lawyerReview}
         </p>
       )}
       <div className="mt-6">

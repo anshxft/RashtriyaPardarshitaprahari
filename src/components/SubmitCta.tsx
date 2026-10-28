@@ -12,7 +12,7 @@ export function SubmitCta({ lang }: { lang: Lang }) {
       </div>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link href={paths.submit(lang)} className="rounded-md bg-navy-900 px-5 py-2.5 font-bold text-white hover:bg-navy-800">
-          ✍ {d.submitIssueShort}
+          {d.submitIssueShort}
         </Link>
         <Link href={paths.appointment(lang)} className="rounded-md border-2 border-navy-900 px-4 py-2 font-bold hover:bg-navy-900 hover:text-white">
           {d.appointment}

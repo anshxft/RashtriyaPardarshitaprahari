@@ -55,7 +55,7 @@ export function TeamEditor({ initial, locale, mayPublish }: { initial: TeamForm;
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? '👤 प्रोफ़ाइल बदलें' : '➕ नया सदस्य'}</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'प्रोफ़ाइल बदलें' : 'नया सदस्य'}</h1>
         <div className="flex gap-2 text-sm">
           <span className="rounded bg-white px-2 py-1 font-semibold ring-1 ring-line">{f.published ? '● प्रकाशित' : '○ ड्राफ्ट'}</span>
           {f.id && <Link className={chip} href={locale === 'hi' ? `/desk/team/${f.id}?lang=en` : `/desk/team/${f.id}`}>{locale === 'hi' ? 'English →' : '← हिंदी'}</Link>}
@@ -94,7 +94,7 @@ export function TeamEditor({ initial, locale, mayPublish }: { initial: TeamForm;
             <label className="block text-sm font-semibold">संक्षिप्त परिचय<textarea value={f.bio} onChange={(e) => set('bio', e.target.value)} rows={3} className={`${input} mt-1`} /></label>
             <label className="block text-sm font-semibold">अनुभव / विशेषज्ञता (वैकल्पिक)<input value={f.experience} onChange={(e) => set('experience', e.target.value)} className={`${input} mt-1`} /></label>
             <details className="rounded-md bg-surface p-3">
-              <summary className="cursor-pointer text-sm font-semibold">📞 संपर्क (डिफ़ॉल्ट रूप से सार्वजनिक नहीं)</summary>
+              <summary className="cursor-pointer text-sm font-semibold">संपर्क (डिफ़ॉल्ट रूप से सार्वजनिक नहीं)</summary>
               <div className="mt-3 space-y-3">
                 <input type="email" value={f.email} onChange={(e) => set('email', e.target.value)} placeholder="ईमेल" className={input} />
                 <input value={f.phone} onChange={(e) => set('phone', e.target.value)} placeholder="फोन" className={input} />
@@ -112,16 +112,16 @@ export function TeamEditor({ initial, locale, mayPublish }: { initial: TeamForm;
             ) : (
               <p className="py-8 text-center text-sm text-muted">“प्रीव्यू देखें” दबाएं: ड्राफ्ट सेव होकर यहां दिखेगा।</p>
             )}
-            <button type="button" disabled={busy} onClick={() => save('draft', true)} className={`${chip} mt-3 w-full`}>👁 सेव करके प्रीव्यू देखें</button>
+            <button type="button" disabled={busy} onClick={() => save('draft', true)} className={`${chip} mt-3 w-full`}>सेव करके प्रीव्यू देखें</button>
           </section>
         </aside>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">💾 ड्राफ्ट सेव</button>
+        <button type="button" disabled={busy} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">ड्राफ्ट सेव</button>
         {mayPublish && (
           <button type="button" disabled={busy} onClick={() => save('publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none">
-            {f.published ? '✔ अपडेट प्रकाशित करें' : '🚀 प्रकाशित करें'}
+            {f.published ? '✔ अपडेट प्रकाशित करें' : 'प्रकाशित करें'}
           </button>
         )}
         {busy && <span className="self-center text-sm text-muted">सेव हो रहा है…</span>}

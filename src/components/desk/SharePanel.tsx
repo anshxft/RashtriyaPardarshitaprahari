@@ -24,7 +24,7 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
   return (
     <div className="space-y-4">
       <section className="space-y-3 rounded-xl border border-line bg-bg p-4">
-        <h2 className="font-display text-lg font-bold">📱 सोशल मीडिया वर्ज़न (मास्टर खबर से बना — शेयर से पहले बदल सकते हैं)</h2>
+        <h2 className="font-display text-lg font-bold">सोशल मीडिया वर्ज़न (मास्टर खबर से बना — शेयर से पहले बदल सकते हैं)</h2>
         <label className="block text-sm font-semibold">
           छोटी हेडलाइन
           <input value={s.headline} maxLength={150} onChange={(e) => setS({ ...s, headline: e.target.value })} className="mt-1 w-full rounded-md border border-line px-3 py-2.5" />
@@ -40,13 +40,13 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
         <p className="text-xs text-muted">हर पोस्ट में वेबसाइट लिंक और News ID अपने-आप जुड़ते हैं, ताकि मूल खबर ही प्रमाण रहे।</p>
         {articleId && (
           <button type="button" disabled={busy} className={chip} onClick={() => start(async () => setNote((await saveSocialAction(articleId, s)).ok ? { ok: true, text: 'सेव ✔' } : { ok: false, text: 'सेव नहीं हुआ' }))}>
-            💾 सोशल वर्ज़न सेव करें
+            सोशल वर्ज़न सेव करें
           </button>
         )}
       </section>
 
       <section className="rounded-xl border border-line bg-bg p-4">
-        <h2 className="mb-2 font-display text-lg font-bold">👁 शेयर प्रीव्यू</h2>
+        <h2 className="mb-2 font-display text-lg font-bold">शेयर प्रीव्यू</h2>
         <div className="mx-auto max-w-md overflow-hidden rounded-xl border border-line shadow">
           {item.imageUrl ? <img src={item.imageUrl} alt="" className="aspect-[1.91/1] w-full object-cover" /> : <img src="/og-default.jpg" alt="" className="aspect-[1.91/1] w-full object-cover" />}
           <div className="space-y-1 p-3 text-sm">
@@ -55,13 +55,13 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
             <p className="text-link">{item.hashtags}</p>
             <p className="font-mono text-xs">News ID: {item.newsId || '—'}</p>
             <p className="truncate text-xs">{item.url}</p>
-            {item.videoUrl && <p className="text-xs">🎬 सोशल वीडियो साथ जाएगा</p>}
+            {item.videoUrl && <p className="text-xs">सोशल वीडियो साथ जाएगा</p>}
           </div>
         </div>
       </section>
 
       <section className="space-y-2 rounded-xl border border-line bg-bg p-4">
-        <h2 className="font-display text-lg font-bold">📣 कहां शेयर करें</h2>
+        <h2 className="font-display text-lg font-bold">कहां शेयर करें</h2>
         {rows.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-2">
             {r.configured ? (
@@ -77,7 +77,7 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
             {!r.configured && (
               <>
                 <button type="button" className={chip} onClick={() => copy(r.id)}>
-                  📋 कैप्शन कॉपी
+                  कैप्शन कॉपी
                 </button>
                 <a className={chip} href={downloadHref}>
                   ⬇ मीडिया
@@ -102,7 +102,7 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
           }
           className="mt-2 min-h-12 w-full rounded-lg bg-india-600 font-extrabold text-white disabled:opacity-50"
         >
-          🚀 चुने प्लेटफ़ॉर्म पर अभी पोस्ट करें
+          चुने प्लेटफ़ॉर्म पर अभी पोस्ट करें
         </button>
         {!published && <p className="text-xs text-muted">प्रकाशन (News ID) के बाद ही पोस्ट होगा।</p>}
       </section>
@@ -110,7 +110,7 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
 
       {logs.length > 0 && (
         <section className="rounded-xl border border-line bg-bg p-4">
-          <h2 className="mb-2 font-display text-lg font-bold">🧾 शेयर लॉग</h2>
+          <h2 className="mb-2 font-display text-lg font-bold">शेयर लॉग</h2>
           <ul className="space-y-2 text-sm">
             {logs.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center gap-2">
@@ -127,7 +127,7 @@ export function SharePanel({ articleId, epaperDate, item: initial, rows, logs, p
                   <>
                     <span className="w-full text-xs text-alert-700">{l.response}</span>
                     <button type="button" disabled={busy} className={chip} onClick={() => start(async () => { const r = await retryShareAction(l.id); setNote(r.ok ? { ok: true, text: 'दोबारा कोशिश सफल ✔' } : { ok: false, text: r.error || 'फिर विफल' }) })}>
-                      🔁 दोबारा कोशिश
+                      दोबारा कोशिश
                     </button>
                   </>
                 )}
