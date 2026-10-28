@@ -13,7 +13,7 @@ async function editor() {
   return user
 }
 
-const ALLOWED: (keyof Layout)[] = ['columns', 'bodyScale', 'epaperPage', 'epaperOrder', 'autoFit', 'inEpaper', 'template', 'headlineSize', 'headlineInk', 'subheadlineSize', 'subheadlineInk', 'reporterSize', 'reporterInk', 'align', 'photoSize', 'photoPos']
+const ALLOWED: (keyof Layout)[] = ['columns', 'bodyScale', 'epaperPage', 'epaperOrder', 'autoFit', 'inEpaper', 'template', 'headlineSize', 'headlineInk', 'subheadlineSize', 'subheadlineInk', 'reporterSize', 'reporterInk', 'headlineWeight', 'headlineAlign', 'headlineFont', 'subheadlineWeight', 'subheadlineAlign', 'reporterWeight', 'reporterAlign', 'align', 'photoSize', 'photoPos']
 
 /** "Fix layout": merge a small layout patch into one story. Never touches the story's text, date or URL. */
 export async function saveLayoutAction(id: number, patch: Layout): Promise<{ ok: boolean; error?: string }> {

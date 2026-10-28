@@ -5,6 +5,10 @@ export type Size = 'sm' | 'md' | 'lg' | 'xl'
 export type PhotoSize = 's' | 'm' | 'l' | 'full'
 export type PhotoPos = 'top' | 'left' | 'right'
 export type Align = 'left' | 'center' | 'justify'
+/** Per-element controls (headline / sub-headline / reporter are independent: changing one never moves the others). */
+export type Weight = 'bold' | 'normal'
+export type ElAlign = 'left' | 'center' | 'right'
+export type Face = 'serif' | 'sans'
 
 export type Layout = {
   template?: string | null
@@ -20,6 +24,13 @@ export type Layout = {
   subheadlineInk?: Ink | null
   reporterSize?: Size | null
   reporterInk?: Ink | null
+  headlineWeight?: Weight | null
+  headlineAlign?: ElAlign | null
+  headlineFont?: Face | null
+  subheadlineWeight?: Weight | null
+  subheadlineAlign?: ElAlign | null
+  reporterWeight?: Weight | null
+  reporterAlign?: ElAlign | null
   align?: Align | null
   photoSize?: PhotoSize | null
   photoPos?: PhotoPos | null
@@ -63,6 +74,13 @@ export type ResolvedLayout = {
   subheadlineInk: Ink
   reporterSize: Size
   reporterInk: Ink
+  headlineWeight: Weight
+  headlineAlign: ElAlign
+  headlineFont: Face
+  subheadlineWeight: Weight
+  subheadlineAlign: ElAlign
+  reporterWeight: Weight
+  reporterAlign: ElAlign
   align: Align
   photoSize: PhotoSize
   photoPos: PhotoPos
@@ -75,6 +93,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 export function resolveLayout(l: Layout | null | undefined, opts: { hasPhoto: boolean; format?: string | null }): ResolvedLayout {
   const template = opts.format === 'link' ? '6' : l?.template && TEMPLATES[l.template] ? l.template : '1'
   const p = TEMPLATES[template]
+  const textAlign: ElAlign = l?.align === 'center' ? 'center' : 'left' // headings follow the body unless set on their own
   return {
     template,
     columns: clamp(Math.round(l?.columns ?? p.columns), 1, 4),
@@ -89,6 +108,13 @@ export function resolveLayout(l: Layout | null | undefined, opts: { hasPhoto: bo
     subheadlineInk: l?.subheadlineInk || 'default',
     reporterSize: l?.reporterSize || 'sm',
     reporterInk: l?.reporterInk || 'default',
+    headlineWeight: l?.headlineWeight || 'bold',
+    headlineAlign: l?.headlineAlign || textAlign,
+    headlineFont: l?.headlineFont || 'serif',
+    subheadlineWeight: l?.subheadlineWeight || 'normal',
+    subheadlineAlign: l?.subheadlineAlign || textAlign,
+    reporterWeight: l?.reporterWeight || 'bold',
+    reporterAlign: l?.reporterAlign || textAlign,
     align: l?.align || 'justify',
     photoSize: l?.photoSize || p.photoSize,
     photoPos: l?.photoPos || p.photoPos,
