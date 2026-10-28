@@ -41,7 +41,18 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
     HOME_BLOCKS.map(async (slug) => ({ slug, cat: (await getCategory(lang, slug))?.cat, items: (await getCategoryArticles(lang, slug, 4)).docs })),
   )
 
-  if (!lead) return <p className="py-20 text-center text-muted">{d.noResults}</p>
+  if (!lead)
+    return lang === 'en' ? (
+      // English shows only translated stories; until there are some, point readers to the Hindi edition.
+      <div className="py-20 text-center">
+        <p className="text-lg">Our news is currently published in Hindi.</p>
+        <Link href="/hi" className="mt-4 inline-block rounded-md bg-brand-600 px-5 py-2.5 font-bold text-white hover:bg-brand-700">
+          हिंदी में पढ़ें / Read in Hindi →
+        </Link>
+      </div>
+    ) : (
+      <p className="py-20 text-center text-muted">{d.noResults}</p>
+    )
 
   return (
     <div className="space-y-12">
