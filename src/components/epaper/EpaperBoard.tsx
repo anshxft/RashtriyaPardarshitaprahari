@@ -49,7 +49,9 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
     () => stories.map((s) => (patches[s.id] ? { ...s, layout: { ...s.layout, ...Object.fromEntries(Object.entries(patches[s.id]).filter(([, v]) => v !== undefined)) } as EpStory['layout'] } : s)),
     [stories, patches],
   )
-  const { ready, pages } = usePack(eff, lang, ad)
+  const packed = usePack(eff, lang, ad)
+  const ready = packed.ready
+  const pages = stories.length ? packed.pages : [] // no stories that day → no empty masthead-only page
   const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
