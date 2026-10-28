@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { colW, GEO, sortStories, spanW, type EpStory } from '@/lib/epaper'
+import { colW, GEO, pageNo, sortStories, spanW, type EpStory } from '@/lib/epaper'
 import type { Lang } from '@/lib/i18n'
 import { StoryBlock } from '../epaper/StoryBlock'
 import { usePack } from '../epaper/usePack'
@@ -66,7 +66,7 @@ export function EpaperPreview({ draft, edition, lang }: { draft: EpStory; editio
         </div>
         <ul className="min-w-0 flex-1 space-y-1.5 text-sm">
           <li>
-            <b>पृष्ठ {page.number}</b> · कॉलम {colStart}–{colStart + pl.variant.cols - 1} <span className="text-muted">({pl.variant.cols} कॉलम की खबर)</span>
+            <b>पृष्ठ {pageNo(page.number)}</b> · कॉलम {colStart}–{colStart + pl.variant.cols - 1} <span className="text-muted">({pl.variant.cols} कॉलम की खबर)</span>
           </li>
           <li>इस पृष्ठ पर बची जगह: <b>{Math.round(page.freeH)} px</b> (≈ {lines} पंक्तियाँ)</li>
           {pl.fitted && <li className="font-semibold text-saffron-600">ऑटो फिट: {pl.variant.cols} कॉलम, टेक्स्ट {Math.round(pl.variant.scale * 100)}%</li>}

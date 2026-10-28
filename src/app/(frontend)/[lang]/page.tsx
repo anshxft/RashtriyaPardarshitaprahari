@@ -5,8 +5,10 @@ import { SubmitCta } from '@/components/SubmitCta'
 import { videoThumb } from '@/components/VideoPlayer'
 import { SectionTitle, Slot, VerdictBadge } from '@/components/ui'
 import { EditorMessage } from '@/components/EditorMessage'
+import { FlashBox } from '@/components/FlashBox'
 import { HOME_BLOCKS } from '@/content/site-structure'
 import { asCat, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, getVideos, type Card } from '@/lib/data'
+import { getFlash } from '@/lib/flash'
 import { assertLang, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
@@ -15,6 +17,7 @@ export const revalidate = 60
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLang((await params).lang)
   const d = t(lang)
+  const flash = await getFlash(lang)
 
   const [featured, latest, investigations, factChecks, questions, forum, positive] = await Promise.all([
     getArticles(lang, { where: { featured: { equals: true } }, limit: 1 }),
@@ -42,6 +45,12 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   return (
     <div className="space-y-12">
+      {flash.length > 0 && (
+        <div className="-mb-6">
+          <FlashBox initial={flash} lang={lang} />
+        </div>
+      )}
+
       {/* Lead + latest list */}
       <section className="grid gap-8 lg:grid-cols-3" aria-label={d.topStories}>
         <div className="lg:col-span-2">

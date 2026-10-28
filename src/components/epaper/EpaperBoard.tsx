@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { reorderAction, saveLayoutAction } from '@/app/(frontend)/[lang]/epaper/actions'
 import { TAGLINE_SHORT } from '@/content/brand'
-import { GEO, sortStories, type EpStory, type Placed } from '@/lib/epaper'
+import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
 import { TricolorName } from '../TricolorName'
@@ -184,7 +184,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
         <div className="flex flex-wrap items-center gap-2">
           {pages.map((p, i) => (
             <button key={p.number} type="button" onClick={() => (setView('page'), setIdx(i))} className={`${btn} ${view === 'page' && idx === i ? '!bg-navy-900 !text-white' : ''}`}>
-              {p.number}
+              {pageNo(p.number)}
             </button>
           ))}
           <button type="button" onClick={() => setView(view === 'all' ? 'page' : 'all')} className={`${btn} ${view === 'all' ? '!bg-navy-900 !text-white' : ''}`}>
@@ -247,7 +247,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, descriptor, ad, s
                     {siteName} · {dateLabel}
                   </span>
                   <span>
-                    {d.pageWord} {pg.number} / {pages.length}
+                    {d.pageWord} {pageNo(pg.number)} / {pageNo(pages.length)}
                   </span>
                 </div>
               </div>

@@ -912,13 +912,45 @@ export interface Video {
  */
 export interface BreakingNew {
   id: number;
-  text: string;
   /**
-   * Optional, e.g. /hi/news/some-slug
+   * 1–3 छोटी पंक्तियाँ (हर पंक्ति नई लाइन में)
+   */
+  text: string;
+  status: 'draft' | 'active' | 'paused' | 'removed';
+  /**
+   * बड़ा नंबर = ऊपर / पहले दिखे
+   */
+  priority?: number | null;
+  photo?: (number | null) | Media;
+  /**
+   * वीडियो की आवाज़ अपने-आप नहीं चलती; पाठक Play दबाकर देखते हैं
+   */
+  video?: (number | null) | Video;
+  showMedia?: ('auto' | 'photo' | 'video' | 'both') | null;
+  caption?: string | null;
+  /**
+   * पूरी खबर — फ्लैश पर क्लिक से यही खुलेगी
+   */
+  article?: (number | null) | Article;
+  /**
+   * Optional other link, e.g. /hi/news/some-slug (used when no news is chosen)
    */
   link?: string | null;
-  active?: boolean | null;
+  /**
+   * किस संवाददाता ने भेजा
+   */
+  reporterName?: string | null;
+  /**
+   * संवाददाता का नाम पाठकों को दिखाएँ
+   */
+  showReporter?: boolean | null;
+  duration?: ('30m' | '1h' | '3h' | '6h' | '12h' | '24h' | 'manual') | null;
+  publishedAt?: string | null;
+  /**
+   * समय पूरा होते ही फ्लैश अपने-आप बंद; खबर वेबसाइट पर रहती है
+   */
   expiresAt?: string | null;
+  createdBy?: (number | null) | User;
   demoContent?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1633,9 +1665,20 @@ export interface TeamMembersSelect<T extends boolean = true> {
  */
 export interface BreakingNewsSelect<T extends boolean = true> {
   text?: T;
+  status?: T;
+  priority?: T;
+  photo?: T;
+  video?: T;
+  showMedia?: T;
+  caption?: T;
+  article?: T;
   link?: T;
-  active?: T;
+  reporterName?: T;
+  showReporter?: T;
+  duration?: T;
+  publishedAt?: T;
   expiresAt?: T;
+  createdBy?: T;
   demoContent?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2166,6 +2209,11 @@ export interface Permission {
     editor?: boolean | null;
     senior?: boolean | null;
   };
+  flash?: {
+    reporter?: boolean | null;
+    editor?: boolean | null;
+    senior?: boolean | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2337,6 +2385,13 @@ export interface PermissionsSelect<T extends boolean = true> {
         senior?: T;
       };
   auditLog?:
+    | T
+    | {
+        reporter?: T;
+        editor?: T;
+        senior?: T;
+      };
+  flash?:
     | T
     | {
         reporter?: T;

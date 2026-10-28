@@ -21,6 +21,7 @@ export const ACTIONS = {
   trashPublished: 'प्रकाशित/आर्काइव खबर हटाना / Delete published news',
   trashVideo: 'वीडियो खबर हटाना / Delete video news',
   auditLog: 'ऑडिट लॉग देखना / View audit log',
+  flash: 'ब्रेकिंग फ्लैश चलाना / रोकना / हटाना — Breaking Flash publish, pause, remove',
 } as const
 export type Action = keyof typeof ACTIONS
 export type Matrix = Record<Action, Role[]>
@@ -39,6 +40,7 @@ export const DEFAULTS: Matrix = {
   trashPublished: [],
   trashVideo: [],
   auditLog: [],
+  flash: ['editor', 'senior'],
 }
 
 /** Global document ({ publish: { reporter: false, editor: true, … }, … }) → matrix; missing values fall back to the defaults. */
