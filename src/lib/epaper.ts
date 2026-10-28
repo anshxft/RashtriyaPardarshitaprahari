@@ -24,7 +24,8 @@ export type EpStory = {
   publishedAt: string
   categorySlug?: string | null
   /** fixed column slots on page 1: the “समाज का आइना” column and the advertisement column */
-  slot?: 'aina' | 'ad' | null
+  /** filler = the paper's own standing material, used only to fill space left over on existing pages */
+  slot?: 'aina' | 'ad' | 'filler' | null
   ad?: { link?: string | null; aspect: number } | null
 }
 
@@ -97,7 +98,7 @@ export function variantsFor(s: EpStory, take?: number): Variant[] {
 
 type Measure = (s: EpStory, v: Variant) => number
 
-export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null } = {}): PackedPage[] {
+export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null; fillers?: EpStory[] } = {}): PackedPage[] {
   type PG = { colTop: number[]; placed: Placed[] }
   const pages: PG[] = []
   const newPage = (): PG => {
@@ -186,6 +187,24 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
         }
         done = true
       }
+    }
+  }
+  // Leftover space (few stories that day): drop in standing blocks — editor's message, “send your issue” — wherever
+  // they fit on pages that already exist. Never opens a new page, never moves a news story.
+  for (const f of extra.fillers || []) {
+    let done = false
+    for (const [i, pg] of pages.entries()) {
+      for (const cols of [2, 3, 4]) {
+        const v = { cols, scale: 1 }
+        const height = h(f, v)
+        const at = slot(pg, cols, height)
+        if (at) {
+          put(pg, i + 1, { ...f, slot: 'filler' }, v, height, at)
+          done = true
+          break
+        }
+      }
+      if (done) break
     }
   }
   return pages.map((pg, i) => ({
