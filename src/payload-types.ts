@@ -610,6 +610,7 @@ export interface Category {
  */
 export interface Media {
   id: number;
+  _objectKey?: string | null;
   alt: string;
   /**
    * e.g. "Photo: Jane Doe / Unsplash"
@@ -1060,6 +1061,7 @@ export interface Submission {
 export interface PrivateFile {
   id: number;
   note?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1735,6 +1737,7 @@ export interface PagesSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  _objectKey?: T;
   alt?: T;
   credit?: T;
   creditUrl?: T;
@@ -1862,6 +1865,7 @@ export interface ContactMessagesSelect<T extends boolean = true> {
  */
 export interface PrivateFilesSelect<T extends boolean = true> {
   note?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

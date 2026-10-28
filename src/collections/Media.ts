@@ -14,7 +14,10 @@ export const Media: CollectionConfig = {
     ],
     adminThumbnail: 'thumb',
   },
+  // Storage key column the Blob storage plugin adds on production. Declared here too so local (no Blob token) and
+  // production share one database schema — migrations made on either machine then match.
   fields: [
+    { name: '_objectKey', type: 'text', admin: { hidden: true, readOnly: true } },
     { name: 'alt', type: 'text', required: true, localized: true },
     { name: 'credit', type: 'text', admin: { description: 'e.g. "Photo: Jane Doe / Unsplash"' } },
     { name: 'creditUrl', type: 'text' },
