@@ -259,6 +259,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                     {/* Client's banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
                         correctly spelt tagline are live text here, and the date strip below is always today's. */}
                     <div style={{ position: 'relative', flex: 1, backgroundImage: 'url(/epaper-masthead.png)', backgroundSize: '100% 100%' }} role="img" aria-label={siteName}>
+                      <div style={{ position: 'absolute', left: 0, right: 0, top: 4, textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: '#13294b' }}>{siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}</div>
                       <div style={{ position: 'absolute', left: '20%', right: '17%', top: '61%', textAlign: 'center' }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
                           {trustName && <span>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
@@ -277,7 +278,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
-                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? '24x7 हेल्पलाइन' : '24x7 Helpline'}: {HELPLINE}</span>
+                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? 'हेल्पलाइन' : 'Helpline'} (24x7): {HELPLINE}</span>
                     </div>
                   </header>
                 )}
