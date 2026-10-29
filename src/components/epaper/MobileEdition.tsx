@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { DATELINE_CITY, HELPLINE } from '@/content/brand'
 import { siteUrl } from '@/lib/paths'
 import type { EpStory } from '@/lib/epaper'
 import type { Lang } from '@/lib/i18n'
@@ -36,8 +37,13 @@ export function MobileEdition({ lang, siteName, dateLabel, weekday, regNo, stori
         <p className="text-[11px] font-semibold text-[#b8860b]">{hi ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</p>
       </header>
       <div className="rounded-lg bg-[#13294b] px-2 py-1.5 text-center text-[12px] leading-snug font-semibold text-white">
-        {weekday}, {dateLabel}
-        {regNo && ` | ${hi ? 'पंजीकरण सं.' : 'Regd. No.'} ${regNo}`}
+        {hi ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
+        <br />
+        {regNo && `${hi ? 'पंजीकरण सं.' : 'Regd. No.'} ${regNo}`}
+        <br />
+        <a href={`tel:${HELPLINE.replace(/\s/g, '')}`} className="underline">
+          {hi ? 'हेल्पलाइन' : 'Helpline'} (24x7): {HELPLINE}
+        </a>
         <br />
         {siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}
       </div>
