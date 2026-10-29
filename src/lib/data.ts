@@ -62,7 +62,7 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   const res = await (await db()).find({
     collection: 'articles',
     locale: lang,
-    where: { and: [publicArticleWhere(lang), { slug: { equals: slug } }] },
+    where: { and: [publicArticleWhere(lang, { withEpaperOnly: true }), { slug: { equals: slug } }] },
     limit: 1,
     depth: 2,
   })

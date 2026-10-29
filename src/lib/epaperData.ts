@@ -52,7 +52,7 @@ export async function getEditionStories(lang: Lang, date: string): Promise<EpSto
   const res = await (await db()).find({
     collection: 'articles',
     locale: lang,
-    where: { and: [publicArticleWhere(lang), { firstPublishedAt: { greater_than_equal: from } }, { firstPublishedAt: { less_than: to } }] },
+    where: { and: [publicArticleWhere(lang, { withEpaperOnly: true }), { firstPublishedAt: { greater_than_equal: from } }, { firstPublishedAt: { less_than: to } }] },
     limit: 300,
     depth: 1,
     pagination: false,
@@ -65,7 +65,7 @@ export async function getEditionStories(lang: Lang, date: string): Promise<EpSto
 export async function listEditions(limitDays = 30): Promise<{ date: string; count: number }[]> {
   const res = await (await db()).find({
     collection: 'articles',
-    where: publicArticleWhere(),
+    where: publicArticleWhere(undefined, { withEpaperOnly: true }),
     sort: '-firstPublishedAt',
     limit: 1000,
     depth: 0,

@@ -28,8 +28,11 @@ export const liveLifecycle = (): Where => ({ or: [{ lifecycle: { equals: 'active
  * For English (query with locale 'en') only stories that really have an English version are listed — no Hindi text
  * under an English menu. Untranslated stories show a "available in Hindi" note on their English URL.
  */
-export const publicArticleWhere = (lang?: 'hi' | 'en'): Where => ({
+export const publicArticleWhere = (lang?: 'hi' | 'en', opts: { withEpaperOnly?: boolean } = {}): Where => ({
   and: [
+    // “सिर्फ ई-पेपर” stories stay out of every website list (home, sections, search, sitemaps); the e-paper and the
+    // story's own link (from the e-paper / QR) still open them.
+    ...(opts.withEpaperOnly ? [] : [{ or: [{ 'layout.epaperOnly': { equals: false } }, { 'layout.epaperOnly': { exists: false } }] }]),
     { _status: { equals: 'published' } },
     { publishedAt: { less_than_equal: new Date().toISOString() } },
     liveLifecycle(),
@@ -49,7 +52,7 @@ export const Articles: CollectionConfig = {
   },
   versions: { drafts: true, maxPerDoc: 0 }, // 0 = keep every version (old versions are never wiped)
   access: {
-    read: ({ req }) => (req.user ? true : publicArticleWhere()),
+    read: ({ req }) => (req.user ? true : publicArticleWhere(undefined, { withEpaperOnly: true })),
     create: ({ req }) => Boolean(req.user),
     update: ({ req }) => (!req.user ? false : canPublish(req) || allowed(req.user as never, 'editOthers') || { createdBy: { equals: req.user.id } }),
     // Nothing is ever hard-deleted from the panel or API: Desk → Delete moves to Trash; only an Admin can purge from the Desk.
@@ -233,6 +236,7 @@ export const Articles: CollectionConfig = {
               type: 'group',
               admin: { description: 'Newspaper layout. The Desk sets this from the template; change only to fix a layout.' },
               fields: [
+                { name: 'epaperOnly', type: 'checkbox', defaultValue: false, label: 'सिर्फ ई-पेपर में (वेबसाइट की सूची में नहीं) / E-paper only', admin: { description: 'टिक करने पर खबर केवल ई-पेपर में छपेगी; वेबसाइट के होम, सेक्शन, खोज में नहीं दिखेगी।' } },
                 { name: 'inEpaper', type: 'checkbox', defaultValue: true, label: 'ई-पेपर में डालें / Include in the e-paper', admin: { description: 'टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।' } },
                 { name: 'template', type: 'select', defaultValue: '1', options: Object.entries(TEMPLATES).map(([value, t]) => ({ value, label: `${value} — ${t.hi} / ${t.en}` })) },
                 { name: 'columns', type: 'number', min: 1, max: 4, admin: { description: 'Text columns in the e-paper (1–4). Blank = template default.' } },

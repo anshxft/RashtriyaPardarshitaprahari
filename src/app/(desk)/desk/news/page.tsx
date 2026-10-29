@@ -19,6 +19,7 @@ const TABS: { key: string; label: string; where: () => Where }[] = [
   { key: 'pending', label: 'समीक्षा में', where: () => ({ and: [live, { _status: { equals: 'draft' } }, { reviewStatus: { equals: 'submitted' } }] }) },
   { key: 'scheduled', label: 'शेड्यूल', where: () => ({ and: [live, { _status: { equals: 'published' } }, { publishedAt: { greater_than: now() } }] }) },
   { key: 'published', label: 'प्रकाशित', where: () => ({ and: [live, { _status: { equals: 'published' } }, { publishedAt: { less_than_equal: now() } }] }) },
+  { key: 'epaper', label: 'सिर्फ ई-पेपर', where: () => ({ and: [live, { 'layout.epaperOnly': { equals: true } }] }) },
   { key: 'archived', label: 'आर्काइव', where: () => ({ lifecycle: { equals: 'archived' } }) },
   { key: 'trash', label: 'ट्रैश', where: () => ({ lifecycle: { equals: 'trashed' } }) },
 ]
