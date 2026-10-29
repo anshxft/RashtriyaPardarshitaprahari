@@ -152,7 +152,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
   let lead = true
   while (queue.length) {
     const { s, pin, cont } = queue.shift()!
-    const vs = cont ? variantsFor(s) : variantsFor({ ...s, layout: { ...s.layout, columns: lead ? 4 : 2, autoFit: true } })
+    const vs = cont ? variantsFor({ ...s, layout: { ...s.layout, columns: 4, autoFit: false } }) : variantsFor({ ...s, layout: { ...s.layout, columns: lead ? 4 : 2, autoFit: true } })
     if (!cont) lead = false
     const target = pin || 1
     let done = false
@@ -169,20 +169,33 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
         }
       }
       if (done) break
-      // Nothing fits even on an empty page → split the body across pages (never shrink below the readable floor).
-      if (pg.placed.length === 0) {
-        const v = vs[vs.length - 1]
-        const room = pageBottom - Math.min(...pg.colTop)
+      // Doesn't fit whole: fill the largest free area of this page with the start of the story (as many columns as are
+      // free side by side, up to the full width) and carry the rest to the next page — so no page is left half empty.
+      // A fresh story keeps the client grid (at most 4 columns); its carried-over part may take the full width.
+      const maxSpan = cont ? GEO.cols : vs[vs.length - 1].cols
+      let area: { c: number; y: number; span: number } | null = null
+      for (let c = 0; c < GEO.cols; c++)
+        for (let e = c + 1; e < Math.min(GEO.cols, c + maxSpan); e++) {
+          const y = Math.max(...pg.colTop.slice(c, e + 1))
+          const span = e - c + 1
+          if (pageBottom - y >= 160 && (!area || span * (pageBottom - y) > area.span * (pageBottom - area.y))) area = { c, y, span }
+        }
+      if (area) {
+        const v = { ...vs[0], cols: area.span }
+        const room = pageBottom - area.y
         let fit = 0
         for (let k = 1; k <= s.paragraphs.length; k++) if (h(s, { ...v, take: k }) <= room) fit = k
-        const take = Math.max(1, fit)
-        const height = Math.min(h(s, { ...v, take }), room)
-        put(pg, p, s, { ...v, take }, height, slot(pg, v.cols, height) ?? { c: 0, y: Math.min(...pg.colTop) }, { cont })
-        if (take < s.paragraphs.length) {
-          const rest: EpStory = { ...s, id: `${s.id.split('~')[0]}~c${p}`, title: `${s.title.replace(/ (जारी)$/, '')} (जारी)`, paragraphs: s.paragraphs.slice(take), photo: undefined, subheadline: null }
-          queue.unshift({ s: rest, pin: p + 1, cont: true })
+        const empty = pg.placed.length === 0
+        if (fit >= (empty || cont ? 1 : 2) || empty) {
+          const take = Math.max(1, fit)
+          const height = Math.min(h(s, { ...v, take }), room)
+          put(pg, p, s, { ...v, take }, height, { c: area.c, y: area.y }, { cont })
+          if (take < s.paragraphs.length) {
+            const rest: EpStory = { ...s, id: `${s.id.split('~')[0]}~c${p}`, title: `${s.title.replace(/ (जारी)$/, '')} (जारी)`, paragraphs: s.paragraphs.slice(take), photo: undefined, subheadline: null }
+            queue.unshift({ s: rest, pin: p + 1, cont: true })
+          }
+          done = true
         }
-        done = true
       }
     }
   }
