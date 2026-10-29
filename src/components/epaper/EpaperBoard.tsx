@@ -277,7 +277,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
-                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? 'हेल्पलाइन' : 'Helpline'}: {HELPLINE}</span>
+                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? '24x7 हेल्पलाइन' : '24x7 Helpline'}: {HELPLINE}</span>
                     </div>
                   </header>
                 )}
