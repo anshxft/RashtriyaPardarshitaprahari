@@ -36,7 +36,7 @@ export function MobileEdition({ lang, siteName, dateLabel, weekday, regNo, stori
         <p className="text-[11px] font-semibold text-[#b8860b]">{hi ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}</p>
       </header>
       <div className="rounded-lg bg-[#13294b] px-2 py-1.5 text-center text-[12px] leading-snug font-semibold text-white">
-        {weekday}, {dateLabel} | {hi ? 'मूल्य: निःशुल्क' : 'Price: Free'}
+        {weekday}, {dateLabel}
         {regNo && ` | ${hi ? 'पंजीकरण सं.' : 'Regd. No.'} ${regNo}`}
         <br />
         {siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}
