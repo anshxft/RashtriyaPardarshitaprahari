@@ -11,6 +11,7 @@ import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epape
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
 import { TricolorName } from '../TricolorName'
+import { MobileEdition } from './MobileEdition'
 import { StoryBlock } from './StoryBlock'
 import { Tula } from './Tula'
 import { usePack } from './usePack'
@@ -56,6 +57,9 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
   const ready = packed.ready
   const pages = stories.length ? packed.pages : [] // no stories that day → no empty masthead-only page
   const [zoom, setZoom] = useState(1)
+  // Phones open the readable card view (client's layout); the A3 pages are one tap away.
+  const [reading, setReading] = useState(false)
+  useEffect(() => setReading(!canEdit && window.innerWidth < 768), [canEdit])
 
   useEffect(() => {
     const el = wrap.current
@@ -199,6 +203,10 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setReading(!reading)} className={`${btn} !bg-navy-900 !text-white`}>
+            {reading ? (lang === 'hi' ? 'पूरा पेज (अखबार) देखें' : 'Full newspaper page') : lang === 'hi' ? 'मोबाइल पर पढ़ने का रूप' : 'Easy reading view'}
+          </button>
+          {!reading && <>
           {pages.map((p, i) => (
             <button key={p.number} type="button" onClick={() => (setView('page'), setIdx(i))} className={`${btn} ${view === 'page' && idx === i ? '!bg-navy-900 !text-white' : ''}`}>
               {pageNo(p.number)}
@@ -220,6 +228,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
               {z}×
             </button>
           ))}
+          </>}
           {canEdit && (
             <Link href={`/desk/epaper-share?date=${date}`} className={btn}>
               {lang === 'hi' ? 'शेयर करें' : 'Share'}
@@ -234,8 +243,11 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
         </div>
       </div>
 
+      {reading && ready && (
+        <MobileEdition lang={lang} siteName={siteName} dateLabel={dateLabel} weekday={weekday} regNo={regNo} ad={ad} stories={sortStories(eff).filter((s) => !s.slot)} />
+      )}
       {/* Grey “desk” behind the white A3 sheets so the page edges are always clear (not printed). */}
-      <div className="rounded-xl bg-[#dcd8d1] p-2 sm:p-5 print:bg-transparent print:p-0 dark:bg-[#2b2925]">
+      <div className={`${reading ? 'hidden print:block' : ''} rounded-xl bg-[#dcd8d1] p-2 sm:p-5 print:bg-transparent print:p-0 dark:bg-[#2b2925]`}>
       <div ref={wrap} className="w-full overflow-x-auto">
         {!ready && <p className="animate-pulse py-16 text-center text-muted motion-reduce:animate-none">{d.preparing}</p>}
         {ready && stories.length === 0 && <p className="py-16 text-center text-muted">{d.noEdition}</p>}
@@ -254,7 +266,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
                           {trustName && <span style={{ color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
-                          {lang === 'hi' ? 'आधिकारिक ई-पेपर संस्करण' : 'Official E-Paper Edition'}
+                          {lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}
                         </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: '#b8860b', marginTop: 1 }}>
                           <span style={{ fontSize: 13, letterSpacing: 2 }}>····◆ </span>
