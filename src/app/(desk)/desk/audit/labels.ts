@@ -6,6 +6,7 @@ export const ACTION_HI: Record<string, string> = {
   status: 'स्थिति बदली',
   republish: 'पुनः प्रकाशित',
   archive: 'आर्काइव',
+  unpublish: 'अप्रकाशित',
   restore: 'वापस लाई गई',
   delete: 'ट्रैश (हटाई गई)',
   purge: 'स्थायी रूप से हटाई गई',

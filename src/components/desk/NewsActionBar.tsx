@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { archiveNews, copyNews, purgeNews, republishNews, restoreFromTrash, trashNews, type ActionResult } from '@/app/(desk)/desk/news/actions'
+import { archiveNews, copyNews, purgeNews, republishNews, restoreFromTrash, trashNews, unpublishNews, type ActionResult } from '@/app/(desk)/desk/news/actions'
 import { DELETE_REASONS, type Btn } from '@/lib/newsStatus'
 
 type Info = { status: string; firstPublishedAt: string; lastEditor: string; lastUpdate: string; newsId: string; live: boolean }
@@ -26,6 +26,7 @@ const LABEL: Record<Btn, string> = {
   social: 'सोशल वर्ज़न बनाएं',
   replaceMedia: 'मीडिया बदलें',
   copy: 'इससे नई खबर',
+  unpublish: 'अप्रकाशित करें (वेबसाइट से हटाएं)',
 }
 const REASON_HI: Record<(typeof DELETE_REASONS)[number], string> = {
   Duplicate: 'डुप्लिकेट',
@@ -75,6 +76,7 @@ export function NewsActionBar({ id, slug, title, buttons, info }: { id: number; 
     else if (b === 'purge') setDialog('purge')
     else if (b === 'restoreTrash') setDialog('restoreTrash')
     else if (b === 'copy') act(() => copyNews(id))
+    else if (b === 'unpublish' && window.confirm('क्या आप इस खबर को वेबसाइट से हटाकर ड्राफ्ट में रखना चाहते हैं?')) act(() => unpublishNews(id))
   }
   const big = 'min-h-11 rounded-lg px-3.5 py-2 text-sm font-bold'
   const one = (b: Btn, inMenu = false) =>

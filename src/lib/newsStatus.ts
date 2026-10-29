@@ -56,6 +56,7 @@ export type Btn =
   | 'social'
   | 'replaceMedia'
   | 'copy'
+  | 'unpublish'
 
 type U = { id: number | string; role?: string | null; canPublish?: boolean | null }
 /** Main buttons by status, then filtered by the person's rights; `more` = the "More ▼" menu. */
@@ -89,6 +90,7 @@ export function buttonsFor(status: NewsStatus, user: U, ownerId: number | string
       add(main, 'share', can('share'))
       add(main, 'republish', can('republish'))
       add(main, 'archive', can('archive'))
+      add(more, 'unpublish', can('publish') && mayEdit)
       add(more, 'delete', mayTrashLive)
       break
     case 'archived':

@@ -61,6 +61,16 @@ export async function archiveNews(id: number): Promise<ActionResult> {
   })
 }
 
+/** Takes a live story off the website (back to draft). Content, News ID and history stay; Publish brings it back. */
+export async function unpublishNews(id: number): Promise<ActionResult> {
+  return run(async () => {
+    const g = await guard(id, 'unpublish')
+    await g.payload.update({ collection: 'articles', id, data: { _status: 'draft' } as never, overrideAccess: true, user: g.user, context: { auditAction: 'unpublish' } })
+    revalidatePath('/', 'layout')
+    return { ok: true, message: 'खबर वेबसाइट से हटा दी गई (ड्राफ्ट में)। सुधार के बाद “प्रकाशित” दबाकर वापस ला सकते हैं।' }
+  })
+}
+
 export async function trashNews(id: number, reason: string, other?: string): Promise<ActionResult> {
   return run(async () => {
     const g = await guard(id, 'delete')
