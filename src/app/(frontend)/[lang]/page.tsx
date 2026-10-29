@@ -9,7 +9,7 @@ import { FlashBox } from '@/components/FlashBox'
 import { HOME_BLOCKS } from '@/content/site-structure'
 import { asCat, cardImage, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, getVideos, type Card } from '@/lib/data'
 import { getFlash } from '@/lib/flash'
-import { assertLang, t, type Lang } from '@/lib/i18n'
+import { assertLang, t, timeAgo, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
 export const revalidate = 60
@@ -21,7 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   const [featured, latest, investigations, factChecks, questions, forum, positive] = await Promise.all([
     getArticles(lang, { where: { featured: { equals: true } }, limit: 1 }),
-    getArticles(lang, { limit: 18 }),
+    getArticles(lang, { limit: 22 }),
     getArticles(lang, { where: { format: { equals: 'investigation' } }, limit: 4 }),
     getArticles(lang, { where: { format: { equals: 'factcheck' } }, limit: 4 }),
     getArticles(lang, { where: { or: [{ format: { in: ['question', 'tracker'] } }, { questionStatus: { exists: true } }] }, limit: 4 }),
@@ -61,8 +61,11 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       {/* Phones: newspaper-style front (client's layout) — lead 2/3 + two stories beside it, then three to a row */}
       <PhoneFront items={[lead, ...rest.slice(0, 11)]} lang={lang} />
 
-      {/* Lead + latest list */}
-      <section className="hidden gap-8 sm:grid lg:grid-cols-3" aria-label={d.topStories}>
+      {/* Computers: newspaper front (client's reference) — story list | lead + two columns | ad + latest */}
+      <DeskFront lead={lead} rest={rest} lang={lang} ad={<Slot name="ad-home-top" lang={lang} />} />
+
+      {/* Tablets: lead + latest list */}
+      <section className="hidden gap-8 sm:grid lg:hidden" aria-label={d.topStories}>
         <div className="lg:col-span-2">
           <ArticleCard a={lead} lang={lang} variant="lead" priority />
           {/* Fill the space under the lead (tall when the lead has no photo) with the next stories */}
@@ -82,16 +85,18 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </aside>
       </section>
 
-      <section className={rest.length > 10 ? 'hidden sm:block' : 'hidden'}>
+      <section className={rest.length > 14 ? 'hidden lg:block' : 'hidden'}>
         <SectionTitle lang={lang}>{d.topStories}</SectionTitle>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {rest.slice(10, 18).map((a) => (
+          {rest.slice(14, 22).map((a) => (
             <ArticleCard key={a.id} a={a} lang={lang} />
           ))}
         </div>
       </section>
 
-      <Slot name="ad-home-top" lang={lang} />
+      <div className="lg:hidden">
+        <Slot name="ad-home-top" lang={lang} />
+      </div>
 
       {videos.docs.length > 0 && (
         <section>
@@ -300,6 +305,84 @@ function PhoneFront({ items, lang }: { items: Card[]; lang: Lang }) {
           ))}
         </div>
       )}
+    </section>
+  )
+}
+
+/** Computer-only front page in a newspaper grid; every headline links to its story. */
+function DeskFront({ lead, rest, lang, ad }: { lead: Card; rest: Card[]; lang: Lang; ad: React.ReactNode }) {
+  const d = t(lang)
+  const left = rest.slice(0, 4)
+  const mid = rest.slice(4, 8)
+  const latest = rest.slice(8, 14)
+  const kicker = (a: Card) => {
+    const c = asCat(a.category)
+    return c && <div className="mb-1 text-sm font-bold tracking-wide text-brand-600">{c.title}</div>
+  }
+  const link = (a: Card) => (
+    <Link href={paths.article(lang, a.slug)} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
+      {a.title}
+    </Link>
+  )
+  const time = (a: Card) => <time dateTime={a.publishedAt} className="mt-2 block text-[11px] font-semibold tracking-wider text-muted uppercase">{timeAgo(a.publishedAt, lang)}</time>
+  const pic = (a: Card, cls: string, kind: 'hero' | 'card' = 'card') => {
+    const img = cardImage(a, kind)
+    return img && <img src={img.src} alt={img.alt} loading={kind === 'hero' ? 'eager' : 'lazy'} className={`w-full object-cover ${cls}`} />
+  }
+  const leadImg = pic(lead, 'aspect-[16/9]', 'hero')
+  const sub = lead.excerpt || lead.subheadline
+  return (
+    <section className="hidden grid-cols-12 gap-8 lg:grid" aria-label={d.topStories}>
+      <div className="col-span-3 divide-y divide-line">
+        {left.map((a, i) => (
+          <article key={a.id} className="relative py-4 first:pt-0">
+            {kicker(a)}
+            <h3 className="font-display text-xl leading-snug">{link(a)}</h3>
+            {i === left.length - 1 && pic(a, 'mt-3 aspect-[4/3]')}
+            {time(a)}
+          </article>
+        ))}
+      </div>
+
+      <div className="col-span-6 border-x border-line px-8">
+        <article className="relative border-b border-line pb-6">
+          {kicker(lead)}
+          <h2 className="font-display text-4xl leading-tight font-extrabold text-navy-900 dark:text-fg">{link(lead)}</h2>
+          <div className={`mt-4 grid gap-5 ${leadImg ? 'grid-cols-5' : ''}`}>
+            {leadImg && <div className="col-span-3">{leadImg}</div>}
+            <div className={leadImg ? 'col-span-2' : ''}>
+              {sub && <p className={leadImg ? 'text-lg leading-relaxed' : 'text-xl leading-relaxed'}>{sub}</p>}
+              {time(lead)}
+            </div>
+          </div>
+        </article>
+        <div className="grid grid-cols-2 divide-x divide-line">
+          {[mid.filter((_, i) => i % 2 === 0), mid.filter((_, i) => i % 2 === 1)].map((col, c) => (
+            <div key={c} className={`divide-y divide-line ${c ? 'pl-5' : 'pr-5'}`}>
+              {col.map((a, i) => (
+                <article key={a.id} className="relative py-5">
+                  {kicker(a)}
+                  <h3 className="font-display text-2xl leading-snug font-bold">{link(a)}</h3>
+                  {c === 1 && i === 0 && pic(a, 'mt-3 aspect-[4/3]')}
+                  {time(a)}
+                </article>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <aside className="col-span-3 space-y-6">
+        {ad}
+        {latest.length > 0 && (
+          <div>
+            <SectionTitle lang={lang}>{d.latest}</SectionTitle>
+            {latest.map((a) => (
+              <ArticleCard key={a.id} a={a} lang={lang} variant="compact" />
+            ))}
+          </div>
+        )}
+      </aside>
     </section>
   )
 }
