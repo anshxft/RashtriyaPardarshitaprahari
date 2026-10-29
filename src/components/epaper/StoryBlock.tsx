@@ -63,7 +63,7 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
     </p>
   ) : (
     // Columns end level: every line is the same height (no gaps between paragraphs — a newspaper indent marks them instead)
-    <div style={{ columnCount: bodyCols, columnGap: 14, columnFill: 'balance', columnRule: bodyCols > 1 ? '1px solid #d8d8d8' : undefined, fontSize: BODY_PX * scale, lineHeight: 1.62, textAlign: align, hyphens: 'auto', marginTop: 6, orphans: 1, widows: 1 }}>
+    <div style={{ columnCount: bodyCols, columnGap: 20, columnFill: 'balance', columnRule: bodyCols > 1 ? '1px solid #d8d8d8' : undefined, fontSize: BODY_PX * scale, lineHeight: 1.7, textAlign: align, hyphens: 'auto', marginTop: 6, orphans: 1, widows: 1 }}>
       {paras.map((p, i) => (
         <p key={i} style={{ margin: 0, textIndent: i ? '1.2em' : 0 }}>
           {p}
