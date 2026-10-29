@@ -37,6 +37,7 @@ export const Ads: CollectionConfig = {
         { label: 'E-paper advertisement column (page 1)', value: 'epaper' },
         { label: 'Website home page (top)', value: 'home-top' },
         { label: 'Website story pages (inside the story)', value: 'article' },
+        { label: 'Video news (shown over the video now and then)', value: 'video' },
       ],
     },
     { name: 'active', type: 'checkbox', defaultValue: true },
