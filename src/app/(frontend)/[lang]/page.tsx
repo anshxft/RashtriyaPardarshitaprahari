@@ -21,7 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   const [featured, latest, investigations, factChecks, questions, forum, positive] = await Promise.all([
     getArticles(lang, { where: { featured: { equals: true } }, limit: 1 }),
-    getArticles(lang, { limit: 14 }),
+    getArticles(lang, { limit: 18 }),
     getArticles(lang, { where: { format: { equals: 'investigation' } }, limit: 4 }),
     getArticles(lang, { where: { format: { equals: 'factcheck' } }, limit: 4 }),
     getArticles(lang, { where: { or: [{ format: { in: ['question', 'tracker'] } }, { questionStatus: { exists: true } }] }, limit: 4 }),
@@ -65,6 +65,14 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       <section className="hidden gap-8 sm:grid lg:grid-cols-3" aria-label={d.topStories}>
         <div className="lg:col-span-2">
           <ArticleCard a={lead} lang={lang} variant="lead" priority />
+          {/* Fill the space under the lead (tall when the lead has no photo) with the next stories */}
+          {rest.length > 6 && (
+            <div className="mt-8 grid gap-6 border-t border-line pt-6 sm:grid-cols-2">
+              {rest.slice(6, 10).map((a) => (
+                <ArticleCard key={a.id} a={a} lang={lang} />
+              ))}
+            </div>
+          )}
         </div>
         <aside>
           <SectionTitle lang={lang}>{d.latest}</SectionTitle>
@@ -77,7 +85,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
       <section className="hidden sm:block">
         <SectionTitle lang={lang}>{d.topStories}</SectionTitle>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {rest.slice(6, 14).map((a) => (
+          {rest.slice(10, 18).map((a) => (
             <ArticleCard key={a.id} a={a} lang={lang} />
           ))}
         </div>
