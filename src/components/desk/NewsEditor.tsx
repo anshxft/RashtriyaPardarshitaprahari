@@ -417,6 +417,10 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
               <input type="checkbox" checked={L.autoFit} onChange={(e) => setLayout({ autoFit: e.target.checked })} className="h-5 w-5" />
               <span className="text-sm font-semibold">ऑटो फिट (जगह के हिसाब से फॉन्ट/कॉलम अपने-आप)</span>
             </label>
+            <label className={`flex items-center gap-2 rounded-lg p-2 ${f.layout.epaperOnly ? 'bg-saffron-500/20 ring-2 ring-saffron-500' : ''}`}>
+              <input type="checkbox" className="h-5 w-5" checked={Boolean(f.layout.epaperOnly)} onChange={(e) => setLayout(e.target.checked ? { epaperOnly: true, inEpaper: true } : { epaperOnly: false })} />
+              <span className="text-sm font-semibold">सिर्फ ई-पेपर में (वेबसाइट के होम / सेक्शन / खोज में नहीं दिखेगी)</span>
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-sm font-semibold">
                 ई-पेपर पृष्ठ

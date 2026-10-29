@@ -4,8 +4,9 @@ import { categoryOptions, emptyForm, mayPublish, teamOptions, todaysEdition } fr
 
 export const metadata = { title: 'नई खबर' }
 
-export default async function NewNews() {
+export default async function NewNews({ searchParams }: { searchParams: Promise<{ epaper?: string }> }) {
+  const epaperOnly = (await searchParams).epaper === '1'
   const user = (await currentUser())!
   const [categories, team, edition] = await Promise.all([categoryOptions(), teamOptions(), todaysEdition('hi')])
-  return <NewsEditor initial={emptyForm()} locale="hi" categories={categories} team={team} edition={edition} mayPublish={mayPublish(user)} />
+  return <NewsEditor initial={emptyForm(epaperOnly)} locale="hi" categories={categories} team={team} edition={edition} mayPublish={mayPublish(user)} />
 }

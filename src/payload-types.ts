@@ -406,6 +406,7 @@ export interface Article {
     /**
      * टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।
      */
+    epaperOnly?: boolean | null;
     inEpaper?: boolean | null;
     template?: ('1' | '2' | '3' | '4' | '5' | '6') | null;
     /**
@@ -1482,6 +1483,7 @@ export interface ArticlesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
+        epaperOnly?: T;
         inEpaper?: T;
         template?: T;
         columns?: T;

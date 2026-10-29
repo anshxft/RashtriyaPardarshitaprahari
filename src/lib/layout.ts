@@ -14,6 +14,7 @@ export type Layout = {
   template?: string | null
   columns?: number | null
   inEpaper?: boolean | null
+  epaperOnly?: boolean | null
   epaperPage?: number | null
   epaperOrder?: number | null
   autoFit?: boolean | null

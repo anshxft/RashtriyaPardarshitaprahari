@@ -28,7 +28,7 @@ export async function teamOptions(): Promise<TeamOption[]> {
 /** Today's (IST) published stories: the real edition the new story will be placed into. */
 export const todaysEdition = (lang: Lang) => getEditionStories(lang, istDate(new Date()))
 
-export const emptyForm = (): NewsForm => ({
+export const emptyForm = (epaperOnly = false): NewsForm => ({
   title: '',
   subheadline: '',
   reporterName: '',
@@ -38,7 +38,7 @@ export const emptyForm = (): NewsForm => ({
   body: '',
   photo: { id: null, url: null },
   credit: '',
-  layout: { template: '1', autoFit: true, bodyScale: 100, inEpaper: true },
+  layout: { template: '1', autoFit: true, bodyScale: 100, inEpaper: true, epaperOnly },
   scheduleAt: '',
   editNote: '',
   format: 'news',
