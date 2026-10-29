@@ -263,7 +263,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                       <div style={{ position: 'absolute', left: '20%', right: '17%', top: '61%', textAlign: 'center' }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
                           {trustName && <span>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
-                          {lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}
+                          {lang === 'hi' ? 'आधिकारिक ई-पेपर संस्करण' : 'Official E-Paper Edition'}
                         </div>
                         <div style={{ fontSize: 21, fontWeight: 700, color: '#b8860b', marginTop: 3 }}>
                           <span style={{ fontSize: 13, letterSpacing: 2 }}>····◆ </span>

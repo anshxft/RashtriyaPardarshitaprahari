@@ -28,17 +28,19 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   const width = spanW(cols)
   const paras = s.paragraphs.slice(0, take ?? s.paragraphs.length)
   const showPhoto = Boolean(s.photo) && L.showPhoto
-  const side = showPhoto && L.photoPos !== 'top' && !s.link
-  const photoW = side ? (cols >= 3 ? colW : Math.round(width * 0.42)) : Math.round(width * FRAC[L.photoSize])
-  const bodyCols = side ? (cols >= 3 ? cols - 1 : 1) : cols
+  // Client: a photo sits at the side with the text running beside it (no empty margins around a centred photo);
+  // only a full-width photo stays on top.
+  const side = showPhoto && !s.link && (L.photoPos !== 'top' || L.photoSize !== 'full')
+  const photoW = side ? (cols >= 4 ? spanW(2) : cols === 3 ? colW : Math.round(width * 0.42)) : Math.round(width * FRAC[L.photoSize])
+  const bodyCols = side ? (cols >= 4 ? cols - 2 : cols === 3 ? 2 : 1) : cols
   // Client: text edges even on both sides (newspaper style)
   const align = 'justify'
   const byline = [s.reporter && `${d.reportBy}: ${s.reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
 
   const photo = showPhoto && (
     <figure style={{ margin: side ? 0 : '0 auto 8px', width: photoW, flex: 'none' }}>
-      <div style={{ width: '100%', aspectRatio: L.photoSize === 'full' && !side ? '2 / 1' : side ? '4 / 5' : '3 / 2', overflow: 'hidden', background: '#e8e8e8' }}>
-        <img src={s.photo!.src} alt={s.photo!.alt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <div style={{ width: '100%', aspectRatio: L.photoSize === 'full' && !side ? '2 / 1' : side ? '4 / 5' : '3 / 2', overflow: 'hidden', background: side ? '#f4f4f4' : '#e8e8e8' }}>
+        <img src={s.photo!.src} alt={s.photo!.alt} style={{ width: '100%', height: '100%', objectFit: side ? 'contain' : 'cover', display: 'block' }} />
       </div>
       {s.photo!.credit && <figcaption style={{ fontSize: 8.5, color: '#777', marginTop: 2, lineHeight: '11px', height: 11, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{s.photo!.credit}</figcaption>}
     </figure>
