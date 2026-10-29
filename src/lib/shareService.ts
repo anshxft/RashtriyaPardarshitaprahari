@@ -18,14 +18,30 @@ async function cfg(): Promise<AutoCfg> {
   return s.autoShare || {}
 }
 
+/** Always-relevant tags that top up a story's own tags so a post carries 15–20 hashtags. */
+const STANDARD_TAGS = ['तथ्य', 'पारदर्शिता', 'जवाबदेही', 'जनहित', 'हिंदी_समाचार', 'ताज़ा_खबर', 'आज_की_खबर', 'ई_पेपर', 'जनता_की_आवाज़', 'भारत', 'HindiNews', 'LatestNews', 'IndiaNews', 'NewsUpdate']
+const MAX_TAGS = 20
+
+async function storyTags(a: Article): Promise<string[]> {
+  const cat = typeof a.category === 'object' ? a.category : null
+  const parent = cat && typeof cat.parent === 'object' ? cat.parent?.title : null
+  const ids = (a.tags || []).map((t) => (typeof t === 'object' ? t.id : t))
+  const titles = ids.length
+    ? (await (await db()).find({ collection: 'tags', where: { id: { in: ids } }, locale: 'hi', depth: 0, limit: ids.length })).docs.map((t) => t.title)
+    : []
+  const places = (a.location || '').split(/[(),\/-]+/)
+  return [cat?.title, parent, ...titles, ...places].filter((x): x is string => !!x)
+}
+
 /** Part 1.13: the social version made from the ONE master record — short headline, short description, hashtags. */
 export async function socialVersion(a: Article) {
   const c = await cfg()
-  const cat = typeof a.category === 'object' ? a.category?.title : null
+  const words = [...(c.hashtags || '').split(/\s+/), ...(await storyTags(a)).map(tag), ...STANDARD_TAGS.map(tag)]
+  const hashtags = [...new Set(words.filter((w) => w && w.length > 1))].slice(0, MAX_TAGS).join(' ')
   return {
     headline: a.social?.headline || a.title,
     description: a.social?.description || firstSentence(a.excerpt || a.subheadline || lexicalToText(a.content)),
-    hashtags: a.social?.hashtags || [tag(cat), tag(a.location), c.hashtags || ''].filter(Boolean).join(' '),
+    hashtags: a.social?.hashtags || hashtags,
   }
 }
 

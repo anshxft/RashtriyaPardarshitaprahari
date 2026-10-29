@@ -5,8 +5,10 @@ export type PlatformId = 'telegram' | 'facebook' | 'instagram' | 'x' | 'whatsapp
 /** Pure: the post text. Keeps within each platform's limit and always ends with the link + News ID. */
 export function caption(item: ShareItem, platform: PlatformId): string {
   const tail = [item.newsId && `News ID: ${item.newsId}`, item.url].filter(Boolean).join('\n')
-  const tags = item.hashtags.trim()
+  let tags = item.hashtags.trim()
   if (platform === 'x') {
+    // 20 hashtags don't fit in 280 characters; keep the first ones that fit in ~110.
+    tags = tags.split(/\s+/).reduce((acc, t) => ((acc + ' ' + t).trim().length <= 110 ? (acc + ' ' + t).trim() : acc), '')
     // X counts every link as 23 characters; keep the whole post ≤ 280.
     const room = 280 - 23 - (item.newsId ? item.newsId.length + 10 : 0) - (tags ? tags.length + 2 : 0) - 4
     const head = item.headline.length > room ? `${item.headline.slice(0, room - 1).trimEnd()}…` : item.headline
