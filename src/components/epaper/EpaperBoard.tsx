@@ -254,7 +254,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
           <section key={pg.number} className="ep-sheet anim-fade mb-6 last:mb-0" style={{ display: view === 'all' || idx === i ? 'block' : 'none' }} aria-label={`${d.pageWord} ${pg.number}`}>
             <div className="ep-wrap mx-auto" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
-                {pg.number === 1 && (
+                {/* same masthead on every page */ pg.number > 0 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: '#e9eef5' }}>
                     {/* Client's banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
                         correctly spelt tagline are live text here, and the date strip below is always today's. */}

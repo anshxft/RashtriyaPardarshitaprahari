@@ -102,8 +102,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
   type PG = { colTop: number[]; placed: Placed[] }
   const pages: PG[] = []
   const newPage = (): PG => {
-    const first = pages.length === 0
-    const pg = { colTop: Array<number>(GEO.cols).fill(GEO.margin + (first ? GEO.mastheadH : 0)), placed: [] as Placed[] }
+    const pg = { colTop: Array<number>(GEO.cols).fill(GEO.margin + GEO.mastheadH), placed: [] as Placed[] }
     pages.push(pg)
     return pg
   }
