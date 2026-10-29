@@ -21,7 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   const [featured, latest, investigations, factChecks, questions, forum, positive] = await Promise.all([
     getArticles(lang, { where: { featured: { equals: true } }, limit: 1 }),
-    getArticles(lang, { limit: 22 }),
+    getArticles(lang, { limit: 60 }),
     getArticles(lang, { where: { format: { equals: 'investigation' } }, limit: 4 }),
     getArticles(lang, { where: { format: { equals: 'factcheck' } }, limit: 4 }),
     getArticles(lang, { where: { or: [{ format: { in: ['question', 'tracker'] } }, { questionStatus: { exists: true } }] }, limit: 4 }),
@@ -201,6 +201,21 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
           {forum.docs.length ? forum.docs.map((a) => <ArticleCard key={a.id} a={a} lang={lang} variant="row" />) : <p className="text-muted">{d.comingSoon}</p>}
         </div>
         <SubmitCta lang={lang} />
+      </section>
+
+      {/* Every story, newest first, so readers scrolling down keep finding the earlier news */}
+      <section aria-label={lang === 'hi' ? 'सभी खबरें' : 'All news'}>
+        <SectionTitle lang={lang}>{lang === 'hi' ? 'सभी खबरें' : 'All news'}</SectionTitle>
+        <div className="grid gap-x-8 lg:grid-cols-2">
+          {latest.docs.map((a) => (
+            <ArticleCard key={a.id} a={a} lang={lang} variant="row" />
+          ))}
+        </div>
+        <p className="mt-4 text-center">
+          <Link href={paths.search(lang)} className="inline-block rounded-md border border-line px-5 py-2.5 font-bold hover:bg-surface">
+            {lang === 'hi' ? 'और पुरानी खबरें खोजें →' : 'Find older news →'}
+          </Link>
+        </p>
       </section>
 
       {positive.docs.length > 0 && (
