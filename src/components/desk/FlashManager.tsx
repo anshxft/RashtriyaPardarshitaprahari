@@ -25,6 +25,7 @@ export type FlashRow = {
   articleId: number | null
   reporterName: string
   showReporter: boolean
+  popup: boolean
   duration: string
   publishedAt: string | null
   updatedAt: string
@@ -36,7 +37,7 @@ type Form = Omit<FlashRow, 'priority' | 'updatedAt' | 'expiresAt' | 'mine' | 'by
 
 const input = 'w-full rounded-md border border-line bg-bg px-3 py-2.5 text-base'
 const chip = 'rounded-full border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
-const empty = (): Form => ({ text: '', caption: '', photo: { id: null, url: null }, videoId: null, showMedia: 'auto', articleId: null, reporterName: '', showReporter: false, duration: '6h' })
+const empty = (): Form => ({ text: '', caption: '', photo: { id: null, url: null }, videoId: null, showMedia: 'auto', articleId: null, reporterName: '', showReporter: false, popup: false, duration: '6h' })
 
 const STATUS_CHIP: Record<string, string> = {
   draft: 'bg-surface text-muted',
@@ -371,6 +372,9 @@ function FlashForm({
           <span className="mt-1 flex items-center gap-2 font-normal">
             <input type="checkbox" checked={f.showReporter} onChange={(e) => set('showReporter', e.target.checked)} className="h-5 w-5" /> पाठकों को नाम दिखाएँ
           </span>
+        </label>
+        <label className="flex items-center gap-2 rounded-lg bg-alert-600/10 p-3 text-sm font-bold">
+          <input type="checkbox" checked={f.popup} onChange={(e) => set('popup', e.target.checked)} className="h-5 w-5" /> 🔔 पॉप-अप फ्लैश — वेबसाइट पर बीच-बीच में अचानक पॉप-अप में दिखे, कुछ सेकंड बाद अपने-आप चला जाए
         </label>
         <label className="block text-sm font-semibold">
           फ्लैश कब तक चले

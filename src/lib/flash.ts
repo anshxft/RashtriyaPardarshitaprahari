@@ -17,6 +17,7 @@ export type FlashItem = {
   reporter?: string
   publishedAt?: string
   updatedAt: string
+  popup?: boolean
 }
 
 const object = <T,>(v: unknown) => (typeof v === 'object' && v ? (v as T) : undefined)
@@ -42,6 +43,7 @@ export function toFlashItem(f: BreakingNew, lang: Lang): FlashItem {
     reporter: f.showReporter && f.reporterName ? f.reporterName : undefined,
     publishedAt: f.publishedAt || undefined,
     updatedAt: f.updatedAt,
+    popup: Boolean(f.popup),
   }
 }
 

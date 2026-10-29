@@ -961,6 +961,7 @@ export interface BreakingNew {
   /**
    * संवाददाता का नाम पाठकों को दिखाएँ
    */
+  popup?: boolean | null;
   showReporter?: boolean | null;
   duration?: ('30m' | '1h' | '3h' | '6h' | '12h' | '24h' | 'manual') | null;
   publishedAt?: string | null;
@@ -1701,6 +1702,7 @@ export interface BreakingNewsSelect<T extends boolean = true> {
   article?: T;
   link?: T;
   reporterName?: T;
+  popup?: T;
   showReporter?: T;
   duration?: T;
   publishedAt?: T;

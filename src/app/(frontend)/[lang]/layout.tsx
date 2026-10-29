@@ -4,6 +4,7 @@ import { Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer, Header } from '@/components/Chrome'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
+import { FlashPopup } from '@/components/FlashPopup'
 import { officeNumbers } from '@/lib/contact'
 import { getSettings } from '@/lib/data'
 import { isLang, t, type Lang } from '@/lib/i18n'
@@ -53,6 +54,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           {children}
         </main>
         <Footer lang={lang} />
+        <FlashPopup lang={lang} />
         <WhatsAppFloat
           numbers={wa}
           text={s.whatsappMessage || (lang === 'hi' ? 'नमस्ते, राष्ट्रीय पारदर्शिता प्रहरी।' : 'Hello, Rashtriya Pardarshita Prahari.')}
