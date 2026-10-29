@@ -31,7 +31,8 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   const side = showPhoto && L.photoPos !== 'top' && !s.link
   const photoW = side ? (cols >= 3 ? colW : Math.round(width * 0.42)) : Math.round(width * FRAC[L.photoSize])
   const bodyCols = side ? (cols >= 3 ? cols - 1 : 1) : cols
-  const align = L.align === 'center' ? 'center' : L.align === 'left' ? 'left' : 'justify'
+  // Client: text edges even on both sides (newspaper style)
+  const align = 'justify'
   const byline = [s.reporter && `${d.reportBy}: ${s.reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
 
   const photo = showPhoto && (
@@ -48,7 +49,7 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
       {s.category && !s.link && <div style={{ fontSize: 10, fontWeight: 700, color: '#8f1d1f', letterSpacing: 0.3, marginBottom: 2 }}>{s.category}</div>}
       {s.link && <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a', background: '#f1efec', display: 'inline-block', padding: '1px 6px', marginBottom: 3 }}>{d.externalLink}{s.link.siteName ? ` · ${s.link.siteName}` : ''}</div>}
       <h2 style={{ margin: 0, fontFamily: L.headlineFont === 'sans' ? font.body : font.head, fontWeight: L.headlineWeight === 'normal' ? 500 : 800, fontSize: headlinePx(L.headlineSize, cols) * (s.id.includes('~c') ? 0.7 : 1), lineHeight: 1.22, textAlign: L.headlineAlign, color: ink(L.headlineInk, '#1a1a1a') }}>{s.title}</h2>
-      {s.subheadline && <p style={{ margin: '4px 0 0', fontSize: subPx(L.subheadlineSize, cols), fontWeight: L.subheadlineWeight === 'bold' ? 700 : 400, lineHeight: 1.4, textAlign: L.subheadlineAlign, color: ink(L.subheadlineInk, '#333') }}>{s.subheadline}</p>}
+      {s.subheadline && <p style={{ margin: '4px 0 0', fontSize: subPx(L.subheadlineSize, cols), fontWeight: L.subheadlineWeight === 'bold' ? 700 : 400, lineHeight: 1.4, textAlign: 'justify', color: ink(L.subheadlineInk, '#333') }}>{s.subheadline}</p>}
       {byline && <p style={{ margin: '5px 0 0', fontSize: bylinePx(L.reporterSize), fontWeight: L.reporterWeight === 'normal' ? 400 : 600, textAlign: L.reporterAlign, color: ink(L.reporterInk, '#555') }}>{byline}</p>}
     </>
   )
