@@ -73,6 +73,15 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
   const [more, setMore] = useState(false)
   const [schedule, setSchedule] = useState(Boolean(initial.scheduleAt))
   const [confirm, setConfirm] = useState<null | 'publish' | 'schedule'>(null)
+
+  // “प्रकाशित / स्वीकृत” from the news list opens here with ?publish=1 → go straight to the publish confirmation.
+  useEffect(() => {
+    const u = new URL(window.location.href)
+    if (u.searchParams.get('publish') !== '1') return
+    u.searchParams.delete('publish')
+    window.history.replaceState(null, '', u.toString())
+    setConfirm('publish')
+  }, [])
   // Opened from the news list with “Publish / Approve”: go straight to the checklist.
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('publish') === '1') setConfirm('publish')

@@ -6,13 +6,14 @@ import { categoryOptions, loadForm, mayPublish, teamOptions, todaysEdition } fro
 
 export const metadata = { title: 'खबर संपादित करें' }
 
-export default async function EditNews({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lang?: string }> }) {
+export default async function EditNews({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lang?: string; publish?: string }> }) {
   const { id } = await params
-  const locale = (await searchParams).lang === 'en' ? 'en' : 'hi'
+  const sp = await searchParams
+  const locale = sp.lang === 'en' ? 'en' : 'hi'
   const user = (await currentUser())!
   // Video news is edited in the video editor (file, flash script, voice, exports).
   const a = await (await db()).findByID({ collection: 'articles', id, depth: 0, draft: true, select: { format: true, video: true } }).catch(() => null)
-  if (a?.format === 'video' && a.video) redirect(`/desk/video/${typeof a.video === 'object' ? a.video.id : a.video}`)
+  if (a?.format === 'video' && a.video) redirect(`/desk/video/${typeof a.video === 'object' ? a.video.id : a.video}${sp.publish === '1' ? '?publish=1' : ''}`)
   const [loaded, categories, team, edition] = await Promise.all([loadForm(id, locale, user), categoryOptions(), teamOptions(), todaysEdition(locale)])
   if (!loaded) notFound()
   return (

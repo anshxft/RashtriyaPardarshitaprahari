@@ -124,7 +124,7 @@ assert.equal(newsStatus({ _status: 'published', lifecycle: 'trashed' }), 'trashe
 const b = (s: Parameters<typeof buttonsFor>[0], u: Parameters<typeof buttonsFor>[1], owner: number) => buttonsFor(s, u, owner, {}, DEFAULTS)
 assert.deepEqual(b('draft', rep, 3).main, ['edit', 'preview', 'delete'], 'reporter: own draft, no publish')
 assert.deepEqual(b('draft', ed, 3).main, ['edit', 'preview', 'publish'], 'editor cannot trash someone else’s draft by default')
-assert.deepEqual(b('published', ed, 3).main, ['preview', 'edit', 'download', 'share', 'archive'], 'editor: no re-publish / delete by default')
+assert.deepEqual(b('published', ed, 3).main, ['preview', 'edit', 'download', 'share', 'republish', 'archive'], 'editor: re-publish yes, delete no by default')
 assert.ok(!b('published', ed, 3).more.includes('delete'))
 assert.ok(b('published', adm, 3).main.includes('republish') && b('published', adm, 3).more.includes('delete'))
 assert.deepEqual(b('trashed', ed, 2).main, [], 'only admin restores from trash')

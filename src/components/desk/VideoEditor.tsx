@@ -64,6 +64,15 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
   const [note, setNote] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [schedule, setSchedule] = useState(false)
   const [confirm, setConfirm] = useState<null | 'publish' | 'schedule'>(null)
+
+  // “प्रकाशित / स्वीकृत” from the news list opens here with ?publish=1 → go straight to the publish confirmation.
+  useEffect(() => {
+    const u = new URL(window.location.href)
+    if (u.searchParams.get('publish') !== '1') return
+    u.searchParams.delete('publish')
+    window.history.replaceState(null, '', u.toString())
+    setConfirm('publish')
+  }, [])
   const pick = useRef<HTMLInputElement>(null)
   const replacing = useRef(false)
   const set = <K extends keyof VideoForm>(k: K, v: VideoForm[K]) => setF((x) => ({ ...x, [k]: v }))

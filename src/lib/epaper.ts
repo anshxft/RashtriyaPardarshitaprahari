@@ -148,6 +148,18 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       queue.splice(ainaAt, 1)
     }
   }
+  // Advertisement: page 1, right-hand column under “समाज का आइना” — reserved before the news flows, so a long story
+  // filling the page can never squeeze it out.
+  let adPlaced = false
+  if (extra.ad?.ad) {
+    const s = { ...extra.ad, slot: 'ad' as const }
+    const v = { cols: SLOT_COLS, scale: 1 }
+    const height = h(s, v)
+    if (slotY + height <= pageBottom) {
+      put(pages[0], 1, s, v, height, { c: c0, y: Math.max(slotY, ...pages[0].colTop.slice(c0)) })
+      adPlaced = true
+    }
+  }
   // Client grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
   let lead = true
   while (queue.length) {
@@ -199,8 +211,8 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       }
     }
   }
-  // Advertisement: page 1, first 2-column slot left after the news (else the first page with room).
-  if (extra.ad?.ad) {
+  // Fallback: an ad too tall for page 1 goes to the first page with room.
+  if (extra.ad?.ad && !adPlaced) {
     const s = { ...extra.ad, slot: 'ad' as const }
     const v = { cols: SLOT_COLS, scale: 1 }
     const height = h(s, v)
