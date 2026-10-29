@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { currentUser } from '@/lib/auth'
 import { db } from '@/lib/data'
+import { NewsActionBar } from '@/components/desk/NewsActionBar'
 import { formatDate } from '@/lib/i18n'
+import { buttonsFor, newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
+import { loadPermissions } from '@/lib/permissions'
+import type { Article } from '@/payload-types'
 
 export const metadata = { title: 'वीडियो' }
 
@@ -9,7 +13,12 @@ const ST: Record<string, [string, string]> = { queued: ['कतार में'
 
 export default async function DeskVideos() {
   const user = (await currentUser())!
-  const list = await (await db()).find({ collection: 'videos', locale: 'hi', sort: '-createdAt', limit: 30, depth: 0, draft: true, overrideAccess: false, user })
+  const payload = await db()
+  const list = await payload.find({ collection: 'videos', locale: 'hi', sort: '-createdAt', limit: 30, depth: 0, draft: true, overrideAccess: false, user })
+  // Each video's news record carries the action buttons (Preview / Edit / Download / Re-publish / Share / Archive / Delete)
+  const m = await loadPermissions(payload)
+  const ids = list.docs.map((v) => (typeof v.article === 'object' ? v.article?.id : v.article)).filter((x): x is number => typeof x === 'number')
+  const arts = ids.length ? ((await payload.find({ collection: 'articles', where: { id: { in: ids } }, limit: ids.length, depth: 0, draft: true, locale: 'hi' })).docs as Article[]) : []
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -27,6 +36,23 @@ export default async function DeskVideos() {
               <span className="min-w-0 flex-1 basis-56 font-semibold">{v.title}</span>
               <span className="text-xs text-muted">{formatDate(v.createdAt, 'hi', true)}</span>
               <Link href={`/desk/video/${v.id}`} className="rounded-full border border-line px-3 py-1 text-sm font-semibold hover:bg-surface">✎ खोलें</Link>
+              {(() => {
+                const a = arts.find((x) => x.id === (typeof v.article === 'object' ? v.article?.id : v.article))
+                if (!a) return null
+                const status = newsStatus(a)
+                const owner = typeof a.createdBy === 'object' ? a.createdBy?.id : a.createdBy
+                return (
+                  <div className="basis-full">
+                    <NewsActionBar
+                      id={a.id}
+                      slug={a.slug}
+                      title={a.title}
+                      buttons={buttonsFor(status, user, owner, { video: true }, m)}
+                      info={{ status: STATUS_LABEL[status].hi, firstPublishedAt: a.firstPublishedAt ? formatDate(a.firstPublishedAt, 'hi', true) : '—', lastEditor: a.lastEditedBy || '—', lastUpdate: formatDate(a.updatedAt, 'hi', true), newsId: a.newsId || '', live: status !== 'draft' && status !== 'pending' }}
+                    />
+                  </div>
+                )
+              })()}
             </li>
           )
         })}
