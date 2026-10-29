@@ -39,7 +39,6 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
   // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
   const nameSize = /[a-z]/i.test(siteName) ? Math.min(72, Math.floor(1450 / siteName.length)) : 76
   const weekday = new Intl.DateTimeFormat(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' }).format(new Date(`${date}T12:00:00+05:30`))
-  const topLines = stories.filter((s) => !s.slot).slice(0, 4).map((s) => s.title).join('  ●  ')
   const router = useRouter()
   const [patches, setPatches] = useState<Record<string, Layout>>({})
   const [view, setView] = useState<'page' | 'all'>('page')
@@ -278,15 +277,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
-                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? 'मूल्य: निःशुल्क' : 'Price: Free'}</span>
+                      <span style={{ textAlign: 'right' }}>{siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}</span>
                     </div>
-                    {/* “मुख्य समाचार” strip: the edition's own headlines (never invented text) */}
-                    {topLines && (
-                      <div style={{ display: 'flex', alignItems: 'stretch', height: 32, flexShrink: 0, background: '#b3201c', color: '#fff', fontSize: 15, fontWeight: 700, overflow: 'hidden' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 14px', background: '#7a1512', fontSize: 17, whiteSpace: 'nowrap' }}>{lang === 'hi' ? 'मुख्य समाचार' : 'Top Stories'}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{topLines}</span>
-                      </div>
-                    )}
                   </header>
                 )}
                 {pg.placed.map((pl) => cell(pl, pg.number))}
