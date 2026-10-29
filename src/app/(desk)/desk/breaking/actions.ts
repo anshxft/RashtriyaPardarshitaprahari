@@ -19,6 +19,7 @@ export type FlashInput = {
   articleId: number | null
   reporterName: string
   showReporter: boolean
+  popup: boolean
   duration: string
   /** 'active' = publish now, 'draft' = save as draft, undefined = keep the current status (instant edit of a live flash). */
   status?: 'active' | 'draft'
@@ -77,6 +78,7 @@ export async function saveFlashAction(input: FlashInput): Promise<Res> {
       article: input.articleId,
       reporterName: input.reporterName.trim().slice(0, 120) || null,
       showReporter: input.showReporter,
+      popup: input.popup,
       duration: input.duration,
       status,
     }

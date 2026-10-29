@@ -60,6 +60,7 @@ export const BreakingNews: CollectionConfig = {
     { name: 'article', type: 'relationship', relationTo: 'articles', admin: { description: 'पूरी खबर — फ्लैश पर क्लिक से यही खुलेगी' } },
     { name: 'link', type: 'text', admin: { description: 'Optional other link, e.g. /hi/news/some-slug (used when no news is chosen)' } },
     { name: 'reporterName', type: 'text', admin: { description: 'किस संवाददाता ने भेजा' } },
+    { name: 'popup', type: 'checkbox', defaultValue: false, admin: { description: 'वेबसाइट पर बीच-बीच में अचानक पॉप-अप में भी दिखाएँ (कुछ सेकंड बाद अपने-आप चला जाता है)' } },
     { name: 'showReporter', type: 'checkbox', defaultValue: false, admin: { description: 'संवाददाता का नाम पाठकों को दिखाएँ' } },
     { name: 'duration', type: 'select', defaultValue: '6h', options: FLASH_DURATIONS.map(({ value, label }) => ({ value, label })) },
     { name: 'publishedAt', type: 'date', admin: { readOnly: true, date: { pickerAppearance: 'dayAndTime' } } },

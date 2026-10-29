@@ -38,6 +38,7 @@ export default async function BreakingPage() {
       articleId: idOf(f.article),
       reporterName: f.reporterName || '',
       showReporter: Boolean(f.showReporter),
+      popup: Boolean(f.popup),
       duration: f.duration || '6h',
       publishedAt: f.publishedAt || null,
       updatedAt: f.updatedAt,
