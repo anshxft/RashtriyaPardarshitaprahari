@@ -35,7 +35,9 @@ export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: n
   const bodyCols = side ? (cols >= 4 ? cols - 2 : cols === 3 ? 2 : 1) : cols
   // Client: text edges even on both sides (newspaper style)
   const align = 'justify'
-  const byline = [s.reporter && `${d.reportBy}: ${s.reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
+  // Editor-in-Chief's pieces already say “प्रधान संपादक के कलम से” — no “रिपोर्ट: प्रधान संपादक…” line under them
+  const reporter = s.reporter && !/^प्रधान संपादक|^Editor-in-Chief/.test(s.reporter) ? s.reporter : null
+  const byline = [reporter && `${d.reportBy}: ${reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
 
   const photo = showPhoto && (
     <figure style={{ margin: side ? 0 : '0 auto 8px', width: photoW, flex: 'none' }}>
