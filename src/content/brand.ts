@@ -3,7 +3,8 @@
  * They live in code (not in the admin) on purpose, so nobody can edit them by accident.
  */
 /** Dateline city of the e-paper (the registered office is in Ranchi). */
-export const DATELINE_CITY = { hi: 'रांची', en: 'Ranchi' } as const
+export const DATELINE_CITY = { hi: 'रांची, धनबाद एवं वाराणसी', en: 'Ranchi, Dhanbad & Varanasi' } as const
+export const HELPLINE = '+91 94319 24522'
 
 export const TAGLINE_SHORT = 'तथ्य * पारदर्शिता * जवाबदेही * जनहित'
 export const TAGLINE_FULL = 'तथ्य हमारा आधार, पारदर्शिता हमारी पहचान, जवाबदेही हमारा संकल्प, जनहित हमारा उद्देश्य'

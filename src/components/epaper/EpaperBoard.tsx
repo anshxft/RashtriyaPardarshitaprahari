@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { reorderAction, saveLayoutAction } from '@/app/(frontend)/[lang]/epaper/actions'
-import { DATELINE_CITY, TAGLINE_SHORT } from '@/content/brand'
+import { DATELINE_CITY, HELPLINE, TAGLINE_SHORT } from '@/content/brand'
 import { siteUrl } from '@/lib/paths'
 import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
@@ -272,12 +272,12 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                       </div>
                     </div>
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 28, flexShrink: 0, padding: '0 10px', background: '#13294b', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 28, flexShrink: 0, padding: '0 10px', background: '#13294b', fontSize: 13, whiteSpace: 'nowrap', fontWeight: 700, color: '#fff' }}>
                       <span>
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
                       <span>{regNo ? `${lang === 'hi' ? 'पंजीकरण सं.' : 'Regd. No.'}: ${regNo}` : ''}</span>
-                      <span style={{ textAlign: 'right' }}>{siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}</span>
+                      <span style={{ textAlign: 'right' }}>{lang === 'hi' ? 'संपर्क हेल्पलाइन' : 'Helpline'}: {HELPLINE}</span>
                     </div>
                   </header>
                 )}
