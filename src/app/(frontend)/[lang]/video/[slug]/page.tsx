@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ListenButton } from '@/components/ListenButton'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { ShareButtons } from '@/components/client'
 import { VideoPlayer, videoPoster } from '@/components/VideoPlayer'
@@ -43,6 +44,11 @@ export default async function VideoPage({ params }: Props) {
       <div className="mt-4">
         <VideoPlayer v={v} aiNote={Boolean(settings.aiVoiceNote)} />
       </div>
+      {v.description && (
+        <div className="mt-4">
+          <ListenButton lang={lang} parts={[v.title, v.description]} />
+        </div>
+      )}
       {v.description && <p className="mt-4 text-lg leading-relaxed">{v.description}</p>}
       <div className="mt-4">
         <ShareButtons url={url} title={v.title} labels={{ share: d.share, copy: d.copyLink, copied: d.copied }} />
