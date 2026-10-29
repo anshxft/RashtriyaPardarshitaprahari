@@ -10,6 +10,7 @@ import type { Article, Tag, TeamMember } from '@/payload-types'
 import { ArticleCard } from './ArticleCard'
 import { CorrectionsBox, DocumentsBox, FactCheckBox, FollowUps, InvestigationSections, RichText, SourcesBox, TrackerTimeline } from './ArticleParts'
 import { ShareButtons } from './client'
+import { ListenButton } from './ListenButton'
 import { Qr } from './Qr'
 import { ShareCard } from './ShareCard'
 import { socialVersion } from '@/lib/shareService'
@@ -168,6 +169,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       </div>
 
       <div className="mt-3 space-y-3">
+        <ListenButton lang={lang} parts={[a.title, text.subheadline || '', ...text.paragraphs].filter(Boolean)} />
         <ShareButtons url={shortUrl} title={a.title} labels={{ share: d.share, copy: d.copyLink, copied: d.copied }} />
         <StoryTools
           title={a.title}
