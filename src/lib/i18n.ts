@@ -47,7 +47,7 @@ const dict = {
     source: 'स्रोत',
     reference: 'संदर्भ',
     corrections: 'सुधार',
-    correctionsLog: 'सुधार लॉग',
+    correctionsLog: 'सुधार लॉग (Correction Log)',
     correctionNote: 'इस खबर में सुधार किया गया है',
     correctionPolicyLink: 'हमारी सुधार नीति',
     reportError: 'गलती दिखी? हमें बताएं',
