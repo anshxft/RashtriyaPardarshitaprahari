@@ -37,7 +37,7 @@ export const GEO = {
   gutter: 16,
   cols: 6,
   footerH: 30,
-  mastheadH: 256, // page-1 masthead: info strip + map / name / तुला + “मुख्य समाचार” strip
+  mastheadH: 278, // page-1 masthead: info strip + map / name / तुला + “मुख्य समाचार” strip
   blockGap: 14,
 } as const
 

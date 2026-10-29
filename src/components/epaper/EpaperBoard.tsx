@@ -256,25 +256,21 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
             <div className="ep-wrap mx-auto" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
-                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #fbfcfe 0%, #e9eef5 100%)' }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
-                      {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
-                      <img src="/epaper-india-map.png" alt="भारत" width={150} height={150} style={{ width: 150, height: 150, objectFit: 'contain', flexShrink: 0 }} />
-                      <div style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ fontFamily: 'var(--font-head), sans-serif', fontWeight: 900, fontSize: nameSize, lineHeight: 1.15, whiteSpace: 'nowrap' }}>
-                          <TricolorName name={siteName} />
-                        </div>
+                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: '#e9eef5' }}>
+                    {/* Client's banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
+                        correctly spelt tagline are live text here, and the date strip below is always today's. */}
+                    <div style={{ position: 'relative', flex: 1, backgroundImage: 'url(/epaper-masthead.png)', backgroundSize: '100% 100%' }} role="img" aria-label={siteName}>
+                      <div style={{ position: 'absolute', left: '20%', right: '17%', top: '61%', textAlign: 'center' }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
                           {trustName && <span style={{ color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
                           {lang === 'hi' ? 'ई-पेपर संस्करण' : 'E-Paper Edition'}
                         </div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#b8860b', marginTop: 1 }}>
+                        <div style={{ fontSize: 21, fontWeight: 700, color: '#b8860b', marginTop: 3 }}>
                           <span style={{ fontSize: 13, letterSpacing: 2 }}>····◆ </span>
                           {TAGLINE_SHORT}
                           <span style={{ fontSize: 13, letterSpacing: 2 }}> ◆····</span>
                         </div>
                       </div>
-                      <Tula size={150} />
                     </div>
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 28, flexShrink: 0, padding: '0 10px', background: '#13294b', fontSize: 14, fontWeight: 700, color: '#fff' }}>

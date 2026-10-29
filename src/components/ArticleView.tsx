@@ -12,6 +12,7 @@ import { CorrectionsBox, DocumentsBox, FactCheckBox, FollowUps, InvestigationSec
 import { ShareButtons } from './client'
 import { Qr } from './Qr'
 import { ShareCard } from './ShareCard'
+import { socialVersion } from '@/lib/shareService'
 import { StoryTools } from './StoryTools'
 import { VideoPlayer } from './VideoPlayer'
 import type { Video } from '@/payload-types'
@@ -246,6 +247,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
         <RichText data={text.bodyFromSubheadline ? paragraphsToLexical(text.paragraphs) : a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
       </div>
+      {/* 15–20 hashtags at the end of every story (same set the social posts use) */}
+      <p className="mt-6 text-[15px] leading-relaxed font-semibold break-words text-link">{(await socialVersion(a)).hashtags}</p>
       <div className="mt-8 border-t border-line pt-4">
         <ShareButtons url={shortUrl} title={a.title} labels={{ share: d.share, copy: d.copyLink, copied: d.copied }} />
       </div>
