@@ -149,14 +149,12 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       queue.splice(ainaAt, 1)
     }
   }
-  if (extra.ad?.ad) {
-    const s = { ...extra.ad, slot: 'ad' as const }
-    const height = h(s, { cols: SLOT_COLS, scale: 1 })
-    if (slotY + height <= pageBottom) put(pages[0], 1, s, { cols: SLOT_COLS, scale: 1 }, height, { c: c0, y: slotY })
-  }
+  // Client grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
+  let lead = true
   while (queue.length) {
     const { s, pin, cont } = queue.shift()!
-    const vs = variantsFor(s)
+    const vs = cont ? variantsFor(s) : variantsFor({ ...s, layout: { ...s.layout, columns: lead ? 4 : 2, autoFit: true } })
+    if (!cont) lead = false
     const target = pin || 1
     let done = false
     for (let p = target; !done; p++) {
@@ -186,6 +184,19 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
           queue.unshift({ s: rest, pin: p + 1, cont: true })
         }
         done = true
+      }
+    }
+  }
+  // Advertisement: page 1, first 2-column slot left after the news (else the first page with room).
+  if (extra.ad?.ad) {
+    const s = { ...extra.ad, slot: 'ad' as const }
+    const v = { cols: SLOT_COLS, scale: 1 }
+    const height = h(s, v)
+    for (const [i, pg] of pages.entries()) {
+      const at = slot(pg, SLOT_COLS, height)
+      if (at) {
+        put(pg, i + 1, s, v, height, at)
+        break
       }
     }
   }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { reorderAction, saveLayoutAction } from '@/app/(frontend)/[lang]/epaper/actions'
 import { DATELINE_CITY, TAGLINE_SHORT } from '@/content/brand'
+import { siteUrl } from '@/lib/paths'
 import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
@@ -243,7 +244,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
             <div className="ep-wrap mx-auto" style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }}>
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
                 {pg.number === 1 && (
-                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column' }}>
+                  <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #fbfcfe 0%, #e9eef5 100%)' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
                       {/* Left: India map — tricolour 3D silhouette built from the map image the client supplied (never redraw borders) */}
                       <img src="/epaper-india-map.png" alt="भारत" width={150} height={150} style={{ width: 150, height: 150, objectFit: 'contain', flexShrink: 0 }} />
@@ -255,12 +256,16 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                           {trustName && <span style={{ color: '#8f1d1f' }}>{lang === 'hi' ? `${trustName} द्वारा संचालित एवं प्रकाशित ` : `Run and published by ${trustName} · `}</span>}
                           {lang === 'hi' ? 'आधिकारिक ई-पेपर संस्करण' : 'Official E-Paper Edition'}
                         </div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#c25a00', marginTop: 1 }}>{TAGLINE_SHORT}</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#b8860b', marginTop: 1 }}>
+                          <span style={{ fontSize: 13, letterSpacing: 2 }}>····◆ </span>
+                          {TAGLINE_SHORT}
+                          <span style={{ fontSize: 13, letterSpacing: 2 }}> ◆····</span>
+                        </div>
                       </div>
                       <Tula size={150} />
                     </div>
                     {/* Info line under the name: dateline left · registration / trust centre · price right */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 26, flexShrink: 0, borderTop: '1.5px solid #1a1a1a', marginBottom: 4, fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, height: 28, flexShrink: 0, padding: '0 10px', background: '#13294b', fontSize: 14, fontWeight: 700, color: '#fff' }}>
                       <span>
                         {lang === 'hi' ? `${DATELINE_CITY.hi} से प्रकाशित` : `Published from ${DATELINE_CITY.en}`} · {weekday}, {dateLabel}
                       </span>
@@ -281,6 +286,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                   <span>
                     {siteName} · {dateLabel}
                   </span>
+                  <span>{siteUrl().replace(/^https?:\/\//, '')}</span>
                   <span>
                     {d.pageWord} {pageNo(pg.number)} / {pageNo(pages.length)}
                   </span>
