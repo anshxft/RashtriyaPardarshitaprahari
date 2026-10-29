@@ -82,7 +82,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </aside>
       </section>
 
-      <section className="hidden sm:block">
+      <section className={rest.length > 10 ? 'hidden sm:block' : 'hidden'}>
         <SectionTitle lang={lang}>{d.topStories}</SectionTitle>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {rest.slice(10, 18).map((a) => (
