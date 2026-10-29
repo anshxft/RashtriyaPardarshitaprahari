@@ -7,7 +7,7 @@ import { SectionTitle, Slot, VerdictBadge } from '@/components/ui'
 import { EditorMessage } from '@/components/EditorMessage'
 import { FlashBox } from '@/components/FlashBox'
 import { HOME_BLOCKS } from '@/content/site-structure'
-import { asCat, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, getVideos, type Card } from '@/lib/data'
+import { asCat, cardImage, getArticles, getBySlug, getCategory, getCategoryArticles, getSettings, getVideos, type Card } from '@/lib/data'
 import { getFlash } from '@/lib/flash'
 import { assertLang, t, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
@@ -58,8 +58,11 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
     <div className="space-y-12">
       {flash.length > 0 && <FlashBox initial={flash} lang={lang} />}
 
+      {/* Phones: newspaper-style front (client's layout) — lead 2/3 + two stories beside it, then three to a row */}
+      <PhoneFront items={[lead, ...rest.slice(0, 11)]} lang={lang} />
+
       {/* Lead + latest list */}
-      <section className="grid gap-8 lg:grid-cols-3" aria-label={d.topStories}>
+      <section className="hidden gap-8 sm:grid lg:grid-cols-3" aria-label={d.topStories}>
         <div className="lg:col-span-2">
           <ArticleCard a={lead} lang={lang} variant="lead" priority />
         </div>
@@ -71,7 +74,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </aside>
       </section>
 
-      <section>
+      <section className="hidden sm:block">
         <SectionTitle lang={lang}>{d.topStories}</SectionTitle>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {rest.slice(6, 14).map((a) => (
@@ -228,3 +231,67 @@ function FactCheckStrip({ items, lang }: { items: Card[]; lang: Lang }) {
   )
 }
 
+
+/** Phone-only front page: real headlines at readable sizes; each tile opens its story. */
+function PhoneFront({ items, lang }: { items: Card[]; lang: Lang }) {
+  const [lead, second, third, ...rest] = items
+  const card = 'relative block rounded-lg border border-line bg-bg p-2.5 shadow-sm'
+  const label = (a: Card) => {
+    const c = asCat(a.category)
+    return c && <div className="mb-1 text-[11px] font-semibold text-brand-600">{c.title}</div>
+  }
+  const head = (a: Card, size: string) => (
+    <h3 className={`font-display leading-tight font-extrabold ${size}`}>
+      <Link href={paths.article(lang, a.slug)} className="after:absolute after:inset-0">
+        {a.title}
+      </Link>
+    </h3>
+  )
+  const photo = (a: Card, ratio: string, kind: 'hero' | 'card' = 'card') => {
+    const img = cardImage(a, kind)
+    return img && <img src={img.src} alt={img.alt} loading={kind === 'hero' ? 'eager' : 'lazy'} className={`mt-2 w-full rounded object-cover ${ratio}`} />
+  }
+  const text = (a: Card, lines: string) => (a.excerpt || a.subheadline) && <p className={`mt-1.5 text-[13px] leading-snug text-muted ${lines}`}>{a.excerpt || a.subheadline}</p>
+  if (!lead) return null
+  return (
+    <section className="space-y-2 sm:hidden" aria-label={t(lang).topStories}>
+      <div className="grid grid-cols-3 gap-2">
+        <article className={`${card} ${second ? 'col-span-2' : 'col-span-3'}`}>
+          {label(lead)}
+          {head(lead, 'text-[20px]')}
+          {photo(lead, 'aspect-[4/3]', 'hero')}
+          {text(lead, 'line-clamp-5')}
+        </article>
+        {second && (
+          <div className="flex flex-col gap-2">
+            <article className={card}>
+              {label(second)}
+              {head(second, 'text-[15px]')}
+              {photo(second, 'aspect-square')}
+              {text(second, 'line-clamp-2')}
+            </article>
+            {third && (
+              <article className={card}>
+                {label(third)}
+                {head(third, 'text-[15px]')}
+                {text(third, 'line-clamp-3')}
+              </article>
+            )}
+          </div>
+        )}
+      </div>
+      {rest.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {rest.map((a) => (
+            <article key={a.id} className={card}>
+              {label(a)}
+              {head(a, 'text-[14px]')}
+              {photo(a, 'aspect-square')}
+              {text(a, 'line-clamp-3')}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
