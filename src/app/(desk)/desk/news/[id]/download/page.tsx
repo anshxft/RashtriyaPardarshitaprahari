@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ShareCard } from '@/components/ShareCard'
 import { StoryTools } from '@/components/StoryTools'
 import { currentUser } from '@/lib/auth'
@@ -24,6 +24,8 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
   if (!allowed(user, 'download')) return <p className="rounded-xl bg-bg p-6 text-center">डाउनलोड का अधिकार आपकी भूमिका में नहीं है।</p>
   const a = await getArticleForPreview('hi', id, user)
   if (!a) notFound()
+  // Video news: “Download” gives just the video (website version with the logo) — no news card / PDF / text.
+  if (a.format === 'video' && a.video) redirect(`/api/desk/download?video=${typeof a.video === 'object' ? a.video.id : a.video}&kind=published`)
   const d = t('hi')
   const settings = await getSettings('hi')
   const img = cardImage(a, 'hero')
