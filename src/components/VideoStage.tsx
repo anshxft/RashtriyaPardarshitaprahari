@@ -15,6 +15,7 @@ const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad }) {
   const times = useRef<number[]>([])
   const [show, setShow] = useState(false)
+  const [playing, setPlaying] = useState(false)
   const [adShow, setAdShow] = useState(false)
   const [adClosed, setAdClosed] = useState(false)
   const strip = Boolean(flash?.on && flash.script.trim())
@@ -48,6 +49,9 @@ export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; 
           controlsList="nodownload noremoteplayback"
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
           onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, flash?.repeat !== false, flash?.intervalSec || 20))}
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
@@ -60,8 +64,9 @@ export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; 
           }}
         />
         {breaking && <span className="pointer-events-none absolute top-2 left-2 animate-pulse rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide text-white motion-reduce:animate-none sm:top-3 sm:left-3 sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>}
-        {strip && show && (
-          <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-10 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-12 sm:px-3 sm:py-2 sm:text-base">
+        {/* Sits at the very bottom like a TV ticker; hidden while paused so the play / seek controls stay clear. */}
+        {strip && show && playing && (
+          <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:px-3 sm:py-1.5 sm:text-base">
             <style>{`@keyframes vs-tick { from { transform: translateX(0) } to { transform: translateX(-100%) } }`}</style>
             <span className="shrink-0 rounded bg-white px-1 py-0.5 text-[10px] text-[#c8102e] sm:px-1.5 sm:text-xs">● {flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
             <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap">
