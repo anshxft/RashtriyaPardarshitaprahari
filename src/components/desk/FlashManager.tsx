@@ -57,7 +57,8 @@ const shownStatus = (r: FlashRow) => (expired(r) ? 'expired' : r.status)
  * Breaking Flash desk. Write (photo / video + 1–3 short lines) → live preview (exactly as readers will see it) → publish.
  * Running flashes can be edited in place (no duplicate), paused, resumed, re-ordered or removed from the flash.
  */
-export function FlashManager({ rows, stories, videos, mayFlash, uploadMode }: { rows: FlashRow[]; stories: { id: number; title: string }[]; videos: { id: number; title: string }[]; mayFlash: boolean; uploadMode: UploadMode }) {
+export function FlashManager({ rows, stories, videos, mayFlash, uploadMode, mode = 'ticker' }: { rows: FlashRow[]; stories: { id: number; title: string }[]; videos: { id: number; title: string }[]; mayFlash: boolean; uploadMode: UploadMode; mode?: 'ticker' | 'popup' }) {
+  const pop = mode === 'popup'
   const router = useRouter()
   const [form, setForm] = useState<Form | null>(null)
   const [tab, setTab] = useState<'active' | 'paused' | 'draft' | 'archive'>('active')
@@ -89,10 +90,13 @@ export function FlashManager({ rows, stories, videos, mayFlash, uploadMode }: { 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">ब्रेकिंग फ्लैश</h1>
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-navy-900">{pop ? 'फ्लैश पॉप-अप' : 'ब्रेकिंग फ्लैश'}</h1>
+          <p className="text-sm text-muted">{pop ? 'यहाँ डाला फ्लैश सिर्फ वेबसाइट पर बीच-बीच में पॉप-अप में आएगा (कुछ सेकंड बाद अपने-आप चला जाता है), लाल पट्टी में नहीं।' : 'यहाँ डाला फ्लैश ऊपर की लाल पट्टी और होम पेज के ब्रेकिंग कार्ड में दिखेगा। पॉप-अप के लिए अलग सेक्शन है।'}</p>
+        </div>
         {!form && (
-          <button type="button" onClick={() => (setNote(null), setForm(empty()))} className="min-h-11 rounded-lg bg-alert-600 px-5 font-bold text-white hover:bg-alert-700">
-            + नया ब्रेकिंग फ्लैश
+          <button type="button" onClick={() => (setNote(null), setForm({ ...empty(), popup: pop }))} className="min-h-11 rounded-lg bg-alert-600 px-5 font-bold text-white hover:bg-alert-700">
+            {pop ? '+ नया पॉप-अप' : '+ नया ब्रेकिंग फ्लैश'}
           </button>
         )}
       </div>
@@ -110,7 +114,7 @@ export function FlashManager({ rows, stories, videos, mayFlash, uploadMode }: { 
           onCancel={() => setForm(null)}
           onSave={(f, status) =>
             run(async () => {
-              const r = await saveFlashAction({ ...f, photoId: f.photo.id, status })
+              const r = await saveFlashAction({ ...f, popup: pop, photoId: f.photo.id, status })
               if (r.ok) setForm(null)
               return r
             }, status === 'active' ? 'फ्लैश वेबसाइट पर चल गया ✔' : f.id ? 'बदलाव सेव ✔ वेबसाइट पर अपने-आप दिखेगा' : 'ड्राफ्ट सेव ✔')
@@ -372,9 +376,6 @@ function FlashForm({
           <span className="mt-1 flex items-center gap-2 font-normal">
             <input type="checkbox" checked={f.showReporter} onChange={(e) => set('showReporter', e.target.checked)} className="h-5 w-5" /> पाठकों को नाम दिखाएँ
           </span>
-        </label>
-        <label className="flex items-center gap-2 rounded-lg bg-alert-600/10 p-3 text-sm font-bold">
-          <input type="checkbox" checked={f.popup} onChange={(e) => set('popup', e.target.checked)} className="h-5 w-5" /> 🔔 पॉप-अप फ्लैश — वेबसाइट पर बीच-बीच में अचानक पॉप-अप में दिखे, कुछ सेकंड बाद अपने-आप चला जाए
         </label>
         <label className="block text-sm font-semibold">
           फ्लैश कब तक चले

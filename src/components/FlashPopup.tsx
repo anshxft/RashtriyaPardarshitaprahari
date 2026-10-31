@@ -28,7 +28,7 @@ export function FlashPopup({ lang }: { lang: 'hi' | 'en' }) {
     }
     const show = async () => {
       try {
-        const res = await fetch(`/api/flash?lang=${lang}`)
+        const res = await fetch(`/api/flash?lang=${lang}&kind=popup`)
         const { items } = (await res.json()) as { items: FlashItem[] }
         const pool = items.filter((f) => f.popup && !closed().has(f.id))
         if (pool.length) {

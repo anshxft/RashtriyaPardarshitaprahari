@@ -166,6 +166,13 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       </div>
       {note && <p role="status" className={`rounded-md p-3 text-sm font-semibold ${note.kind === 'ok' ? 'bg-india-600/10 text-india-700' : 'bg-alert-600/10 text-alert-700'}`}>{note.text}</p>}
 
+      {!f.id && pct === null && (
+        <Link href="/desk/news/new" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-dashed border-navy-900/40 bg-surface p-3 text-sm font-semibold hover:bg-bg">
+          <span>वीडियो नहीं है? सिर्फ फोटो से खबर डालें (एक या कई फोटो)</span>
+          <span className="rounded-lg bg-navy-900 px-3 py-1.5 font-bold text-white">📷 फोटो खबर →</span>
+        </Link>
+      )}
+
       {/* 1 · file */}
       <section className={card}>
         <input ref={pick} type="file" accept="video/*" className="hidden" onChange={(e) => (onFile(e.target.files?.[0]), (e.target.value = ''))} />
