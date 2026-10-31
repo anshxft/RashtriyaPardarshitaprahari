@@ -269,6 +269,16 @@ export const Articles: CollectionConfig = {
     // Sidebar
     slugField('title'),
     { name: 'format', type: 'select', required: true, defaultValue: 'news', options: [...FORMATS], admin: { position: 'sidebar' } },
+    {
+      name: 'gallery',
+      type: 'array',
+      label: 'और फोटो (गैलरी) / More photos',
+      admin: { description: 'मुख्य फोटो के अलावा जितनी चाहें फोटो — खबर के नीचे गैलरी में दिखती हैं।' },
+      fields: [
+        { name: 'image', type: 'upload', relationTo: 'media', required: true },
+        { name: 'caption', type: 'text' },
+      ],
+    },
     { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true, admin: { position: 'sidebar' } },
     { name: 'author', type: 'relationship', relationTo: 'authors', admin: { position: 'sidebar', description: 'Legacy byline (use Reporter below)' } },
     { name: 'reporterName', type: 'text', localized: true, admin: { position: 'sidebar', description: 'Reporter / correspondent shown in the byline' } },

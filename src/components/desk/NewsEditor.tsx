@@ -10,6 +10,7 @@ import { INK, INK_OPTIONS, resolveLayout, TEMPLATES, type ElAlign, type Ink, typ
 import { parsePastedStory } from '@/lib/paste'
 import { EpaperPreview } from './EpaperPreview'
 import { PhotoField, type Photo } from './PhotoField'
+import { GalleryField, type GalleryItem } from './GalleryField'
 import { publishChecklist } from '@/lib/newsStatus'
 
 export type NewsForm = {
@@ -22,6 +23,8 @@ export type NewsForm = {
   categoryId: number | null
   body: string
   photo: Photo
+  /** extra photos (gallery under the story) */
+  gallery: GalleryItem[]
   credit: string
   layout: Layout
   scheduleAt: string
@@ -64,7 +67,8 @@ const AUTOSAVE_MS = 2000
 
 export function NewsEditor({ initial, locale, categories, team, edition, mayPublish, reference }: Props) {
   const [f, setF] = useState<NewsForm>(initial)
-  const [busy, start] = useTransition()
+  const [saving, start] = useTransition()
+  const busy = saving || (f.gallery || []).some((g) => g.busy)
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [result, setResult] = useState<Extract<SaveResult, { ok: true }> | null>(null)
   // Client: each section is separate. A story opened from “ई-पेपर खबर” is e-paper only; every other story is website only
@@ -160,6 +164,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       categoryId: f.categoryId,
       paragraphs,
       heroImageId: f.photo.id,
+      gallery: (f.gallery || []).filter((g) => g.id).map((g) => ({ imageId: g.id!, caption: g.caption })),
       layout: { ...f.layout, epaperOnly: ep, inEpaper: ep },
       scheduleAt: mode === 'schedule' && f.scheduleAt ? new Date(`${f.scheduleAt}:00+05:30`).toISOString() : undefined,
       editNote: f.editNote,
@@ -399,6 +404,9 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
           <section id="photo" className={`${card} scroll-mt-20`}>
             <h3 className={h3}>4 · फोटो</h3>
             <PhotoField photo={f.photo} onChange={(p) => set('photo', p)} alt={f.title} credit={f.credit} onCredit={(v) => set('credit', v)} />
+            <div className="mt-5 border-t border-line pt-4">
+              <GalleryField items={f.gallery || []} onChange={(fn) => (setF((x) => ({ ...x, gallery: fn(x.gallery || []) })), setDirty(true))} alt={f.title} />
+            </div>
           </section>
 
           <section className={`${card} space-y-4`}>
@@ -570,7 +578,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
               समीक्षा के लिए भेजें
             </button>
           )}
-          {busy && <span className="text-sm text-muted">सेव हो रहा है…</span>}
+          {saving ? <span className="text-sm text-muted">सेव हो रहा है…</span> : busy && <span className="text-sm text-muted">फोटो अपलोड हो रही हैं…</span>}
         </div>
       </div>
 
