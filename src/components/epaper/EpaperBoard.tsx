@@ -180,6 +180,8 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
           .ep-wrap { width: ${GEO.pageW}px !important; height: ${GEO.pageH}px !important }
           .ep-page { transform: none !important; box-shadow: none !important; outline: none !important }
         }
+        /* PDF / print: keep the masthead banner, the navy date strip and every coloured box exactly as on screen */
+        .ep-page, .ep-page * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important }
       `}</style>
 
       <div className="no-print mb-4 space-y-3">
@@ -260,7 +262,10 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: '#e9eef5' }}>
                     {/* Client's banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
                         correctly spelt tagline are live text here, and the date strip below is always today's. */}
-                    <div style={{ position: 'relative', flex: 1, backgroundImage: 'url(/epaper-masthead.png)', backgroundSize: '100% 100%' }} role="img" aria-label={siteName}>
+                    <div style={{ position: 'relative', flex: 1 }} role="img" aria-label={siteName}>
+                      {/* a real <img>, not a CSS background: PDF / print tools drop backgrounds, so the name went missing */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/epaper-masthead.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
                       <div style={{ position: 'absolute', left: 0, right: 0, top: 4, textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: '#13294b' }}>{siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')}</div>
                       <div style={{ position: 'absolute', left: '20%', right: '17%', top: '61%', textAlign: 'center' }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
