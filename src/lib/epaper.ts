@@ -55,7 +55,7 @@ const HEAD: Record<number, Record<Size, number>> = {
 }
 export const headlinePx = (size: Size, span: number) => HEAD[Math.min(4, Math.max(1, span))][size]
 export const subPx = (size: Size, span: number) => Math.round(headlinePx(size, span) * (span === 1 ? 0.62 : 0.5) + 2)
-export const bylinePx = (size: Size) => ({ sm: 11, md: 12.5, lg: 14, xl: 16 })[size]
+export const bylinePx = (size: Size) => ({ sm: 14, md: 16, lg: 18, xl: 20 })[size]
 export const BODY_PX = 20
 /** Readable floor: body text is never drawn smaller than this (Round 4: never shrink text just to fit more). */
 export const MIN_BODY_PX = 19.5

@@ -59,7 +59,7 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
       {s.link && <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a1a', background: '#f1efec', display: 'inline-block', padding: '1px 6px', marginBottom: 3 }}>{d.externalLink}{s.link.siteName ? ` · ${s.link.siteName}` : ''}</div>}
       <h2 style={{ margin: 0, fontFamily: L.headlineFont === 'sans' ? font.body : font.head, fontWeight: L.headlineWeight === 'normal' ? 500 : 800, fontSize: headlinePx(L.headlineSize, cols) * (s.id.includes('~c') ? 0.7 : 1), lineHeight: 1.22, textAlign: L.headlineAlign, color: ink(L.headlineInk, '#1a1a1a') }}>{s.title}</h2>
       {s.subheadline && <p style={{ margin: '4px 0 0', fontSize: subPx(L.subheadlineSize, cols), fontWeight: L.subheadlineWeight === 'bold' ? 700 : 400, lineHeight: 1.4, textAlign: 'justify', color: ink(L.subheadlineInk, '#333') }}>{s.subheadline}</p>}
-      {byline && <p style={{ margin: '5px 0 0', fontSize: bylinePx(L.reporterSize), fontWeight: L.reporterWeight === 'normal' ? 400 : 600, textAlign: L.reporterAlign, color: ink(L.reporterInk, '#555') }}>{byline}</p>}
+      {byline && <p style={{ margin: '6px 0 2px', fontSize: bylinePx(L.reporterSize), fontWeight: L.reporterWeight === 'normal' ? 500 : 700, textAlign: L.reporterAlign, color: ink(L.reporterInk, '#555') }}>{byline}</p>}
     </>
   )
 
