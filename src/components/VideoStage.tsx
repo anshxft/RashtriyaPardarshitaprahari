@@ -64,16 +64,16 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
         />
         {breaking && <span className="pointer-events-none absolute top-2 left-2 animate-pulse rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide text-white motion-reduce:animate-none sm:top-3 sm:left-3 sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>}
         {strip && show && (
-          <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-1 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-2 sm:px-3 sm:py-2 sm:text-base">
+          <div className="anim-strip tv-strip pointer-events-none absolute inset-x-0 bottom-1 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-2 sm:px-3 sm:py-2 sm:text-base">
             <style>{`@keyframes vs-tick { from { transform: translateX(0) } to { transform: translateX(-100%) } }`}</style>
-            <span className="shrink-0 rounded bg-white px-1 py-0.5 text-[10px] text-[#c8102e] sm:px-1.5 sm:text-xs">● {flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
+            <span className="tv-pill shrink-0 rounded bg-white px-1 py-0.5 text-[10px] font-black text-[#c8102e] sm:px-1.5 sm:text-xs">● {flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
             <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap">
               <span className="inline-block pl-[100%] motion-reduce:pl-0" style={{ animation: `vs-tick ${Math.max(4, showSec - 2.4)}s linear 2.2s both` }}>
                 {flash!.script.replace(/\s*\n+\s*/g, ' • ')}
               </span>
             </span>
             {/* opening bumper: “BREAKING” flips to “NEWS”, then the scrolling line takes over */}
-            <span className="tv-bump absolute inset-0 items-center justify-center bg-[#c8102e] text-base font-black tracking-[0.25em] text-white sm:text-2xl" aria-hidden>
+            <span className="tv-bump absolute inset-0 items-center justify-center bg-[#c8102e] text-base font-black tracking-[0.25em] text-white italic sm:text-2xl" aria-hidden>
               <span>{flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
               <span>NEWS</span>
             </span>
@@ -93,17 +93,17 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
   if (!banded) return stage
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top, yellow second headline under the video.
   return (
-    <div className="overflow-hidden rounded-lg bg-black shadow-sm">
+    <div className="tv-frame overflow-hidden rounded-lg bg-black">
       {top && (
         <>
-          <p className="tv-top bg-[#e10600] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-white sm:px-5 sm:py-3 sm:text-2xl">{top}</p>
-          <p className="tv-bar border-y-2 border-white/80 bg-gradient-to-r from-[#0a2f7a] via-[#1f6fd1] to-[#0a2f7a] py-1 text-center text-sm font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-xl">
+          <p className="tv-top px-3 py-2 text-center font-display text-xl leading-snug font-black text-white sm:px-5 sm:py-3 sm:text-3xl">{top}</p>
+          <p className="tv-bar py-1 text-center text-base font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-2xl">
             <span className="tv-bar-text">HEADLINE NEWS</span>
           </p>
         </>
       )}
       {stage}
-      {bottom && <p className="tv-bottom bg-[#ffe500] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-black sm:px-5 sm:py-3 sm:text-2xl">{bottom}</p>}
+      {bottom && <p className="tv-bottom px-3 py-2 text-center font-display text-xl leading-snug font-black text-black sm:px-5 sm:py-3 sm:text-3xl">{bottom}</p>}
     </div>
   )
 }
