@@ -38,6 +38,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const author = asAuthor(a.author)
   const member = typeof a.reporter === 'object' && a.reporter ? (a.reporter as TeamMember) : undefined
   const byline = a.reporterName || member?.name || author?.name
+  const isVideo = a.format === 'video'
   const img = cardImage(a, 'hero')
   const heroRatio = img?.w && img.h ? Math.min(21 / 9, Math.max(3 / 4, img.w / img.h)) : 16 / 9
   const L = resolveLayout(a.layout, { hasPhoto: Boolean(img), format: a.format })
@@ -125,7 +126,8 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       <h1 className={`${L.headlineFont === 'sans' ? 'font-sans' : 'font-display'} leading-tight ${L.headlineWeight === 'normal' ? 'font-medium' : 'font-extrabold'} ${H1[L.headlineSize]} ${EL_ALIGN[L.headlineAlign]} ${h.className}`} style={h.style}>
         {a.title}
       </h1>
-      {(text.subheadline || a.excerpt) && (
+      {/* Video news: only the headline is written on the page — the story itself is heard (🔊 button under the video). */}
+      {!isVideo && (text.subheadline || a.excerpt) && (
         <p className={`mt-4 leading-relaxed ${SUB[L.subheadlineSize]} ${L.subheadlineWeight === 'bold' ? 'font-bold' : ''} ${EL_ALIGN[L.subheadlineAlign]} ${s.className}`} style={s.style}>
           {text.subheadline || a.excerpt}
         </p>
@@ -152,10 +154,12 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
         <span>
           {d.published}: <time dateTime={stamp}>{formatDate(stamp, lang, true)}</time>
         </span>
-        <span className="text-muted">{readMin} {lang === 'hi' ? 'मिनट में पढ़ें' : 'min read'}</span>
-        <span className="ml-auto">
-          <FontSizer target="story-body" labels={{ smaller: lang === 'hi' ? 'अक्षर छोटे करें' : 'Smaller text', larger: lang === 'hi' ? 'अक्षर बड़े करें' : 'Larger text' }} />
-        </span>
+        {!isVideo && <span className="text-muted">{readMin} {lang === 'hi' ? 'मिनट में पढ़ें' : 'min read'}</span>}
+        {!isVideo && (
+          <span className="ml-auto">
+            <FontSizer target="story-body" labels={{ smaller: lang === 'hi' ? 'अक्षर छोटे करें' : 'Smaller text', larger: lang === 'hi' ? 'अक्षर बड़े करें' : 'Larger text' }} />
+          </span>
+        )}
         {revisions[0] && (
           <span className="font-semibold text-brand-600">
             {d.revised}: <time dateTime={revisions[0].at}>{formatDate(revisions[0].at, lang, true)}</time>
@@ -169,7 +173,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       </div>
 
       <div className="mt-3 space-y-3">
-        <ListenButton lang={lang} parts={[a.title, text.subheadline || '', ...text.paragraphs].filter(Boolean)} />
+        {!isVideo && <ListenButton lang={lang} parts={[a.title, text.subheadline || '', ...text.paragraphs].filter(Boolean)} />}
         <ShareButtons url={shortUrl} title={a.title} labels={{ share: d.share, copy: d.copyLink, copied: d.copied }} />
         <StoryTools
           title={a.title}
@@ -190,6 +194,11 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
             aiNote={Boolean(settings.aiVoiceNote)}
             flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
           />
+          {text.paragraphs.length > 0 && (
+            <div className="mt-3">
+              <ListenButton lang={lang} label={lang === 'hi' ? 'पूरी खबर सुनें' : 'Listen to the full story'} parts={[a.title, ...text.paragraphs]} />
+            </div>
+          )}
         </div>
       )}
 
@@ -246,9 +255,11 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       )}
       {a.format === 'tracker' && a.tracker && <TrackerTimeline steps={a.tracker} lang={lang} />}
 
-      <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
-        <RichText data={text.bodyFromSubheadline ? paragraphsToLexical(text.paragraphs) : a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
-      </div>
+      {!isVideo && (
+        <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
+          <RichText data={text.bodyFromSubheadline ? paragraphsToLexical(text.paragraphs) : a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
+        </div>
+      )}
       {(() => {
         const pics = (a.gallery || []).map((g) => ({ m: asMedia(g.image), caption: g.caption })).filter((g) => g.m?.url)
         if (!pics.length) return null

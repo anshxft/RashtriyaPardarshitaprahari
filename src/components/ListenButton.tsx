@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
  * Prefers a Hindi female voice. Speaks sentence by sentence because some phones stop long utterances part-way.
  * The text spoken is exactly the published text.
  */
-export function ListenButton({ parts, lang }: { parts: string[]; lang: 'hi' | 'en' }) {
+export function ListenButton({ parts, lang, label }: { parts: string[]; lang: 'hi' | 'en'; label?: string }) {
   const [state, setState] = useState<'idle' | 'playing' | 'paused'>('idle')
   const [supported, setSupported] = useState(false)
   const queue = useRef<string[]>([])
@@ -59,7 +59,7 @@ export function ListenButton({ parts, lang }: { parts: string[]; lang: 'hi' | 'e
     <div className="flex flex-wrap items-center gap-2" aria-live="polite">
       {state === 'idle' ? (
         <button type="button" onClick={start} className={`${btn} bg-brand-600 text-white hover:bg-brand-700`}>
-          🔊 {hi ? 'खबर सुनें' : 'Listen to this story'}
+          🔊 {label || (hi ? 'खबर सुनें' : 'Listen to this story')}
         </button>
       ) : (
         <>

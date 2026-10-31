@@ -216,7 +216,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           खबर का शीर्षक *<input value={f.title} onChange={(e) => set('title', e.target.value)} className={`${input} mt-1 text-lg font-bold`} />
         </label>
         <label className="block text-sm font-semibold">
-          पूरी खबर (वीडियो के नीचे वेबसाइट पर दिखेगी)
+          पूरी खबर — वेबसाइट पर लिखी नहीं दिखेगी; पाठक “🔊 पूरी खबर सुनें” दबाकर आवाज़ में सुनेंगे (पेज पर सिर्फ शीर्षक और वीडियो)
           <textarea value={f.description} onChange={(e) => set('description', e.target.value)} rows={10} className={`${input} mt-1 leading-relaxed`} placeholder="यहाँ पूरी खबर लिखें या पेस्ट करें। हर पैराग्राफ के बीच एक खाली लाइन छोड़ें।" />
           <span className="text-xs text-muted">{f.description.trim() ? f.description.trim().split(/\s+/).length : 0} शब्द</span>
         </label>
