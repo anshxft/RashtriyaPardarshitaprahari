@@ -216,6 +216,11 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           खबर का शीर्षक *<input value={f.title} onChange={(e) => set('title', e.target.value)} className={`${input} mt-1 text-lg font-bold`} />
         </label>
         <label className="block text-sm font-semibold">
+          पूरी खबर (वीडियो के नीचे वेबसाइट पर दिखेगी)
+          <textarea value={f.description} onChange={(e) => set('description', e.target.value)} rows={10} className={`${input} mt-1 leading-relaxed`} placeholder="यहाँ पूरी खबर लिखें या पेस्ट करें। हर पैराग्राफ के बीच एक खाली लाइन छोड़ें।" />
+          <span className="text-xs text-muted">{f.description.trim() ? f.description.trim().split(/\s+/).length : 0} शब्द</span>
+        </label>
+        <label className="block text-sm font-semibold">
           फ्लैश न्यूज़ (स्वीकृत स्क्रिप्ट) — यही पट्टी पर दिखेगी और यही आवाज़ पढ़ेगी
           <textarea value={f.flashScript} onChange={(e) => set('flashScript', e.target.value)} rows={3} maxLength={600} className={`${input} mt-1`} placeholder="छोटा, तथ्यात्मक वाक्य। सिस्टम इसमें कुछ नहीं जोड़ता।" />
           <span className="text-xs text-muted">{f.flashScript.length}/600</span>
@@ -257,10 +262,6 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <p className="mt-2 text-muted">प्रकाशित करते समय अपने-आप (भारतीय समय)। आगे के लिए नीचे “शेड्यूल” चुनें।</p>
           </div>
         </div>
-        <details>
-          <summary className="cursor-pointer text-sm font-semibold">विस्तृत विवरण (वैकल्पिक)</summary>
-          <textarea value={f.description} onChange={(e) => set('description', e.target.value)} rows={4} className={`${input} mt-2`} />
-        </details>
         <div>
           <p className="mb-1 text-sm font-semibold">थंबनेल (खाली = वीडियो का एक फ्रेम अपने-आप)</p>
           {!f.thumb.id && f.posterUrl && <img src={f.posterUrl} alt="" className="mb-2 aspect-video w-48 rounded object-cover" />}
