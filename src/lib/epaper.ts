@@ -25,7 +25,7 @@ export type EpStory = {
   categorySlug?: string | null
   /** fixed column slots on page 1: the “समाज का आइना” column and the advertisement column */
   /** filler = the paper's own standing material, used only to fill space left over on existing pages */
-  slot?: 'aina' | 'ad' | 'filler' | null
+  slot?: 'aina' | 'ad' | 'filler' | 'promo' | null
   ad?: { link?: string | null; aspect: number } | null
 }
 
@@ -68,6 +68,8 @@ export const AD_LABEL_H = 26
 export const adHeight = (aspect: number) => Math.min(640, Math.round(spanW(SLOT_COLS) * aspect) + AD_LABEL_H + 8)
 
 export const MAX_PAGES = 40
+/** Smallest gap (px) worth filling with the paper's own box; anything smaller stays as white space. */
+export const PROMO_MIN = 70
 
 export type Variant = { cols: number; scale: number; take?: number }
 export type Placed = { story: EpStory; id: string; page: number; x: number; y: number; w: number; h: number; variant: Variant; cont?: boolean; pinFailed?: boolean; fitted?: boolean }
@@ -240,6 +242,27 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
         }
       }
       if (done) break
+    }
+  }
+  // Client: no empty space at the foot of a page. Whatever is left under each column gets the paper's own box
+  // (helpline · website · QR · “send your news”), sized to exactly that gap.
+  const tpl = (extra.fillers || []).find((f) => f.id === 'filler-submit')
+  if (tpl) {
+    for (const [i, pg] of pages.entries()) {
+      if (!pg.placed.some((p) => !p.story.slot)) continue
+      let c = 0
+      while (c < GEO.cols) {
+        if (pageBottom - pg.colTop[c] < PROMO_MIN) {
+          c++
+          continue
+        }
+        let e = c
+        while (e + 1 < GEO.cols && pageBottom - pg.colTop[e + 1] >= PROMO_MIN && Math.abs(pg.colTop[e + 1] - pg.colTop[c]) <= 80) e++
+        const y = Math.max(...pg.colTop.slice(c, e + 1))
+        const height = pageBottom - y
+        if (height >= PROMO_MIN) put(pg, i + 1, { ...tpl, id: `promo-${i}-${c}`, slot: 'promo' }, { cols: e - c + 1, scale: 1 }, height, { c, y })
+        c = e + 1
+      }
     }
   }
   return pages.map((pg, i) => ({

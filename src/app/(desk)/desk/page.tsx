@@ -8,12 +8,13 @@ import { formatDate } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
 const ACTIONS = [
-  { href: '/desk/news/new', title: 'नई खबर', hint: 'पेस्ट → ऑटो फॉर्मेट → प्रकाशित', color: 'bg-india-600 text-white' },
+  { href: '/desk/news/new', title: 'नई खबर', hint: 'सिर्फ वेबसाइट पर (ई-पेपर में नहीं)', color: 'bg-india-600 text-white' },
   { href: '/desk/news/new?epaper=1', title: 'ई-पेपर खबर', hint: 'सिर्फ ई-पेपर में छपेगी, वेबसाइट पर नहीं', color: 'bg-[#13294b] text-white' },
   { href: '/desk/link', title: 'लिंक न्यूज़', hint: 'दूसरे पोर्टल की खबर का कार्ड', color: 'bg-navy-900 text-white' },
   { href: '/desk/video', title: 'वीडियो अपलोड', hint: 'लोगो अपने-आप लगेगा', color: 'bg-saffron-500 text-navy-950' },
   { href: '/desk/breaking', title: 'ब्रेकिंग न्यूज़', hint: 'ऊपर की लाल पट्टी', color: 'bg-alert-600 text-white' },
   { href: '/desk/team', title: 'हमारी टीम', hint: 'प्रोफ़ाइल जोड़ें / बदलें', color: 'bg-gold-400 text-navy-950' },
+  { href: '/desk/ads', title: 'विज्ञापन', hint: 'फोटो डालें → कहाँ दिखे चुनें → लग गया', color: 'bg-[#b8860b] text-white' },
   { href: '/hi/epaper', title: 'ई-पेपर', hint: 'आज का A3 अंक', color: 'bg-white text-navy-900 ring-1 ring-line' },
 ]
 

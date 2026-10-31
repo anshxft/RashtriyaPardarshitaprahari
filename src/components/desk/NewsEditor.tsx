@@ -437,7 +437,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
               </label>
               <label className="flex items-end gap-2 pb-3 text-sm font-semibold">
                 <input type="checkbox" className="h-5 w-5" checked={L.inEpaper} onChange={(e) => setLayout({ inEpaper: e.target.checked })} />
-                ई-पेपर में डालें
+                ई-पेपर में भी डालें
               </label>
             </div>
 

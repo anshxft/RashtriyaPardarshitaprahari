@@ -48,7 +48,7 @@ export function LinkEditor({ categories, defaultCategory, mayPublish }: { catego
         categoryId,
         paragraphs: [],
         excerpt: description,
-        layout: { template: '6', columns, autoFit: true, inEpaper: true },
+        layout: { template: '6', columns, autoFit: true, inEpaper: false },
         linkCard: { url, siteName, description, imageUrl },
       })
       if (!r.ok) return setNote({ kind: 'err', text: r.error })
