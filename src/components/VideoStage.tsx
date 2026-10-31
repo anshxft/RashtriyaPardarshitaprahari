@@ -12,7 +12,7 @@ type Ad = { title: string; image: string; link?: string | null; win: { x: number
 const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 
 /** The <video> with the red FLASH strip shown over the bottom while it plays (when not already burned in). */
-export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad }) {
+export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null }) {
   const times = useRef<number[]>([])
   const [show, setShow] = useState(false)
   const [adShow, setAdShow] = useState(false)
@@ -24,8 +24,9 @@ export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; 
   const framed = Boolean(ad && adShow && !adClosed)
   const pct = (n: number) => `${(n * 100).toFixed(2)}%`
   const screen = framed && ad ? { left: pct(ad.win.x), top: pct(ad.win.y), width: pct(ad.win.w), height: pct(ad.win.h) } : { left: '0%', top: '0%', width: '100%', height: '100%' }
-  return (
-    <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
+  const banded = Boolean(top || bottom)
+  const stage = (
+    <div className={`relative aspect-video overflow-hidden bg-black ${banded ? '' : 'rounded-lg'}`}>
       {ad && (
         <div className={`absolute inset-0 transition-opacity duration-500 ${framed ? 'opacity-100' : 'pointer-events-none opacity-0'}`} aria-hidden={!framed}>
           {ad.link ? (
@@ -82,6 +83,20 @@ export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; 
           </button>
         </div>
       )}
+    </div>
+  )
+  if (!banded) return stage
+  // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top, yellow second headline under the video.
+  return (
+    <div className="overflow-hidden rounded-lg bg-black shadow-sm">
+      {top && (
+        <>
+          <p className="bg-[#e10600] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-white sm:px-5 sm:py-3 sm:text-2xl">{top}</p>
+          <p className="border-y-2 border-white/80 bg-gradient-to-r from-[#0a2f7a] via-[#1f6fd1] to-[#0a2f7a] py-1 text-center text-sm font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-xl">HEADLINE NEWS</p>
+        </>
+      )}
+      {stage}
+      {bottom && <p className="bg-[#ffe500] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-black sm:px-5 sm:py-3 sm:text-2xl">{bottom}</p>}
     </div>
   )
 }

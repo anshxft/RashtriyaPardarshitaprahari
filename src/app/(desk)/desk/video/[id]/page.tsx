@@ -28,6 +28,7 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
     articleId: a?.id ?? null,
     newsId: a?.newsId,
     title: a?.title || v.title,
+    bottomLine: a?.subheadline || '',
     flashScript: fl?.script || '',
     description: v.description || '',
     location: a?.location || v.location || '',

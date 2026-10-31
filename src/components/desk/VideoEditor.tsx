@@ -16,6 +16,7 @@ export type VideoForm = {
   articleId?: number | null
   newsId?: string | null
   title: string
+  bottomLine: string
   flashScript: string
   description: string
   location: string
@@ -116,6 +117,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         videoId: f.id!,
         mode,
         title: f.title,
+        bottomLine: f.bottomLine,
         flashScript: f.flashScript,
         description: f.description,
         reporterName: f.reporterName,
@@ -213,7 +215,12 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       {/* 2 · fields (only the ones the spec asks for) */}
       <section className={`${card} space-y-3`}>
         <label className="block text-sm font-semibold">
-          खबर का शीर्षक *<input value={f.title} onChange={(e) => set('title', e.target.value)} className={`${input} mt-1 text-lg font-bold`} />
+          खबर का शीर्षक * <span className="font-normal text-muted">— वीडियो के ऊपर लाल पट्टी में दिखेगा</span>
+          <input value={f.title} onChange={(e) => set('title', e.target.value)} className={`${input} mt-1 text-lg font-bold`} />
+        </label>
+        <label className="block text-sm font-semibold">
+          दूसरी हेडलाइन (वैकल्पिक) <span className="font-normal text-muted">— वीडियो के नीचे पीली पट्टी में दिखेगी</span>
+          <input value={f.bottomLine} onChange={(e) => set('bottomLine', e.target.value)} maxLength={160} className={`${input} mt-1 font-bold`} placeholder="जैसे: बोकारो के गरगा डैम में 35 वर्षों से छठ व्रतियों की सेवा" />
         </label>
         <label className="block text-sm font-semibold">
           पूरी खबर — वेबसाइट पर लिखी नहीं दिखेगी; पाठक “🔊 पूरी खबर सुनें” दबाकर आवाज़ में सुनेंगे (पेज पर सिर्फ शीर्षक और वीडियो)

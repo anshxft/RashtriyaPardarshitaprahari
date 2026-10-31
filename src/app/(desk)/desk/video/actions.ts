@@ -89,6 +89,8 @@ export type VideoNewsInput = {
   videoId: number
   mode: 'draft' | 'submit' | 'publish' | 'schedule'
   title: string
+  /** Yellow band under the video (second headline); stored as the story's sub-headline. */
+  bottomLine?: string
   flashScript: string
   description?: string
   reporterName?: string
@@ -145,6 +147,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     const text = (input.description || input.flashScript || '').split(/\n{2,}|\r?\n/).map((p) => p.trim()).filter(Boolean)
     const data: Record<string, unknown> = {
       title: input.title.trim(),
+      subheadline: clean(input.bottomLine),
       excerpt: clean(input.flashScript) || clean(input.description),
       content: paragraphsToLexical(text),
       format: 'video',
