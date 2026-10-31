@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { canPublish } from '@/access'
 import { EpaperBoard } from '@/components/epaper/EpaperBoard'
-import { currentUser } from '@/lib/auth'
 import { getSettings } from '@/lib/data'
 import { getEditionStories, getEpaperAds, getEpaperFillers, getEpaperLayout, listEditions } from '@/lib/epaperData'
 import { assertLang, formatDate, t } from '@/lib/i18n'
@@ -21,7 +19,7 @@ export default async function EpaperPage({ params }: Props) {
   const p = await params
   const lang = assertLang(p.lang)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date)) notFound()
-  const [stories, editions, settings, user, ads, fillers, manual] = await Promise.all([getEditionStories(lang, p.date), listEditions(), getSettings(lang), currentUser(), getEpaperAds(), getEpaperFillers(lang), getEpaperLayout(p.date)])
+  const [stories, editions, settings, ads, fillers, manual] = await Promise.all([getEditionStories(lang, p.date), listEditions(), getSettings(lang), getEpaperAds(), getEpaperFillers(lang), getEpaperLayout(p.date)])
   return (
     <EpaperBoard
       lang={lang}
@@ -35,7 +33,7 @@ export default async function EpaperPage({ params }: Props) {
       ads={ads}
       stories={stories}
       editions={editions.map((e) => ({ ...e, label: label(e.date, lang) }))}
-      canEdit={Boolean(user && canPublish({ user } as never))}
+      canEdit={false} // layout is changed only in Desk → ई-पेपर डिज़ाइनर; the public e-paper never shows editing tools
       manual={manual}
     />
   )
