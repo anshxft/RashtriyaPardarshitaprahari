@@ -68,9 +68,14 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
             <style>{`@keyframes vs-tick { from { transform: translateX(0) } to { transform: translateX(-100%) } }`}</style>
             <span className="shrink-0 rounded bg-white px-1 py-0.5 text-[10px] text-[#c8102e] sm:px-1.5 sm:text-xs">● {flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
             <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap">
-              <span className="inline-block pl-[100%] motion-reduce:pl-0" style={{ animation: `vs-tick ${showSec}s linear forwards` }}>
+              <span className="inline-block pl-[100%] motion-reduce:pl-0" style={{ animation: `vs-tick ${Math.max(4, showSec - 2.4)}s linear 2.2s both` }}>
                 {flash!.script.replace(/\s*\n+\s*/g, ' • ')}
               </span>
+            </span>
+            {/* opening bumper: “BREAKING” flips to “NEWS”, then the scrolling line takes over */}
+            <span className="tv-bump absolute inset-0 items-center justify-center bg-[#c8102e] text-base font-black tracking-[0.25em] text-white sm:text-2xl" aria-hidden>
+              <span>{flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
+              <span>NEWS</span>
             </span>
           </div>
         )}
@@ -91,12 +96,14 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
     <div className="overflow-hidden rounded-lg bg-black shadow-sm">
       {top && (
         <>
-          <p className="bg-[#e10600] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-white sm:px-5 sm:py-3 sm:text-2xl">{top}</p>
-          <p className="border-y-2 border-white/80 bg-gradient-to-r from-[#0a2f7a] via-[#1f6fd1] to-[#0a2f7a] py-1 text-center text-sm font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-xl">HEADLINE NEWS</p>
+          <p className="tv-top bg-[#e10600] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-white sm:px-5 sm:py-3 sm:text-2xl">{top}</p>
+          <p className="tv-bar border-y-2 border-white/80 bg-gradient-to-r from-[#0a2f7a] via-[#1f6fd1] to-[#0a2f7a] py-1 text-center text-sm font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-xl">
+            <span className="tv-bar-text">HEADLINE NEWS</span>
+          </p>
         </>
       )}
       {stage}
-      {bottom && <p className="bg-[#ffe500] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-black sm:px-5 sm:py-3 sm:text-2xl">{bottom}</p>}
+      {bottom && <p className="tv-bottom bg-[#ffe500] px-3 py-2 text-center font-display text-lg leading-snug font-extrabold text-black sm:px-5 sm:py-3 sm:text-2xl">{bottom}</p>}
     </div>
   )
 }

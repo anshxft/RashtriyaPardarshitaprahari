@@ -236,3 +236,84 @@ body {
     transform: translateY(28px);
   }
 }
+
+/* ── Video news “channel” look (bands around the player), like a TV news package.
+      Nothing moves for people who switched on "reduce motion". */
+.tv-bump {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* red headline drops in, yellow line rises in */
+  .tv-top {
+    animation: tv-drop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .tv-bottom {
+    animation: tv-rise 0.6s 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  /* HEADLINE NEWS bar: wipes in, then a light glint sweeps across it again and again */
+  .tv-bar {
+    position: relative;
+    overflow: hidden;
+    animation: tv-wipe 0.7s 0.15s ease-out both;
+  }
+  .tv-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 -40%;
+    width: 35%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+    animation: tv-glint 3.2s 1s ease-in-out infinite;
+  }
+  .tv-bar-text {
+    display: inline-block;
+    animation: tv-blink 9s 4s ease-in-out infinite;
+  }
+  /* the “BREAKING ⇄ NEWS” flip that opens the red strip */
+  .tv-bump {
+    display: flex;
+    animation: tv-bump-out 0.35s 2.2s ease-in forwards;
+    perspective: 400px;
+  }
+  .tv-bump > span {
+    position: absolute;
+    backface-visibility: hidden;
+    animation: tv-flip-a 2.2s ease-in-out both;
+  }
+  .tv-bump > span + span {
+    animation-name: tv-flip-b;
+  }
+}
+@keyframes tv-drop {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tv-rise {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tv-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes tv-glint {
+  0% { left: -40%; }
+  45%, 100% { left: 110%; }
+}
+@keyframes tv-blink {
+  0%, 88%, 100% { opacity: 1; letter-spacing: 0.2em; }
+  92% { opacity: 0; letter-spacing: 0.6em; }
+  96% { opacity: 1; letter-spacing: 0.2em; }
+}
+@keyframes tv-flip-a {
+  0% { transform: rotateX(90deg) scale(1.4); opacity: 0; }
+  15%, 40% { transform: rotateX(0) scale(1); opacity: 1; }
+  50%, 100% { transform: rotateX(-90deg); opacity: 0; }
+}
+@keyframes tv-flip-b {
+  0%, 45% { transform: rotateX(90deg); opacity: 0; }
+  60%, 90% { transform: rotateX(0) scale(1); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes tv-bump-out {
+  to { opacity: 0; visibility: hidden; }
+}
