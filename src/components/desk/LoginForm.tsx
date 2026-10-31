@@ -26,7 +26,7 @@ export function LoginForm({ next }: { next: string }) {
     setErr('')
     try {
       const ctrl = new AbortController()
-      const timer = setTimeout(() => ctrl.abort(), 20000)
+      const timer = setTimeout(() => ctrl.abort(), 45000) // a cold server may need a while to wake up
       const res = await fetch('/api/users/login', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email.trim(), password }), signal: ctrl.signal })
       clearTimeout(timer)
       if (res.ok) {
