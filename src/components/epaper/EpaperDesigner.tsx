@@ -16,7 +16,7 @@ type Props = {
   fillers: EpStory[]
   saved: ManualLayout | null
 }
-type Drag = { ref: string; mode: 'move' | 'size'; px: number; py: number; start: ManualItem }
+type Drag = { ref: string; mode: 'move' | 'size'; px: number; py: number; offX: number; offY: number; start: ManualItem }
 
 const btn = 'rounded-lg border border-line bg-bg px-3 py-2 text-sm font-bold hover:bg-surface disabled:opacity-40'
 const small = 'rounded-md border border-line bg-bg px-2.5 py-1.5 text-sm font-bold hover:bg-surface disabled:opacity-40'
@@ -34,6 +34,8 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
   const auto = usePack(stories, 'hi', ads[0] ?? null, fillers, ads)
   const [layout, setLayout] = useState<ManualLayout | null>(saved)
   const [pageIdx, setPageIdx] = useState(0)
+  const [view, setView] = useState<'all' | 'one'>('all')
+  const pageEls = useRef<(HTMLDivElement | null)[]>([])
   const [sel, setSel] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)
@@ -42,7 +44,6 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
   const [toFit, setToFit] = useState<Set<string>>(new Set())
   const drag = useRef<Drag | null>(null)
   const box = useRef<HTMLDivElement>(null)
-  const canvas = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
 
   // No saved design yet → start from what the automatic layout gives today.
@@ -64,7 +65,8 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
   const page = pages[pageIdx] ?? []
   const used = new Set(pages.flat().map((i) => i.ref))
   const unplaced = [...stories, ...ads, ...fillers].filter((s) => !used.has(s.id))
-  const selItem = page.find((i) => i.ref === sel) || null
+  const selPage = pages.findIndex((p) => p.some((i) => i.ref === sel))
+  const selItem = selPage >= 0 ? pages[selPage].find((i) => i.ref === sel) || null : null
   const selStory = sel ? pool.get(sel) : undefined
 
   const update = (fn: (l: ManualLayout) => ManualLayout) => {
@@ -76,7 +78,7 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
 
   // Measure each block's real text height (unscaled) so we can warn about cut text and “fit” heights.
   useLayoutEffect(() => {
-    const el = canvas.current
+    const el = box.current
     if (!el) return
     const next: Record<string, number> = {}
     el.querySelectorAll<HTMLElement>('[data-inner]').forEach((n) => (next[n.dataset.inner!] = n.offsetHeight))
@@ -91,25 +93,60 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
     }
   })
 
-  const onDown = (e: RPointerEvent, ref: string, mode: Drag['mode']) => {
-    const it = page.find((i) => i.ref === ref)
-    if (!it) return
+  // Dragging listens on the whole window, so a block can be carried from one page onto another.
+  const onDown = (e: RPointerEvent, ref: string, mode: Drag['mode'], pg: number) => {
+    const it = pages[pg]?.find((i) => i.ref === ref)
+    const el = pageEls.current[pg]
+    if (!it || !el) return
     e.preventDefault()
     e.stopPropagation()
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    drag.current = { ref, mode, px: e.clientX, py: e.clientY, start: it }
+    const r = el.getBoundingClientRect()
+    drag.current = { ref, mode, px: e.clientX, py: e.clientY, offX: (e.clientX - r.left) / scale - colX(it.col), offY: (e.clientY - r.top) / scale - it.y, start: it }
     setSel(ref)
+    setPageIdx(pg)
+    const move = (ev: PointerEvent) => {
+      const d = drag.current
+      if (!d) return
+      if (d.mode === 'size') {
+        const dx = (ev.clientX - d.px) / scale
+        const dy = (ev.clientY - d.py) / scale
+        // widening stops at the page edge (the block stays where it is instead of sliding left)
+        setItem(d.ref, { span: Math.min(GEO.cols - d.start.col, d.start.span + Math.round(dx / STEP)), h: snapY(d.start.h + dy) })
+        return
+      }
+      // which page is under the pointer?
+      let target = -1
+      let best = Infinity
+      pageEls.current.forEach((pe, i) => {
+        if (!pe) return
+        const rr = pe.getBoundingClientRect()
+        const dist = ev.clientY < rr.top ? rr.top - ev.clientY : ev.clientY > rr.bottom ? ev.clientY - rr.bottom : 0
+        if (dist < best) (best = dist), (target = i)
+      })
+      if (target < 0) return
+      const rr = pageEls.current[target]!.getBoundingClientRect()
+      const col = Math.round(((ev.clientX - rr.left) / scale - d.offX - GEO.margin) / STEP)
+      const y = snapY((ev.clientY - rr.top) / scale - d.offY)
+      update((l) => {
+        const from = l.pages.findIndex((p) => p.some((i) => i.ref === d.ref))
+        if (from < 0) return l
+        const cur = l.pages[from].find((i) => i.ref === d.ref)!
+        const next = clampItem({ ...cur, col, y })
+        if (from === target) return { pages: l.pages.map((p, i) => (i === from ? p.map((x) => (x.ref === d.ref ? next : x)) : p)) }
+        return { pages: l.pages.map((p, i) => (i === from ? p.filter((x) => x.ref !== d.ref) : i === target ? [...p, next] : p)) }
+      })
+      setPageIdx(target)
+    }
+    const up = () => {
+      drag.current = null
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
   }
-  const onMove = (e: RPointerEvent) => {
-    const d = drag.current
-    if (!d) return
-    const dx = (e.clientX - d.px) / scale
-    const dy = (e.clientY - d.py) / scale
-    if (d.mode === 'move') setItem(d.ref, { col: d.start.col + Math.round(dx / STEP), y: snapY(d.start.y + dy) })
-    // widening stops at the page edge (the block stays where it is instead of sliding left)
-    else setItem(d.ref, { span: Math.min(GEO.cols - d.start.col, d.start.span + Math.round(dx / STEP)), h: snapY(d.start.h + dy) })
-  }
-  const onUp = () => (drag.current = null)
 
   const addToPage = (s: EpStory) => {
     const bottom = Math.max(contentTop, ...page.map((i) => i.y + i.h + GEO.blockGap))
@@ -154,14 +191,14 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
   }
 
   const bad = new Set<string>()
-  page.forEach((a, i) => page.slice(i + 1).forEach((b) => overlaps(a, b) && (bad.add(a.ref), bad.add(b.ref))))
+  pages.forEach((pg) => pg.forEach((a, i) => pg.slice(i + 1).forEach((b) => overlaps(a, b) && (bad.add(a.ref), bad.add(b.ref)))))
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-navy-900">ई-पेपर डिज़ाइनर</h1>
-          <p className="text-sm text-muted">खबर या विज्ञापन को खींचकर जगह बदलें · नीचे-दाएं कोने ◢ को खींचकर चौड़ाई (कॉलम) और लंबाई बदलें · फिर “सेव करें”।</p>
+          <p className="text-sm text-muted">खबर या विज्ञापन को खींचकर जगह बदलें (एक पेज से दूसरे पेज पर भी) · नीचे-दाएं कोने ◢ को खींचकर चौड़ाई (कॉलम) और लंबाई बदलें · फिर “सेव करें”। कॉलम के नीचे बची खाली जगह ई-पेपर में अपने-आप हेल्पलाइन / “अपनी खबर भेजें” बॉक्स से भर जाएगी।</p>
         </div>
         <label className="text-sm font-semibold">
           अंक (तारीख)
@@ -202,10 +239,13 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-1.5">
               {pages.map((p, i) => (
-                <button key={i} type="button" onClick={() => (setPageIdx(i), setSel(null))} className={`${small} ${i === pageIdx ? '!border-navy-900 !bg-navy-900 text-white' : ''}`}>
+                <button key={i} type="button" onClick={() => (setPageIdx(i), setSel(null), view === 'all' && pageEls.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' }))} className={`${small} ${i === pageIdx ? '!border-navy-900 !bg-navy-900 text-white' : ''}`}>
                   पेज {i + 1} <span className="opacity-70">({p.length})</span>
                 </button>
               ))}
+              <button type="button" className={`${small} ${view === 'all' ? '!border-navy-900 !bg-navy-900 text-white' : ''}`} onClick={() => setView(view === 'all' ? 'one' : 'all')}>
+                {view === 'all' ? '✔ सभी पेज एक साथ' : 'सभी पेज एक साथ दिखाएं'}
+              </button>
               <button type="button" className={small} disabled={pages.length >= MAX_PAGES} onClick={() => (update((l) => ({ pages: [...l.pages, []] })), setPageIdx(pages.length), setSel(null))}>
                 + नया पेज
               </button>
@@ -216,50 +256,58 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
               )}
             </div>
 
-            <div ref={box} className="w-full">
-              <div style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }} className="mx-auto">
-                <div
-                  ref={canvas}
-                  onPointerMove={onMove}
-                  onPointerUp={onUp}
-                  onPointerCancel={onUp}
-                  onPointerDown={() => setSel(null)}
-                  style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 12px rgba(0,0,0,.25)' }}
-                >
-                  {/* column guides */}
-                  {Array.from({ length: GEO.cols }, (_, c) => (
-                    <div key={c} style={{ position: 'absolute', left: colX(c), top: contentTop, width: colW, height: contentBottom - contentTop, background: 'rgba(19,41,75,.04)', borderLeft: '1px dashed rgba(19,41,75,.15)', borderRight: '1px dashed rgba(19,41,75,.15)' }} />
-                  ))}
-                  <div style={{ position: 'absolute', left: GEO.margin, top: GEO.margin, right: GEO.margin, height: contentTop - GEO.margin - 12, background: '#e9eef5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 800, color: '#13294b', opacity: 0.8 }}>
-                    मास्टहेड (नाम · तारीख) — पेज {pageIdx + 1}
-                  </div>
-                  <div style={{ position: 'absolute', left: GEO.margin, right: GEO.margin, top: contentBottom, borderTop: '2px dashed #bbb' }} />
-
-                  {page.map((it) => {
-                    const s = pool.get(it.ref)
-                    if (!s) return null
-                    const over = (natural[it.ref] ?? 0) > it.h + 2
-                    const on = sel === it.ref
-                    return (
+            <div ref={box} className="w-full space-y-6">
+              {pages.map((pg, pi) =>
+                view === 'one' && pi !== pageIdx ? null : (
+                  <div key={pi}>
+                    <p className={`mb-1 text-sm font-bold ${pi === pageIdx ? 'text-[#1f6fd1]' : 'text-muted'}`}>
+                      पेज {pi + 1} <span className="font-normal">({pg.length} ब्लॉक)</span>
+                    </p>
+                    <div style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }} className="mx-auto">
                       <div
-                        key={it.ref}
-                        onPointerDown={(e) => onDown(e, it.ref, 'move')}
-                        style={{ position: 'absolute', left: colX(it.col), top: it.y, width: spanW(it.span), height: it.h, overflow: 'hidden', cursor: 'move', touchAction: 'none', outline: bad.has(it.ref) ? '4px solid #d0201a' : on ? '4px solid #1f6fd1' : '2px dashed rgba(19,41,75,.35)', outlineOffset: 2, background: '#fff' }}
+                        ref={(el) => {
+                          pageEls.current[pi] = el
+                        }}
+                        onPointerDown={() => (setSel(null), setPageIdx(pi))}
+                        style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: pi === pageIdx ? '0 0 0 6px #1f6fd1, 0 2px 12px rgba(0,0,0,.25)' : '0 2px 12px rgba(0,0,0,.25)' }}
                       >
-                        <div data-inner={it.ref} style={{ pointerEvents: 'none' }}>
-                          <StoryBlock s={s} cols={it.span} scale={it.scale ?? 1} lang="hi" height={it.h} />
+                        {/* column guides */}
+                        {Array.from({ length: GEO.cols }, (_, c) => (
+                          <div key={c} style={{ position: 'absolute', left: colX(c), top: contentTop, width: colW, height: contentBottom - contentTop, background: 'rgba(19,41,75,.04)', borderLeft: '1px dashed rgba(19,41,75,.15)', borderRight: '1px dashed rgba(19,41,75,.15)' }} />
+                        ))}
+                        <div style={{ position: 'absolute', left: GEO.margin, top: GEO.margin, right: GEO.margin, height: contentTop - GEO.margin - 12, background: '#e9eef5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 800, color: '#13294b', opacity: 0.8 }}>
+                          मास्टहेड (नाम · तारीख) — पेज {pi + 1}
                         </div>
-                        {over && <span style={{ position: 'absolute', left: 0, bottom: 0, background: '#f28c1b', color: '#000', fontSize: 20, fontWeight: 800, padding: '4px 10px' }}>✂ टेक्स्ट कट रहा है</span>}
-                        <span
-                          onPointerDown={(e) => onDown(e, it.ref, 'size')}
-                          title="खींचकर चौड़ाई / लंबाई बदलें"
-                          style={{ position: 'absolute', right: 0, bottom: 0, width: 44, height: 44, background: on ? '#1f6fd1' : 'rgba(19,41,75,.75)', color: '#fff', cursor: 'nwse-resize', touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
-                        />
+                        <div style={{ position: 'absolute', left: GEO.margin, right: GEO.margin, top: contentBottom, borderTop: '2px dashed #bbb' }} />
+
+                        {pg.map((it) => {
+                          const s = pool.get(it.ref)
+                          if (!s) return null
+                          const over = (natural[it.ref] ?? 0) > it.h + 2
+                          const on = sel === it.ref
+                          return (
+                            <div
+                              key={it.ref}
+                              onPointerDown={(e) => onDown(e, it.ref, 'move', pi)}
+                              style={{ position: 'absolute', left: colX(it.col), top: it.y, width: spanW(it.span), height: it.h, overflow: 'hidden', cursor: 'move', touchAction: 'none', outline: bad.has(it.ref) ? '4px solid #d0201a' : on ? '4px solid #1f6fd1' : '2px dashed rgba(19,41,75,.35)', outlineOffset: 2, background: '#fff', zIndex: on ? 2 : 1 }}
+                            >
+                              <div data-inner={it.ref} style={{ pointerEvents: 'none' }}>
+                                <StoryBlock s={s} cols={it.span} scale={it.scale ?? 1} lang="hi" height={it.h} />
+                              </div>
+                              {over && <span style={{ position: 'absolute', left: 0, bottom: 0, background: '#f28c1b', color: '#000', fontSize: 20, fontWeight: 800, padding: '4px 10px' }}>✂ टेक्स्ट कट रहा है</span>}
+                              <span
+                                onPointerDown={(e) => onDown(e, it.ref, 'size', pi)}
+                                title="खींचकर चौड़ाई / लंबाई बदलें"
+                                style={{ position: 'absolute', right: 0, bottom: 0, width: 44, height: 44, background: on ? '#1f6fd1' : 'rgba(19,41,75,.75)', cursor: 'nwse-resize', touchAction: 'none', clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
+                              />
+                            </div>
+                          )
+                        })}
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
+                    </div>
+                  </div>
+                ),
+              )}
             </div>
           </div>
 
@@ -292,7 +340,7 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
                 </Row>
                 <label className="block text-sm font-semibold">
                   दूसरे पेज पर भेजें
-                  <select className="mt-1 block w-full rounded-md border border-line bg-bg px-2 py-1.5" value={pageIdx} onChange={(e) => (toPage(selItem.ref, Number(e.target.value)), setPageIdx(Number(e.target.value)))}>
+                  <select className="mt-1 block w-full rounded-md border border-line bg-bg px-2 py-1.5" value={selPage} onChange={(e) => (toPage(selItem.ref, Number(e.target.value)), setPageIdx(Number(e.target.value)))}>
                     {[...pages.map((_, i) => i), pages.length].map((i) => (
                       <option key={i} value={i}>
                         {i < pages.length ? `पेज ${i + 1}` : `नया पेज ${i + 1}`}

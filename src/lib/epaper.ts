@@ -105,10 +105,11 @@ export function variantsFor(s: EpStory, take?: number): Variant[] {
 type Measure = (s: EpStory, v: Variant) => number
 
 export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null; fillers?: EpStory[]; ads?: EpStory[] } = {}): PackedPage[] {
-  type PG = { colTop: number[]; placed: Placed[] }
+  type Hole = { c: number; y0: number; y1: number }
+  type PG = { colTop: number[]; placed: Placed[]; holes: Hole[] }
   const pages: PG[] = []
   const newPage = (): PG => {
-    const pg = { colTop: Array<number>(GEO.cols).fill(GEO.margin + GEO.mastheadH), placed: [] as Placed[] }
+    const pg = { colTop: Array<number>(GEO.cols).fill(GEO.margin + GEO.mastheadH), placed: [] as Placed[], holes: [] as Hole[] }
     pages.push(pg)
     return pg
   }
@@ -131,7 +132,11 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     return best
   }
   const put = (pg: PG, pageNo: number, s: EpStory, v: Variant, height: number, at: { c: number; y: number }, extra: Partial<Placed> = {}) => {
-    for (let i = at.c; i < at.c + v.cols; i++) pg.colTop[i] = at.y + height + GEO.blockGap
+    for (let i = at.c; i < at.c + v.cols; i++) {
+      // a block wider than one column sits at its tallest column: the shorter columns get a hole above it — remember it
+      if (at.y - GEO.blockGap - pg.colTop[i] >= PROMO_MIN) pg.holes.push({ c: i, y0: pg.colTop[i], y1: at.y - GEO.blockGap })
+      pg.colTop[i] = at.y + height + GEO.blockGap
+    }
     pg.placed.push({ story: s, id: s.id, page: pageNo, x: GEO.margin + at.c * (colW + GEO.gutter), y: at.y, w: spanW(v.cols), h: height, variant: v, ...extra })
   }
 
@@ -174,7 +179,10 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     let n = 0
     for (const item of queue) {
       out.push(item)
-      if (!item.pin && ++n % AD_EVERY === 0) out.push({ s: { ...between[(n / AD_EVERY - 1) % between.length], slot: 'ad' as const, id: `ad~${n}` }, pin: null, cont: false })
+      if (!item.pin && ++n % AD_EVERY === 0) {
+        const base = between[(n / AD_EVERY - 1) % between.length]
+        out.push({ s: { ...base, slot: 'ad' as const, id: `${base.id}~${n}` }, pin: null, cont: false })
+      }
     }
     queue.splice(0, queue.length, ...out)
   }
@@ -184,7 +192,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     for (let i = 0; i < Math.min(queue.length, LOOKAHEAD); i++) {
       const { s, pin, cont } = queue[i]
       if (s.slot === 'ad' || cont || (pin != null && pin !== p)) continue
-      for (const cols of [1, 2, 3, 4]) {
+      for (const cols of [2, 3, 4]) {
         const v = { cols, scale: bodyScaleOf(s) }
         const height = h(s, v)
         const at = slot(pg, cols, height)
@@ -320,6 +328,30 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       }
     }
   }
+  // …and the holes left above wide blocks (between stories) get the same box, joined across neighbouring columns.
+  if (tpl) {
+    for (const [i, pg] of pages.entries()) {
+      const hs = [...pg.holes].sort((a, b) => a.c - b.c)
+      while (hs.length) {
+        const h0 = hs.shift()!
+        let e = h0.c
+        let y0 = h0.y0
+        let y1 = h0.y1
+        for (let k = 0; k < hs.length; k++) {
+          const n = hs[k]
+          if (n.c === e + 1 && Math.abs(n.y1 - h0.y1) < 4 && Math.abs(n.y0 - h0.y0) <= 80) {
+            e = n.c
+            y0 = Math.max(y0, n.y0)
+            y1 = Math.min(y1, n.y1)
+            hs.splice(k--, 1)
+          }
+        }
+        // placed directly (not via put): the columns' tops are already below this hole
+        if (y1 - y0 >= PROMO_MIN)
+          pg.placed.push({ story: { ...tpl, id: `promo-h${i}-${h0.c}-${Math.round(y0)}`, slot: 'promo' }, id: `promo-h${i}-${h0.c}-${Math.round(y0)}`, page: i + 1, x: GEO.margin + h0.c * (colW + GEO.gutter), y: y0, w: spanW(e - h0.c + 1), h: y1 - y0, variant: { cols: e - h0.c + 1, scale: 1 } })
+      }
+    }
+  }
   return pages.map((pg, i) => ({
     number: i + 1,
     placed: pg.placed,
@@ -354,26 +386,46 @@ export function clampItem(it: ManualItem): ManualItem {
 /** Saved hand layout → the same page structure the board draws. Items whose story no longer exists are skipped. */
 export function fromManual(layout: ManualLayout, pool: EpStory[]): PackedPage[] {
   const byId = new Map(pool.map((s) => [s.id, s]))
-  return layout.pages.map((items, i) => ({
-    number: i + 1,
-    freeH: 0,
-    placed: items.flatMap((raw) => {
+  const tpl = byId.get('filler-submit')
+  return layout.pages.map((items, i) => {
+    const placed: Placed[] = items.flatMap((raw) => {
       const it = clampItem(raw)
       const story = byId.get(it.ref)
       if (!story) return []
       return [{ story, id: `${it.ref}@${i + 1}`, page: i + 1, x: colX(it.col), y: it.y, w: spanW(it.span), h: it.h, variant: { cols: it.span, scale: it.scale ?? 1 } }]
-    }),
-  }))
+    })
+    // Client: no empty space — whatever is left under each column gets the helpline / send-your-news box.
+    if (tpl && placed.length) {
+      const top = Array.from({ length: GEO.cols }, (_, c) => Math.max(contentTop, ...placed.filter((p) => p.x <= colX(c) + 1 && p.x + p.w >= colX(c) + colW - 1).map((p) => p.y + p.h + GEO.blockGap)))
+      let c = 0
+      while (c < GEO.cols) {
+        if (contentBottom - top[c] < PROMO_MIN) {
+          c++
+          continue
+        }
+        let e = c
+        while (e + 1 < GEO.cols && contentBottom - top[e + 1] >= PROMO_MIN && Math.abs(top[e + 1] - top[c]) <= 80) e++
+        const y = Math.max(...top.slice(c, e + 1))
+        if (contentBottom - y >= PROMO_MIN)
+          placed.push({ story: { ...tpl, id: `promo-m${i}-${c}`, slot: 'promo' }, id: `promo-m${i}-${c}`, page: i + 1, x: colX(c), y, w: spanW(e - c + 1), h: contentBottom - y, variant: { cols: e - c + 1, scale: 1 } })
+        c = e + 1
+      }
+    }
+    return { number: i + 1, freeH: 0, placed }
+  })
 }
 
 /** Automatic pages → editable hand layout (the designer starts from what the reader sees today). */
 export function toManual(pages: PackedPage[]): ManualLayout {
+  const seen = new Set<string>() // an ad repeated between the news is kept once (each block appears once by hand)
   return {
-    pages: pages.map((pg) =>
-      pg.placed
-        .filter((p) => !p.cont && p.story.slot !== 'promo')
-        .map((p) => clampItem({ ref: p.story.id, col: Math.round((p.x - GEO.margin) / (colW + GEO.gutter)), span: p.variant.cols, y: p.y, h: p.h, scale: p.variant.scale })),
-    ),
+    pages: pages
+      .map((pg) =>
+        pg.placed
+          .filter((p) => !p.cont && p.story.slot !== 'promo' && (p.story.slot === 'ad' || !p.story.id.includes('~')) && !seen.has(p.story.id.split('~')[0]) && !!seen.add(p.story.id.split('~')[0]))
+          .map((p) => clampItem({ ref: p.story.id.split('~')[0], col: Math.round((p.x - GEO.margin) / (colW + GEO.gutter)), span: p.variant.cols, y: p.y, h: p.h, scale: p.variant.scale })),
+      )
+      .filter((pg) => pg.length), // a page that only held the “(जारी)” rest of a story
   }
 }
 
