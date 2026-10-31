@@ -38,7 +38,7 @@ export async function flashVersion(id: number, _params: Record<string, unknown> 
       voiceSec = (await probe(voice)).durationSec
     }
     const strip = path.join(dir, 'strip.png')
-    await writeFile(strip, await flashStrip(script, W, f.breaking ? 'BREAKING NEWS' : 'FLASH NEWS'))
+    await writeFile(strip, await flashStrip(script, W, f.breaking ? 'BREAKING NEWS' : 'FLASH NEWS', info.size?.h || undefined))
     const showSec = Math.max(6, Math.ceil(voiceSec + 1.5))
     const times = flashTimes(info.durationSec, showSec, f.repeat !== false, f.intervalSec || 20)
     const out = path.join(dir, 'flash.mp4')

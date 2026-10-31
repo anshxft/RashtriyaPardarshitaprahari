@@ -45,11 +45,18 @@ export async function nameTag(m: Meta, W: number): Promise<Buffer> {
 }
 
 /** Red "🔴 FLASH NEWS" strip carrying the approved script (the same text the voice reads). */
-export async function flashStrip(script: string, W: number, label = 'FLASH NEWS'): Promise<Buffer> {
+export async function flashStrip(script: string, W: number, label = 'FLASH NEWS', videoH = Math.round((W * 9) / 16)): Promise<Buffer> {
   const pad = Math.round(W * 0.018)
-  const size = Math.round(W * (W > 1200 ? 0.026 : 0.04))
-  const tag = await text(`<span foreground="#c8102e">● ${esc(label)}</span>`, Math.round(size * 0.8), W, { bold: true })
-  const body = await text(`<span foreground="white">${esc(script)}</span>`, size, W - pad * 4 - tag.w, { bold: true })
+  const base = Math.round(W * (W > 1200 ? 0.026 : 0.04))
+  const tag = await text(`<span foreground="#c8102e">● ${esc(label)}</span>`, Math.round(base * 0.8), W, { bold: true })
+  // A long script must not cover the picture: shrink the text until the strip is at most ~24% of the video height.
+  const maxH = Math.round(videoH * 0.24)
+  let size = base
+  let body = await text(`<span foreground="white">${esc(script)}</span>`, size, W - pad * 4 - tag.w, { bold: true })
+  while (body.h + pad * 2 > maxH && size > base * 0.5) {
+    size = Math.round(size * 0.9)
+    body = await text(`<span foreground="white">${esc(script)}</span>`, size, W - pad * 4 - tag.w, { bold: true })
+  }
   const H = Math.max(tag.h, body.h) + pad * 2
   const tagBox = await panel(tag.w + pad, tag.h + Math.round(pad / 2), '#ffffff').composite([{ input: tag.data, left: Math.round(pad / 2), top: Math.round(pad / 4) }]).png().toBuffer()
   return panel(W, H, '#c8102e', 0.94)
