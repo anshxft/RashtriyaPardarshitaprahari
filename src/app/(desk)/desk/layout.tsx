@@ -11,7 +11,7 @@ const ROLE = { admin: 'प्रधान संपादक / एडमिन',
 
 export default async function DeskLayout({ children }: { children: ReactNode }) {
   const user = await currentUser()
-  if (!user) redirect('/admin/login?redirect=/desk')
+  if (!user) redirect('/login?next=/desk')
   const role = (user as { role?: keyof typeof ROLE }).role || 'reporter'
   return (
     <div className="pb-24 md:pb-8">

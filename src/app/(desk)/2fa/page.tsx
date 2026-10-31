@@ -17,7 +17,7 @@ const ERR: Record<string, string> = {
 export default async function TwoFactorPage({ searchParams }: { searchParams: Promise<{ next?: string; err?: string }> }) {
   const sp = await searchParams
   const user = await currentUser(true)
-  if (!user) redirect('/admin/login?redirect=/2fa')
+  if (!user) redirect('/login?next=/2fa')
   const payload = await db()
   const u = (await payload.findByID({ collection: 'users', id: user.id, depth: 0 })) as unknown as { totpSecret?: string; totpEnabled?: boolean }
   let secret = u.totpSecret ? unseal(u.totpSecret).toString() : ''
