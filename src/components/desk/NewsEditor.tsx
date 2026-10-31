@@ -67,7 +67,9 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
   const [busy, start] = useTransition()
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [result, setResult] = useState<Extract<SaveResult, { ok: true }> | null>(null)
-  const [tab, setTab] = useState<'epaper' | 'web'>('epaper')
+  // Client: each section is separate. A story opened from “ई-पेपर खबर” is e-paper only; every other story is website only
+  // and shows no e-paper options or preview at all.
+  const ep = Boolean(initial.layout.epaperOnly)
   const [webKey, setWebKey] = useState(0)
   const [dirty, setDirty] = useState(false)
   const [more, setMore] = useState(false)
@@ -158,7 +160,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
       categoryId: f.categoryId,
       paragraphs,
       heroImageId: f.photo.id,
-      layout: f.layout,
+      layout: { ...f.layout, epaperOnly: ep, inEpaper: ep },
       scheduleAt: mode === 'schedule' && f.scheduleAt ? new Date(`${f.scheduleAt}:00+05:30`).toISOString() : undefined,
       editNote: f.editNote,
     }
@@ -401,7 +403,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
 
           <section className={`${card} space-y-4`}>
             <h3 className={h3}>5 · लेआउट</h3>
-            <div>
+            {ep && <div>
               <p className="mb-1 text-sm font-semibold">कॉलम (ई-पेपर)</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4].map((n) => (
@@ -411,7 +413,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
                 ))}
               </div>
               <p className="mt-1 text-xs text-muted">{tpl.hi} टेम्पलेट का सुझाव: {tpl.columns} कॉलम</p>
-            </div>
+            </div>}
             <div>
               <p className="mb-1 text-sm font-semibold">अलाइनमेंट</p>
               <div className="flex gap-2">
@@ -422,24 +424,21 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
                 ))}
               </div>
             </div>
-            <label className="flex min-h-11 items-center gap-3 rounded-md bg-surface px-3">
-              <input type="checkbox" checked={L.autoFit} onChange={(e) => setLayout({ autoFit: e.target.checked })} className="h-5 w-5" />
-              <span className="text-sm font-semibold">ऑटो फिट (जगह के हिसाब से फॉन्ट/कॉलम अपने-आप)</span>
-            </label>
-            <label className={`flex items-center gap-2 rounded-lg p-2 ${f.layout.epaperOnly ? 'bg-saffron-500/20 ring-2 ring-saffron-500' : ''}`}>
-              <input type="checkbox" className="h-5 w-5" checked={Boolean(f.layout.epaperOnly)} onChange={(e) => setLayout(e.target.checked ? { epaperOnly: true, inEpaper: true } : { epaperOnly: false })} />
-              <span className="text-sm font-semibold">सिर्फ ई-पेपर में (वेबसाइट के होम / सेक्शन / खोज में नहीं दिखेगी)</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="text-sm font-semibold">
-                ई-पेपर पृष्ठ
-                <input type="number" min={1} placeholder="ऑटो" value={f.layout.epaperPage ?? ''} onChange={(e) => setLayout({ epaperPage: e.target.value ? Number(e.target.value) : null })} className={`${input} mt-1`} />
-              </label>
-              <label className="flex items-end gap-2 pb-3 text-sm font-semibold">
-                <input type="checkbox" className="h-5 w-5" checked={L.inEpaper} onChange={(e) => setLayout({ inEpaper: e.target.checked })} />
-                ई-पेपर में भी डालें
-              </label>
-            </div>
+            {ep ? (
+              <>
+                <label className="flex min-h-11 items-center gap-3 rounded-md bg-surface px-3">
+                  <input type="checkbox" checked={L.autoFit} onChange={(e) => setLayout({ autoFit: e.target.checked })} className="h-5 w-5" />
+                  <span className="text-sm font-semibold">ऑटो फिट (जगह के हिसाब से फॉन्ट/कॉलम अपने-आप)</span>
+                </label>
+                <label className="block text-sm font-semibold">
+                  ई-पेपर पृष्ठ
+                  <input type="number" min={1} placeholder="ऑटो" value={f.layout.epaperPage ?? ''} onChange={(e) => setLayout({ epaperPage: e.target.value ? Number(e.target.value) : null })} className={`${input} mt-1`} />
+                </label>
+                <p className="rounded-lg bg-[#13294b]/10 px-3 py-2 text-sm font-semibold text-[#13294b]">यह ई-पेपर खबर है — सिर्फ ई-पेपर में छपेगी, वेबसाइट पर नहीं।</p>
+              </>
+            ) : (
+              <p className="rounded-lg bg-india-600/10 px-3 py-2 text-sm font-semibold text-india-700">यह वेबसाइट की खबर है — ई-पेपर में नहीं जाएगी। ई-पेपर के लिए Desk → “ई-पेपर खबर” से डालें।</p>
+            )}
 
             <button type="button" className={chip} onClick={() => setMore((m) => !m)} aria-expanded={more}>
               {more ? 'सजावट छिपाएं' : 'सजावट (साइज़ / रंग / फोटो)'}
@@ -528,11 +527,12 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
         {/* ───────────── PREVIEW ───────────── */}
         <aside className="space-y-3 lg:sticky lg:top-16 lg:self-start">
           <div className={card}>
-            <div className="mb-3 flex gap-2">
-              <button type="button" className={`${chip} flex-1 ${tab === 'epaper' ? on : ''}`} onClick={() => setTab('epaper')}>ई-पेपर प्रीव्यू</button>
-              <button type="button" className={`${chip} flex-1 ${tab === 'web' ? on : ''}`} onClick={() => setTab('web')}>वेब पेज</button>
-            </div>
-            {tab === 'epaper' ? (
+            {ep ? (
+              <p className="mb-3 rounded-full bg-[#13294b] py-2 text-center text-sm font-bold text-white">ई-पेपर प्रीव्यू</p>
+            ) : (
+              <p className="mb-3 rounded-full bg-india-600 py-2 text-center text-sm font-bold text-white">वेब पेज प्रीव्यू</p>
+            )}
+            {ep ? (
               <EpaperPreview draft={draft} edition={edition} lang={locale} />
             ) : f.id ? (
               <div className="space-y-2">
