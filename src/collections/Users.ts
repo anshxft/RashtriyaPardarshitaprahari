@@ -15,7 +15,9 @@ export const Users: CollectionConfig = {
     update: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin' || { id: { equals: req.user?.id } },
   },
   hooks: {
-    afterLogin: [({ req, user }) => audit(req.payload, user as never, { action: 'login', collectionSlug: 'users' }, req.headers)],
+    // Same transaction as the login (req): a separate connection would wait on the users row this login has locked,
+    // and the login would wait for it — a deadlock until the database statement timeout (login hung for minutes).
+    afterLogin: [({ req, user }) => audit(req.payload, user as never, { action: 'login', collectionSlug: 'users' }, req.headers, req)],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
         if (operation === 'update' && previousDoc?.role !== doc.role)
