@@ -181,6 +181,13 @@ export interface Article {
    * लैपटॉप या मोबाइल से फोटो चुनें (बड़ी फोटो भी चलेगी)। फोटो न हो तो खाली छोड़ें।
    */
   heroImage?: (number | null) | Media;
+  gallery?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * पूरी खबर यहाँ पेस्ट करें — यही वेबसाइट और ई-पेपर में छपती है। ई-पेपर में वही खबर आती है जिसमें यहाँ लिखा हो।
    */
@@ -1425,6 +1432,13 @@ export interface ArticlesSelect<T extends boolean = true> {
   excerpt?: T;
   category?: T;
   heroImage?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
   content?: T;
   sources?:
     | T

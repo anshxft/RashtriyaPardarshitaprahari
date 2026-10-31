@@ -16,6 +16,8 @@ export type NewsInput = {
   paragraphs: string[]
   excerpt?: string
   heroImageId?: number | null
+  /** extra photos shown as a gallery under the story */
+  gallery?: { imageId: number; caption?: string }[]
   layout: Layout
   scheduleAt?: string // ISO
   editNote?: string

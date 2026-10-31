@@ -49,6 +49,7 @@ export async function saveNewsAction(input: NewsInput): Promise<SaveResult> {
       reporter: input.reporterId ?? null,
       location: input.location?.trim() || null,
       heroImage: input.heroImageId ?? null,
+      ...(input.gallery ? { gallery: input.gallery.filter((g) => g.imageId).map((g) => ({ image: g.imageId, caption: g.caption?.trim() || null })) } : {}),
       layout: input.layout,
       reviewStatus: input.mode === 'submit' ? 'submitted' : 'draft',
       _status: publishing ? 'published' : 'draft',

@@ -131,7 +131,7 @@ export async function purgeNews(id: number, password: string): Promise<ActionRes
   })
 }
 
-const COPY_FIELDS = ['title', 'subheadline', 'excerpt', 'content', 'sources', 'format', 'category', 'tags', 'reporterName', 'reporter', 'location', 'heroImage', 'externalImage', 'layout', 'linkCard', 'documents'] as const
+const COPY_FIELDS = ['title', 'subheadline', 'excerpt', 'content', 'sources', 'format', 'category', 'tags', 'reporterName', 'reporter', 'location', 'heroImage', 'gallery', 'externalImage', 'layout', 'linkCard', 'documents'] as const
 const strip = (v: unknown): unknown => (Array.isArray(v) ? v.map(strip) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'id').map(([k, x]) => [k, strip(x)])) : v)
 
 /** Create New From This News: a brand-new draft (new News ID at its own first publish), both languages copied. */

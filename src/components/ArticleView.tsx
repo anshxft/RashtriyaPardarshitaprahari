@@ -249,6 +249,22 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       <div id="story-body" className="mt-8" style={{ fontSize: `calc(${L.bodyScale}% * var(--reader-scale, 1))` }}>
         <RichText data={text.bodyFromSubheadline ? paragraphsToLexical(text.paragraphs) : a.content} className={L.align === 'justify' ? 'text-justify' : L.align === 'center' ? 'text-center' : ''} />
       </div>
+      {(() => {
+        const pics = (a.gallery || []).map((g) => ({ m: asMedia(g.image), caption: g.caption })).filter((g) => g.m?.url)
+        if (!pics.length) return null
+        return (
+          <section aria-label="फोटो गैलरी" className="mt-8 grid gap-4 sm:grid-cols-2">
+            {pics.map(({ m, caption }, i) => (
+              <figure key={i} className={pics.length % 2 === 1 && i === 0 ? 'sm:col-span-2' : ''}>
+                <a href={m!.url!} target="_blank" rel="noopener" className="block overflow-hidden rounded-lg bg-surface">
+                  <Image src={m!.sizes?.card?.url || m!.url!} alt={caption || m!.alt || a.title} width={m!.width || 1200} height={m!.height || 900} sizes="(min-width: 640px) 50vw, 100vw" className="h-auto w-full" />
+                </a>
+                {caption && <figcaption className="mt-1.5 text-sm text-muted">{caption}</figcaption>}
+              </figure>
+            ))}
+          </section>
+        )
+      })()}
       {/* 15–20 hashtags at the end of every story (same set the social posts use) */}
       <p className="mt-6 text-[15px] leading-relaxed font-semibold break-words text-link">{(await socialVersion(a)).hashtags}</p>
       <div className="mt-8 border-t border-line pt-4">

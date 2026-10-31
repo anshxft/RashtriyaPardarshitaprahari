@@ -37,6 +37,7 @@ export const emptyForm = (epaperOnly = false): NewsForm => ({
   categoryId: null,
   body: '',
   photo: { id: null, url: null },
+  gallery: [],
   credit: '',
   // Client: each section is separate — “नई खबर” goes to the website only, “ई-पेपर खबर” to the e-paper only.
   layout: { template: '1', autoFit: true, bodyScale: 100, inEpaper: epaperOnly, epaperOnly },
@@ -68,6 +69,10 @@ export async function loadForm(id: string, locale: Lang, user: User): Promise<{ 
       body: lexicalToText(a.content),
       photo: { id: media?.id ?? null, url: media ? media.sizes?.hero?.url || media.url || null : null },
       credit: media?.credit || '',
+      gallery: (a.gallery || []).flatMap((g) => {
+        const m = asMedia(g.image)
+        return m ? [{ id: m.id, url: m.sizes?.card?.url || m.url || null, caption: g.caption || '' }] : []
+      }),
       layout: (a.layout as NewsForm['layout']) || {},
       scheduleAt: '',
       editNote: '',
