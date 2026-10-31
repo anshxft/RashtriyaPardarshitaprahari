@@ -1,4 +1,4 @@
-import { getAd } from '@/lib/data'
+import { getVideoFrameAd } from '@/lib/data'
 import type { Video } from '@/payload-types'
 import { VideoStage, type FlashProps } from './VideoStage'
 
@@ -14,7 +14,7 @@ export const videoThumb = videoPoster
  */
 export async function VideoPlayer({ v, flash, aiNote }: { v: Video; wm?: WM; flash?: FlashProps | null; aiNote?: boolean }) {
   if (!v.processedUrl) return <p className="rounded-lg bg-surface p-6 text-center text-muted">वीडियो तैयार हो रहा है…</p>
-  const ad = await getAd('video')
+  const ad = await getVideoFrameAd()
   const burned = Boolean(v.flashUrl && flash && (flash.on || flash.voice))
   return (
     <div>

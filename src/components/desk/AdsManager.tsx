@@ -11,7 +11,7 @@ export type AdRow = { id: number; title: string; imageId: number | null; imageUr
 const PLACES: [string, string][] = [
   ['home-top', 'वेबसाइट होम पेज'],
   ['article', 'हर खबर के अंदर'],
-  ['video', 'वीडियो के बीच-बीच में'],
+  ['video', 'वीडियो में L-फ्रेम (TV जैसा)'],
 ]
 const input = 'w-full rounded-md border border-line bg-bg px-3 py-2.5 text-base'
 const chip = 'rounded-full border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
@@ -84,6 +84,12 @@ export function AdsManager({ rows, adsEnabled, mode = 'web' }: { rows: AdRow[]; 
               </label>
             ))}
           </div>
+          {f.placements.includes('video') && (
+            <p className="mt-2 rounded-lg bg-saffron-500/15 p-2.5 text-xs leading-relaxed">
+              <strong>वीडियो के लिए:</strong> L-आकार की फोटो डालें — बाएं और नीचे विज्ञापन की पट्टी, और बाकी जगह <strong>खाली सफेद</strong>। वीडियो चलते समय बीच-बीच में
+              वीडियो छोटा होकर उसी सफेद जगह में चलेगा और चारों ओर आपका विज्ञापन दिखेगा। साधारण विज्ञापन फोटो (बिना सफेद जगह) वीडियो में नहीं लगेगी।
+            </p>
+          )}
         </div>}
         <label className="block text-sm font-semibold">
           लिंक (वैकल्पिक, क्लिक करने पर खुले)

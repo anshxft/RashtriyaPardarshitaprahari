@@ -94,6 +94,41 @@ export async function getAd(placement: string): Promise<{ title: string; image: 
   return ad && m?.url ? { title: ad.title, image: m.url, link: ad.link, w: m.width, h: m.height } : null
 }
 
+/**
+ * Video ad = TV-style L-band frame: an ad picture with a big blank (white / transparent) area where the video plays.
+ * Only such frames are used inside videos; an ordinary ad picture is never laid over a video. The blank area is
+ * found once per picture and remembered.
+ */
+// undefined = picture could not be read this time (tried again next request); null = not a frame
+const frameCache = new Map<string, Promise<import('./videoFrame').FrameWindow | null | undefined>>()
+export async function getVideoFrameAd(): Promise<{ title: string; image: string; link?: string | null; win: import('./videoFrame').FrameWindow } | null> {
+  const ads = await getAds('video')
+  const found = await Promise.all(
+    ads.map(async (ad) => {
+      if (!frameCache.has(ad.image))
+        frameCache.set(
+          ad.image,
+          (async () => {
+            try {
+              const { siteUrl } = await import('./paths')
+              const res = await fetch(new URL(ad.image, siteUrl() + '/'), { signal: AbortSignal.timeout(8000) })
+              if (!res.ok) return undefined
+              const { findFrameWindow } = await import('./videoFrame')
+              return await findFrameWindow(Buffer.from(await res.arrayBuffer()))
+            } catch {
+              return undefined
+            }
+          })(),
+        )
+      const win = await frameCache.get(ad.image)!
+      if (win === undefined) frameCache.delete(ad.image)
+      return win ? { title: ad.title, image: ad.image, link: ad.link, win } : null
+    }),
+  )
+  const frames = found.filter((f) => f !== null)
+  return frames.length ? frames[Math.floor(Math.random() * frames.length)] : null
+}
+
 /** An archived story keeps its URL / QR: visitors see a short notice with the News ID (content stays in the newsroom). */
 export const getArchivedStub = cache(async (lang: Lang, slug: string) => {
   const res = await (await db()).find({
