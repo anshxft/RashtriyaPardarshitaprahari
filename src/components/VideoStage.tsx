@@ -51,6 +51,8 @@ export function VideoStage({ src, poster, flash, breaking, ad }: { src: string; 
           onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, flash?.repeat !== false, flash?.intervalSec || 20))}
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
+            // The video's details can load before the page wakes up (then onLoadedMetadata is missed): work the times out here.
+            if (strip && !times.current.length && e.currentTarget.duration) times.current = flashTimes(e.currentTarget.duration, showSec, flash?.repeat !== false, flash?.intervalSec || 20)
             if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
             if (ad) {
               const on = adOn(t)
