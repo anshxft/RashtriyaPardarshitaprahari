@@ -69,6 +69,19 @@ export const getArticle = cache(async (lang: Lang, slug: string) => {
   return res.docs[0] as Article | undefined
 })
 
+/** Every live ad for a placement (newest first), or [] when ads are off. */
+export async function getAds(placement: string): Promise<{ id: number; title: string; image: string; link?: string | null; w?: number | null; h?: number | null }[]> {
+  const payload = await db()
+  const s = (await payload.findGlobal({ slug: 'site-settings', depth: 0 })) as { adsEnabled?: boolean }
+  if (!s.adsEnabled) return []
+  const { liveAdsWhere } = await import('@/collections/Ads')
+  const res = await payload.find({ collection: 'ads', where: liveAdsWhere(placement), sort: '-updatedAt', limit: 20, depth: 1 })
+  return res.docs.flatMap((ad) => {
+    const m = asMedia(ad.image)
+    return m?.url ? [{ id: ad.id, title: ad.title, image: m.url, link: ad.link, w: m.width, h: m.height }] : []
+  })
+}
+
 /** One live ad for a placement (random among the live ones), or null when ads are off / none is running. */
 export async function getAd(placement: string): Promise<{ title: string; image: string; link?: string | null; w?: number | null; h?: number | null } | null> {
   const payload = await db()

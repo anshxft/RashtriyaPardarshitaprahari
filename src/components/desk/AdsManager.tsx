@@ -9,7 +9,6 @@ import { PhotoField, type Photo } from './PhotoField'
 export type AdRow = { id: number; title: string; imageId: number | null; imageUrl: string | null; link: string; placements: string[]; active: boolean; startsAt: string; endsAt: string }
 
 const PLACES: [string, string][] = [
-  ['epaper', 'ई-पेपर (पेज 1, दाईं तरफ)'],
   ['home-top', 'वेबसाइट होम पेज'],
   ['article', 'हर खबर के अंदर'],
   ['video', 'वीडियो के बीच-बीच में'],
@@ -25,10 +24,11 @@ const toLocal = (iso: string) => {
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : '')
 
 type Form = { id?: number; title: string; photo: Photo; link: string; placements: string[]; active: boolean; startsAt: string; endsAt: string }
-const empty = (): Form => ({ title: '', photo: { id: null, url: null }, link: '', placements: ['epaper', 'home-top'], active: true, startsAt: '', endsAt: '' })
+const empty = (): Form => ({ title: '', photo: { id: null, url: null }, link: '', placements: ['home-top'], active: true, startsAt: '', endsAt: '' })
 
-/** Desk → विज्ञापन: upload an ad, pick where it shows and for how long; switch it on/off or delete it. */
-export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: boolean }) {
+/** Desk → विज्ञापन (website) or ई-पेपर विज्ञापन: upload an ad, pick where/how long; switch it on/off or delete it. */
+export function AdsManager({ rows, adsEnabled, mode = 'web' }: { rows: AdRow[]; adsEnabled: boolean; mode?: 'web' | 'epaper' }) {
+  const ep = mode === 'epaper'
   const router = useRouter()
   const [f, setF] = useState<Form>(empty())
   const [credit, setCredit] = useState('')
@@ -42,7 +42,7 @@ export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: bo
 
   const save = () =>
     start(async () => {
-      const r = await saveAdAction({ id: f.id, title: f.title, imageId: f.photo.id, link: f.link, placements: f.placements, active: f.active, startsAt: fromLocal(f.startsAt), endsAt: fromLocal(f.endsAt) })
+      const r = await saveAdAction({ id: f.id, title: f.title, imageId: f.photo.id, link: f.link, placements: f.placements, active: f.active, startsAt: fromLocal(f.startsAt), endsAt: fromLocal(f.endsAt) }, mode)
       done(r, f.id ? 'विज्ञापन बदल गया ✔' : 'विज्ञापन लग गया ✔')
       if (r.ok) setF(empty())
     })
@@ -54,7 +54,10 @@ export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: bo
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">विज्ञापन</h1>
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-navy-900">{ep ? 'ई-पेपर विज्ञापन' : 'वेबसाइट विज्ञापन'}</h1>
+          <p className="text-sm text-muted">{ep ? 'यहाँ डाले विज्ञापन सिर्फ ई-पेपर में लगेंगे: पहला पेज 1 के कॉलम में, बाकी हर 4 खबरों के बाद बीच-बीच में।' : 'यहाँ डाले विज्ञापन सिर्फ वेबसाइट पर लगेंगे (ई-पेपर के लिए अलग सेक्शन है)।'}</p>
+        </div>
         <label className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold ${adsEnabled ? 'bg-india-600/10 text-india-700' : 'bg-alert-600/10 text-alert-700'}`}>
           <input type="checkbox" className="h-5 w-5" checked={adsEnabled} disabled={pending} onChange={(e) => start(async () => done(await setAdsEnabledAction(e.target.checked), e.target.checked ? 'वेबसाइट पर विज्ञापन चालू' : 'वेबसाइट पर सभी विज्ञापन बंद'))} />
           {adsEnabled ? 'विज्ञापन चालू हैं' : 'सभी विज्ञापन बंद हैं'}
@@ -71,7 +74,7 @@ export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: bo
           <p className="mb-1 text-sm font-semibold">विज्ञापन की फोटो</p>
           <PhotoField photo={f.photo} onChange={(p) => set('photo', p)} alt={f.title || 'विज्ञापन'} credit={credit} onCredit={setCredit} />
         </div>
-        <div>
+        {!ep && <div>
           <p className="mb-1 text-sm font-semibold">कहाँ दिखे?</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {PLACES.map(([v, l]) => (
@@ -81,7 +84,7 @@ export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: bo
               </label>
             ))}
           </div>
-        </div>
+        </div>}
         <label className="block text-sm font-semibold">
           लिंक (वैकल्पिक, क्लिक करने पर खुले)
           <input value={f.link} onChange={(e) => set('link', e.target.value)} className={`${input} mt-1`} placeholder="https://" inputMode="url" />
@@ -133,7 +136,7 @@ export function AdsManager({ rows, adsEnabled }: { rows: AdRow[]; adsEnabled: bo
               <button type="button" className={chip} onClick={() => edit(a)}>
                 ✎ बदलें
               </button>
-              <button type="button" className={`${chip} !border-alert-600 text-alert-700`} disabled={pending} onClick={() => window.confirm(`“${a.title}” विज्ञापन हमेशा के लिए हटाएं?`) && start(async () => done(await deleteAdAction(a.id), 'विज्ञापन हटाया गया'))}>
+              <button type="button" className={`${chip} !border-alert-600 text-alert-700`} disabled={pending} onClick={() => window.confirm(`“${a.title}” विज्ञापन हमेशा के लिए हटाएं?`) && start(async () => done(await deleteAdAction(a.id, mode), 'विज्ञापन हटाया गया'))}>
                 हटाएं
               </button>
             </li>
