@@ -135,7 +135,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
     const cur = eff.find((s) => s.id === baseId)
     return (
       <div key={pl.id} className="ep-cell" style={{ position: 'absolute', left: pl.x, top: pl.y, width: pl.w, height: pl.h, overflow: 'hidden' }}>
-        <StoryBlock s={pl.story} cols={pl.variant.cols} scale={pl.variant.scale} take={pl.variant.take} lang={lang} />
+        <StoryBlock s={pl.story} cols={pl.variant.cols} scale={pl.variant.scale} take={pl.variant.take} lang={lang} height={pl.h} />
         {/* Readers: the whole story block opens only that story's own page (Read / Download / Print / Share live there). */}
         {!canEdit && pl.story.slot !== 'ad' && pl.story.url && <a href={pl.story.url} className="ep-open no-print" aria-label={pl.story.title} />}
         {canEdit && cur && pl.story.slot !== 'ad' && (

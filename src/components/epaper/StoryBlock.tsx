@@ -23,10 +23,10 @@ function Qr({ svg, size }: { svg?: string | null; size: number }) {
  * One story as a newspaper block. Deterministic on purpose (fixed sizes, aspect-ratio photo frames) so the packer's
  * measured height equals the rendered height. No photo → no frame; missing sub-headline / reporter → no empty line.
  */
-export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: number; scale: number; take?: number; lang: Lang }) {
+export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory; cols: number; scale: number; take?: number; lang: Lang; height?: number }) {
   const d = t(lang)
   if (s.slot === 'ad' && s.ad && s.photo) return <AdBlock s={s} width={spanW(cols)} lang={lang} />
-  if (s.slot === 'promo') return <PromoBlock s={s} width={spanW(cols)} lang={lang} />
+  if (s.slot === 'promo') return <PromoBlock s={s} width={spanW(cols)} height={height ?? 200} lang={lang} />
   const L = s.layout
   const width = spanW(cols)
   const paras = s.paragraphs.slice(0, take ?? s.paragraphs.length)
@@ -118,16 +118,27 @@ function AdBlock({ s, width, lang }: { s: EpStory; width: number; lang: Lang }) 
   )
 }
 
-/** The paper's own box that fills whatever space is left at the foot of a column (height comes from the cell). */
-function PromoBlock({ s, width, lang }: { s: EpStory; width: number; lang: Lang }) {
+/** The paper's own box that fills whatever space is left at the foot of a column. Three sizes, chosen by height. */
+function PromoBlock({ s, width, height, lang }: { s: EpStory; width: number; height: number; lang: Lang }) {
   const hi = lang === 'hi'
   const web = siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')
+  const help = `${hi ? 'हेल्पलाइन' : 'Helpline'} (24x7): ${HELPLINE}`
+  const box = { width, height: '100%', boxSizing: 'border-box', border: '2px solid #13294b', borderRadius: 6, background: 'linear-gradient(180deg,#f4f6fb,#e9eef5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: font.body, color: '#13294b', textAlign: 'center' } as const
+  if (height < 90)
+    // thin strip: one line
+    return (
+      <aside data-ep-block="promo" style={{ ...box, padding: '0 10px', fontSize: Math.min(16, Math.max(12, height * 0.32)), fontWeight: 700, whiteSpace: 'nowrap' }}>
+        {help}
+        {width > 500 ? `  ·  ${web}` : ''}
+      </aside>
+    )
+  const showQr = Boolean(s.qrSvg) && height >= 160
   return (
-    <aside data-ep-block="promo" style={{ width, height: '100%', boxSizing: 'border-box', border: '2px solid #13294b', borderRadius: 6, background: 'linear-gradient(180deg,#f4f6fb,#e9eef5)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '8px 12px', overflow: 'hidden', fontFamily: font.body, color: '#13294b', textAlign: 'center' }}>
-      {s.qrSvg && <div style={{ height: '100%', maxHeight: 90, aspectRatio: '1', flex: 'none' }} dangerouslySetInnerHTML={{ __html: s.qrSvg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') }} />}
+    <aside data-ep-block="promo" style={{ ...box, gap: 14, padding: '8px 12px' }}>
+      {showQr && <div style={{ height: '100%', maxHeight: 90, aspectRatio: '1', flex: 'none' }} dangerouslySetInnerHTML={{ __html: s.qrSvg!.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') }} />}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontFamily: font.head, fontWeight: 800, fontSize: 20, lineHeight: 1.25 }}>{hi ? 'अपनी खबर / समस्या हमें भेजें' : 'Send us your news or issue'}</div>
-        <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{hi ? 'हेल्पलाइन' : 'Helpline'} (24x7): {HELPLINE}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{help}</div>
         <div style={{ fontSize: 15, marginTop: 2 }}>{web}</div>
       </div>
     </aside>

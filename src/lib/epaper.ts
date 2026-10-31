@@ -69,7 +69,7 @@ export const adHeight = (aspect: number) => Math.min(640, Math.round(spanW(SLOT_
 
 export const MAX_PAGES = 40
 /** Smallest gap (px) worth filling with the paper's own box; anything smaller stays as white space. */
-export const PROMO_MIN = 70
+export const PROMO_MIN = 36
 
 export type Variant = { cols: number; scale: number; take?: number }
 export type Placed = { story: EpStory; id: string; page: number; x: number; y: number; w: number; h: number; variant: Variant; cont?: boolean; pinFailed?: boolean; fitted?: boolean }
