@@ -60,7 +60,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
   const manualPages = useMemo(() => (manual ? fromManual(manual, [...eff, ...(ads || []), ...(fillers || [])]) : null), [manual, eff, ads, fillers])
   const leftover = useMemo(() => {
     if (!manualPages) return eff
-    const used = new Set(manualPages.flatMap((p) => p.placed.map((pl) => pl.story.id)))
+    const used = new Set(manualPages.flatMap((p) => p.placed.map((pl) => pl.story.id.split('~')[0])))
     return eff.filter((s) => !used.has(s.id))
   }, [manualPages, eff])
   const none = useMemo<EpStory[]>(() => [], [])

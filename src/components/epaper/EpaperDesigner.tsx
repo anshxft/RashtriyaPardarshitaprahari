@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, type PointerEvent as RPointerEvent } from 'react'
 import { resetEpaperLayoutAction, saveEpaperLayoutAction } from '@/app/(desk)/desk/epaper-layout/actions'
-import { clampItem, colW, colX, contentBottom, contentTop, GEO, MAX_PAGES, spanW, toManual, type EpStory, type ManualItem, type ManualLayout } from '@/lib/epaper'
+import { clampItem, colW, colX, contentBottom, contentTop, GEO, manualStory, MAX_PAGES, spanW, toManual, type EpStory, type ManualItem, type ManualLayout } from '@/lib/epaper'
 import { StoryBlock } from './StoryBlock'
 import { usePack } from './usePack'
 
@@ -51,6 +51,26 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
     if (!layout && auto.ready && auto.pages.length) setLayout(toManual(auto.pages))
   }, [layout, auto.ready, auto.pages])
 
+  // Saved design + stories it doesn't hold (published later / left out): the website lays them out automatically on
+  // extra pages after the design — show exactly those pages here too, so every page can be seen and changed.
+  const leftover = useMemo(() => {
+    if (!saved) return [] as EpStory[]
+    const inSaved = new Set(saved.pages.flat().map((i) => i.ref.split('~')[0]))
+    return stories.filter((s) => !inSaved.has(s.id))
+  }, [saved, stories])
+  const none = useMemo<EpStory[]>(() => [], [])
+  const rest = usePack(leftover, 'hi', null, none, none)
+  const [restAdded, setRestAdded] = useState(false)
+  useEffect(() => {
+    if (restAdded || !saved || !leftover.length || !rest.ready || !rest.pages.length) return
+    const extra = toManual(rest.pages).pages
+    if (!extra.length) return
+    setRestAdded(true)
+    setLayout((l) => (l ? { pages: [...l.pages, ...extra] } : l))
+    setDirty(true)
+    setNote({ ok: true, text: `डिज़ाइन के बाद अपने-आप बने ${extra.length} पेज भी यहाँ जोड़ दिए — बदलकर “सेव करें”।` })
+  }, [restAdded, saved, leftover, rest.ready, rest.pages])
+
   useEffect(() => {
     const el = box.current
     if (!el) return
@@ -63,11 +83,11 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
   const pool = useMemo(() => new Map([...stories, ...ads, ...fillers].map((s) => [s.id, s])), [stories, ads, fillers])
   const pages = layout?.pages ?? []
   const page = pages[pageIdx] ?? []
-  const used = new Set(pages.flat().map((i) => i.ref))
+  const used = new Set(pages.flat().map((i) => i.ref.split('~')[0]))
   const unplaced = [...stories, ...ads, ...fillers].filter((s) => !used.has(s.id))
   const selPage = pages.findIndex((p) => p.some((i) => i.ref === sel))
   const selItem = selPage >= 0 ? pages[selPage].find((i) => i.ref === sel) || null : null
-  const selStory = sel ? pool.get(sel) : undefined
+  const selStory = selItem ? manualStory(selItem, pool) : undefined
 
   const update = (fn: (l: ManualLayout) => ManualLayout) => {
     setLayout((l) => (l ? fn(l) : l))
@@ -281,7 +301,7 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
                         <div style={{ position: 'absolute', left: GEO.margin, right: GEO.margin, top: contentBottom, borderTop: '2px dashed #bbb' }} />
 
                         {pg.map((it) => {
-                          const s = pool.get(it.ref)
+                          const s = manualStory(it, pool)
                           if (!s) return null
                           const over = (natural[it.ref] ?? 0) > it.h + 2
                           const on = sel === it.ref

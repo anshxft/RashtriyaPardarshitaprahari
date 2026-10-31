@@ -365,7 +365,8 @@ export const pageNo = (n: number) => String(n).padStart(2, '0')
 /* ── Hand-made layout (Desk → ई-पेपर डिज़ाइनर) ─────────────────────────────────────────────────────────────────────── */
 
 /** One block placed by hand: grid column (0–5), width in columns, top + height in A3 page px, text size. */
-export type ManualItem = { ref: string; col: number; span: number; y: number; h: number; scale?: number }
+export type ManualItem = { ref: string; col: number; span: number; y: number; h: number; scale?: number; from?: number; take?: number }
+/** A long story can sit in parts: `from` / `take` = which paragraphs this block shows (later parts get “(जारी)”). */
 export type ManualLayout = { pages: ManualItem[][] }
 
 /** First and last y a block may use on a page (below the masthead, above the footer). */
@@ -380,17 +381,28 @@ export function clampItem(it: ManualItem): ManualItem {
   const h = Math.max(40, Math.min(contentBottom - contentTop, Math.round(it.h)))
   const y = Math.max(contentTop, Math.min(contentBottom - h, Math.round(it.y)))
   const scale = Math.max(0.8, Math.min(1.4, it.scale ?? 1))
-  return { ref: it.ref, col, span, y, h, scale }
+  const part = it.from != null || it.take != null ? { from: Math.max(0, Math.round(it.from ?? 0)), ...(it.take != null ? { take: Math.max(1, Math.round(it.take)) } : {}) } : {}
+  return { ref: it.ref, col, span, y, h, scale, ...part }
 }
 
 /** Saved hand layout → the same page structure the board draws. Items whose story no longer exists are skipped. */
+/** The story a hand-placed block shows (a part of a long story becomes its “(जारी)” piece). */
+export function manualStory(it: ManualItem, byId: Map<string, EpStory>): EpStory | undefined {
+  const s = byId.get(it.ref.split('~')[0])
+  if (!s || (it.from == null && it.take == null)) return s
+  const from = it.from ?? 0
+  const paragraphs = s.paragraphs.slice(from, it.take != null ? from + it.take : undefined)
+  if (!paragraphs.length) return undefined
+  return from > 0 ? { ...s, id: it.ref, title: `${s.title} (जारी)`, paragraphs, photo: undefined, subheadline: null } : { ...s, id: it.ref, paragraphs }
+}
+
 export function fromManual(layout: ManualLayout, pool: EpStory[]): PackedPage[] {
   const byId = new Map(pool.map((s) => [s.id, s]))
   const tpl = byId.get('filler-submit')
   return layout.pages.map((items, i) => {
     const placed: Placed[] = items.flatMap((raw) => {
       const it = clampItem(raw)
-      const story = byId.get(it.ref)
+      const story = manualStory(it, byId)
       if (!story) return []
       return [{ story, id: `${it.ref}@${i + 1}`, page: i + 1, x: colX(it.col), y: it.y, w: spanW(it.span), h: it.h, variant: { cols: it.span, scale: it.scale ?? 1 } }]
     })
@@ -418,14 +430,28 @@ export function fromManual(layout: ManualLayout, pool: EpStory[]): PackedPage[] 
 /** Automatic pages → editable hand layout (the designer starts from what the reader sees today). */
 export function toManual(pages: PackedPage[]): ManualLayout {
   const seen = new Set<string>() // an ad repeated between the news is kept once (each block appears once by hand)
+  const offset = new Map<string, number>() // paragraphs already shown of a story that runs in parts
   return {
     pages: pages
       .map((pg) =>
-        pg.placed
-          .filter((p) => !p.cont && p.story.slot !== 'promo' && (p.story.slot === 'ad' || !p.story.id.includes('~')) && !seen.has(p.story.id.split('~')[0]) && !!seen.add(p.story.id.split('~')[0]))
-          .map((p) => clampItem({ ref: p.story.id.split('~')[0], col: Math.round((p.x - GEO.margin) / (colW + GEO.gutter)), span: p.variant.cols, y: p.y, h: p.h, scale: p.variant.scale })),
+        pg.placed.flatMap((p) => {
+          if (p.story.slot === 'promo') return []
+          const base = p.story.id.split('~')[0]
+          const col = Math.round((p.x - GEO.margin) / (colW + GEO.gutter))
+          const box = { col, span: p.variant.cols, y: p.y, h: p.h, scale: p.variant.scale }
+          if (p.story.slot === 'ad' || p.story.slot === 'filler' || p.story.slot === 'aina') {
+            if (seen.has(base)) return []
+            seen.add(base)
+            return [clampItem({ ref: base, ...box })]
+          }
+          const from = offset.get(base) ?? 0
+          const shown = p.variant.take ?? p.story.paragraphs.length
+          offset.set(base, from + shown)
+          const split = p.cont || p.variant.take != null
+          return [clampItem({ ref: p.cont ? `${base}~c${p.page}` : base, ...box, ...(split ? { from, take: shown } : {}) })]
+        }),
       )
-      .filter((pg) => pg.length), // a page that only held the “(जारी)” rest of a story
+      .filter((pg) => pg.length),
   }
 }
 
