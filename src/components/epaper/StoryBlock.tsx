@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { AD_LABEL_H, adHeight, BODY_PX, bylinePx, colW, headlinePx, spanW, subPx, type EpStory } from '@/lib/epaper'
+import { AD_LABEL_H, adHeight, BODY_PX, bylinePx, headlinePx, spanW, subPx, type EpStory } from '@/lib/epaper'
 import { INK } from '@/lib/layout'
 import { t, type Lang } from '@/lib/i18n'
 import { HELPLINE } from '@/content/brand'
@@ -34,8 +34,10 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
   // Client: a photo sits at the side with the text running beside it (no empty margins around a centred photo);
   // only a full-width photo stays on top.
   const side = showPhoto && !s.link && (L.photoPos !== 'top' || L.photoSize !== 'full')
-  const photoW = side ? (cols >= 4 ? spanW(2) : cols === 3 ? colW : Math.round(width * 0.42)) : Math.round(width * FRAC[L.photoSize])
-  const bodyCols = side ? (cols >= 4 ? cols - 2 : cols === 3 ? 2 : 1) : cols
+  // Client: no empty space under a side photo — the photo sits at the top of the first text column and the text runs
+  // on underneath it, then through the other columns (newspaper wrap). One column wide, so the columns stay level.
+  const photoW = side ? '100%' : Math.round(width * FRAC[L.photoSize])
+  const bodyCols = cols
   // Client: text edges even on both sides (newspaper style)
   const align = 'justify'
   // Editor-in-Chief's pieces already say “प्रधान संपादक के कलम से” — no “रिपोर्ट: प्रधान संपादक…” line under them
@@ -43,8 +45,8 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
   const byline = [reporter && `${d.reportBy}: ${reporter}`, s.location && `${s.location}`].filter(Boolean).join('  ·  ')
 
   const photo = showPhoto && (
-    <figure style={{ margin: side ? 0 : '0 auto 8px', width: photoW, flex: 'none' }}>
-      <div style={{ width: '100%', aspectRatio: L.photoSize === 'full' && !side ? '2 / 1' : side ? '4 / 5' : '3 / 2', overflow: 'hidden', background: side ? '#f4f4f4' : '#e8e8e8' }}>
+    <figure style={{ margin: side ? '0 0 8px' : '0 auto 8px', width: photoW, flex: 'none', breakInside: 'avoid' }}>
+      <div style={{ width: '100%', aspectRatio: L.photoSize === 'full' && !side ? '2 / 1' : side ? '4 / 3' : '3 / 2', overflow: 'hidden', background: side ? '#f4f4f4' : '#e8e8e8' }}>
         <img src={s.photo!.src} alt={s.photo!.alt} style={{ width: '100%', height: '100%', objectFit: side ? 'contain' : 'cover', display: 'block' }} />
       </div>
       {s.photo!.credit && <figcaption style={{ fontSize: 8.5, color: '#777', marginTop: 2, lineHeight: '11px', height: 11, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{s.photo!.credit}</figcaption>}
@@ -69,6 +71,7 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
   ) : (
     // Columns end level: every line is the same height (no gaps between paragraphs — a newspaper indent marks them instead)
     <div style={{ columnCount: bodyCols, columnGap: 20, columnFill: 'balance', columnRule: bodyCols > 1 ? '1px solid #d8d8d8' : undefined, fontSize: BODY_PX * scale, fontWeight: 500, lineHeight: 1.7, textAlign: align, hyphens: 'auto', marginTop: 6, orphans: 1, widows: 1 }}>
+      {side && photo}
       {paras.map((p, i) => (
         <p key={i} style={{ margin: 0, textIndent: i ? '1.2em' : 0 }}>
           {p}
@@ -88,14 +91,7 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
       {head}
       {/* Newspaper order: headline → photo → text */}
       {!side && photo && <div style={{ marginTop: 8 }}>{photo}</div>}
-      {side ? (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexDirection: L.photoPos === 'right' ? 'row-reverse' : 'row', marginTop: 4 }}>
-          {photo}
-          <div style={{ flex: 1, minWidth: 0 }}>{body}</div>
-        </div>
-      ) : (
-        body
-      )}
+      {body}
       <footer style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, marginTop: 4, borderTop: '1px solid #ddd', paddingTop: 2 }}>
         <Qr svg={s.qrSvg} size={30} />
         <div style={{ fontSize: 9, lineHeight: 1.25, color: '#555', minWidth: 0 }}>
