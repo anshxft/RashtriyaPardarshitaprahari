@@ -170,6 +170,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
         approvedBy: publishing ? u.name : scriptChanged ? null : prev?.flash?.approvedBy,
         approvedAt: publishing ? new Date().toISOString() : scriptChanged ? null : prev?.flash?.approvedAt,
       },
+      ...(prev ? {} : { layout: { inEpaper: false } }), // video news belongs to the website, not the e-paper
       reviewStatus: input.mode === 'submit' ? 'submitted' : prev?.reviewStatus || 'draft',
       _status: publishing ? 'published' : prev?._status === 'published' ? 'published' : 'draft',
     }

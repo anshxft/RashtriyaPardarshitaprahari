@@ -2,6 +2,8 @@
 import { AD_LABEL_H, adHeight, BODY_PX, bylinePx, colW, headlinePx, spanW, subPx, type EpStory } from '@/lib/epaper'
 import { INK } from '@/lib/layout'
 import { t, type Lang } from '@/lib/i18n'
+import { HELPLINE } from '@/content/brand'
+import { siteUrl } from '@/lib/paths'
 
 const font = { body: 'var(--font-noto), "Noto Sans Devanagari", sans-serif', head: 'var(--font-head), var(--font-noto), sans-serif' }
 const ink = (i: keyof typeof INK, fallback: string) => (i === 'default' ? fallback : INK[i])
@@ -24,6 +26,7 @@ function Qr({ svg, size }: { svg?: string | null; size: number }) {
 export function StoryBlock({ s, cols, scale, take, lang }: { s: EpStory; cols: number; scale: number; take?: number; lang: Lang }) {
   const d = t(lang)
   if (s.slot === 'ad' && s.ad && s.photo) return <AdBlock s={s} width={spanW(cols)} lang={lang} />
+  if (s.slot === 'promo') return <PromoBlock s={s} width={spanW(cols)} lang={lang} />
   const L = s.layout
   const width = spanW(cols)
   const paras = s.paragraphs.slice(0, take ?? s.paragraphs.length)
@@ -111,6 +114,22 @@ function AdBlock({ s, width, lang }: { s: EpStory; width: number; lang: Lang }) 
     <aside data-ep-block="ad" style={{ width, height: H, boxSizing: 'border-box', background: '#fff', border: '1px dashed #999', paddingBottom: 8 }}>
       <div style={{ height: AD_LABEL_H, lineHeight: `${AD_LABEL_H}px`, fontSize: 11, fontWeight: 700, letterSpacing: 1, textAlign: 'center', color: '#666', borderBottom: '1px solid #ddd' }}>{lang === 'hi' ? 'विज्ञापन / ADVERTISEMENT' : 'ADVERTISEMENT'}</div>
       <img src={s.photo!.src} alt={s.photo!.alt} style={{ display: 'block', width: '100%', height: H - AD_LABEL_H - 10, objectFit: 'contain' }} />
+    </aside>
+  )
+}
+
+/** The paper's own box that fills whatever space is left at the foot of a column (height comes from the cell). */
+function PromoBlock({ s, width, lang }: { s: EpStory; width: number; lang: Lang }) {
+  const hi = lang === 'hi'
+  const web = siteUrl().replace(/^https?:\/\/(www\.)?/, 'www.')
+  return (
+    <aside data-ep-block="promo" style={{ width, height: '100%', boxSizing: 'border-box', border: '2px solid #13294b', borderRadius: 6, background: 'linear-gradient(180deg,#f4f6fb,#e9eef5)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '8px 12px', overflow: 'hidden', fontFamily: font.body, color: '#13294b', textAlign: 'center' }}>
+      {s.qrSvg && <div style={{ height: '100%', maxHeight: 90, aspectRatio: '1', flex: 'none' }} dangerouslySetInnerHTML={{ __html: s.qrSvg.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"') }} />}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: font.head, fontWeight: 800, fontSize: 20, lineHeight: 1.25 }}>{hi ? 'अपनी खबर / समस्या हमें भेजें' : 'Send us your news or issue'}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{hi ? 'हेल्पलाइन' : 'Helpline'} (24x7): {HELPLINE}</div>
+        <div style={{ fontSize: 15, marginTop: 2 }}>{web}</div>
+      </div>
     </aside>
   )
 }
