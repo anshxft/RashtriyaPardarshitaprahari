@@ -329,3 +329,55 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
 
 /** Page numbers are generated from the order of the pages (never typed): 1 → "01", 2 → "02" … no gaps after a reorder. */
 export const pageNo = (n: number) => String(n).padStart(2, '0')
+
+/* ── Hand-made layout (Desk → ई-पेपर डिज़ाइनर) ─────────────────────────────────────────────────────────────────────── */
+
+/** One block placed by hand: grid column (0–5), width in columns, top + height in A3 page px, text size. */
+export type ManualItem = { ref: string; col: number; span: number; y: number; h: number; scale?: number }
+export type ManualLayout = { pages: ManualItem[][] }
+
+/** First and last y a block may use on a page (below the masthead, above the footer). */
+export const contentTop = GEO.margin + GEO.mastheadH
+export const contentBottom = pageBottom
+export const colX = (col: number) => GEO.margin + col * (colW + GEO.gutter)
+
+/** Clamp an item so it always stays on the page grid. */
+export function clampItem(it: ManualItem): ManualItem {
+  const span = Math.max(1, Math.min(GEO.cols, Math.round(it.span)))
+  const col = Math.max(0, Math.min(GEO.cols - span, Math.round(it.col)))
+  const h = Math.max(40, Math.min(contentBottom - contentTop, Math.round(it.h)))
+  const y = Math.max(contentTop, Math.min(contentBottom - h, Math.round(it.y)))
+  const scale = Math.max(0.8, Math.min(1.4, it.scale ?? 1))
+  return { ref: it.ref, col, span, y, h, scale }
+}
+
+/** Saved hand layout → the same page structure the board draws. Items whose story no longer exists are skipped. */
+export function fromManual(layout: ManualLayout, pool: EpStory[]): PackedPage[] {
+  const byId = new Map(pool.map((s) => [s.id, s]))
+  return layout.pages.map((items, i) => ({
+    number: i + 1,
+    freeH: 0,
+    placed: items.flatMap((raw) => {
+      const it = clampItem(raw)
+      const story = byId.get(it.ref)
+      if (!story) return []
+      return [{ story, id: `${it.ref}@${i + 1}`, page: i + 1, x: colX(it.col), y: it.y, w: spanW(it.span), h: it.h, variant: { cols: it.span, scale: it.scale ?? 1 } }]
+    }),
+  }))
+}
+
+/** Automatic pages → editable hand layout (the designer starts from what the reader sees today). */
+export function toManual(pages: PackedPage[]): ManualLayout {
+  return {
+    pages: pages.map((pg) =>
+      pg.placed
+        .filter((p) => !p.cont && p.story.slot !== 'promo')
+        .map((p) => clampItem({ ref: p.story.id, col: Math.round((p.x - GEO.margin) / (colW + GEO.gutter)), span: p.variant.cols, y: p.y, h: p.h, scale: p.variant.scale })),
+    ),
+  }
+}
+
+/** Is this a usable saved layout? (guards against damaged JSON) */
+export function isManualLayout(v: unknown): v is ManualLayout {
+  return Boolean(v && typeof v === 'object' && Array.isArray((v as ManualLayout).pages) && (v as ManualLayout).pages.every((p) => Array.isArray(p)))
+}

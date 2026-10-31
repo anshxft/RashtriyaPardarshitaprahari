@@ -119,3 +119,11 @@ export async function getEpaperFillers(lang: Lang): Promise<EpStory[]> {
   out.push({ ...base, id: 'filler-submit', title: d.submitIssue, paragraphs: [d.submitIssueCta], url: submit, qrSvg: await qr(submit) })
   return out
 }
+
+/** The hand-made layout saved for this edition date, or null (= automatic layout). */
+export async function getEpaperLayout(date: string): Promise<import('./epaper').ManualLayout | null> {
+  const { isManualLayout } = await import('./epaper')
+  const res = await (await db()).find({ collection: 'epaper-layouts', where: { date: { equals: date } }, limit: 1, depth: 0 })
+  const data = res.docs[0]?.data
+  return isManualLayout(data) && data.pages.some((p) => p.length) ? data : null
+}

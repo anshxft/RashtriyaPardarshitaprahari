@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { reorderAction, saveLayoutAction } from '@/app/(frontend)/[lang]/epaper/actions'
 import { DATELINE_CITY, HELPLINE, TAGLINE_SHORT } from '@/content/brand'
 import { siteUrl } from '@/lib/paths'
-import { GEO, pageNo, sortStories, type EpStory, type Placed } from '@/lib/epaper'
+import { fromManual, GEO, pageNo, sortStories, type EpStory, type ManualLayout, type Placed } from '@/lib/epaper'
 import { t, type Lang } from '@/lib/i18n'
 import type { Layout } from '@/lib/layout'
 import { TricolorName } from '../TricolorName'
@@ -31,12 +31,14 @@ type Props = {
   stories: EpStory[]
   editions: { date: string; label: string; count: number }[]
   canEdit: boolean
+  /** hand-made layout from Desk → ई-पेपर डिज़ाइनर (null = automatic) */
+  manual?: ManualLayout | null
 }
 
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const tool = 'h-6 min-w-6 rounded bg-navy-900 px-1 text-[11px] leading-none font-bold text-white hover:bg-navy-700'
 
-export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, fillers, ad, ads, stories, editions, canEdit }: Props) {
+export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo, fillers, ad, ads, stories, editions, canEdit, manual }: Props) {
   const d = t(lang)
   // Masthead name stays on one line: Latin letters are wider, so the long English name gets a smaller size.
   const nameSize = /[a-z]/i.test(siteName) ? Math.min(72, Math.floor(1450 / siteName.length)) : 76
@@ -54,9 +56,21 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
     () => stories.map((s) => (patches[s.id] ? { ...s, layout: { ...s.layout, ...Object.fromEntries(Object.entries(patches[s.id]).filter(([, v]) => v !== undefined)) } as EpStory['layout'] } : s)),
     [stories, patches],
   )
-  const packed = usePack(eff, lang, ad, fillers, ads)
+  // Hand layout: its pages first; any story published after it was made is packed automatically on extra pages.
+  const manualPages = useMemo(() => (manual ? fromManual(manual, [...eff, ...(ads || []), ...(fillers || [])]) : null), [manual, eff, ads, fillers])
+  const leftover = useMemo(() => {
+    if (!manualPages) return eff
+    const used = new Set(manualPages.flatMap((p) => p.placed.map((pl) => pl.story.id)))
+    return eff.filter((s) => !used.has(s.id))
+  }, [manualPages, eff])
+  const none = useMemo<EpStory[]>(() => [], [])
+  const packed = usePack(leftover, lang, manualPages ? null : ad, manualPages ? none : fillers, manualPages ? none : ads)
   const ready = packed.ready
-  const pages = stories.length ? packed.pages : [] // no stories that day → no empty masthead-only page
+  const pages = !stories.length
+    ? [] // no stories that day → no empty masthead-only page
+    : manualPages
+      ? [...manualPages, ...(leftover.length ? packed.pages : []).map((p, i) => ({ ...p, number: manualPages.length + i + 1 }))]
+      : packed.pages
   const [zoom, setZoom] = useState(1)
   // Phones open the readable card view (client's layout); the A3 pages are one tap away.
   const [reading, setReading] = useState(false)
@@ -140,7 +154,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
         <StoryBlock s={pl.story} cols={pl.variant.cols} scale={pl.variant.scale} take={pl.variant.take} lang={lang} height={pl.h} />
         {/* Readers: the whole story block opens only that story's own page (Read / Download / Print / Share live there). */}
         {!canEdit && pl.story.slot !== 'ad' && pl.story.url && <a href={pl.story.url} className="ep-open no-print" aria-label={pl.story.title} />}
-        {canEdit && cur && pl.story.slot !== 'ad' && (
+        {canEdit && !manualPages && cur && pl.story.slot !== 'ad' && (
           <div className="ep-tools no-print" style={{ position: 'absolute', top: 3, right: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: pl.w - 6 }}>
             {pl.fitted && <span style={{ background: '#f28c1b', color: '#000', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>{d.autoFitted}</span>}
             {pl.pinFailed && <span style={{ background: '#d0201a', color: '#fff', fontSize: 10, padding: '2px 4px', borderRadius: 3 }}>{d.pinMissed}</span>}
@@ -191,6 +205,11 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
             <p className="text-muted">
               {dateLabel} · {stories.length} {d.storiesWord} · {pages.length || '…'} {d.pageWord.toLowerCase()}
             </p>
+            {canEdit && (
+              <Link href={`/desk/epaper-layout?date=${date}`} className="mt-1 inline-block rounded-md bg-navy-900 px-3 py-1.5 text-sm font-bold text-white">
+                🖐 {manualPages ? 'हाथ से बना डिज़ाइन — डिज़ाइनर में बदलें' : 'ई-पेपर डिज़ाइनर (खींचकर सेट करें)'}
+              </Link>
+            )}
           </div>
           <label className="text-sm font-semibold">
             {d.editionOf}

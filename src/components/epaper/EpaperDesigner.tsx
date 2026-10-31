@@ -1,0 +1,343 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, type PointerEvent as RPointerEvent } from 'react'
+import { resetEpaperLayoutAction, saveEpaperLayoutAction } from '@/app/(desk)/desk/epaper-layout/actions'
+import { clampItem, colW, colX, contentBottom, contentTop, GEO, MAX_PAGES, spanW, toManual, type EpStory, type ManualItem, type ManualLayout } from '@/lib/epaper'
+import { StoryBlock } from './StoryBlock'
+import { usePack } from './usePack'
+
+type Props = {
+  date: string
+  dateLabel: string
+  editions: { date: string; label: string; count: number }[]
+  stories: EpStory[]
+  ads: EpStory[]
+  fillers: EpStory[]
+  saved: ManualLayout | null
+}
+type Drag = { ref: string; mode: 'move' | 'size'; px: number; py: number; start: ManualItem }
+
+const btn = 'rounded-lg border border-line bg-bg px-3 py-2 text-sm font-bold hover:bg-surface disabled:opacity-40'
+const small = 'rounded-md border border-line bg-bg px-2.5 py-1.5 text-sm font-bold hover:bg-surface disabled:opacity-40'
+const STEP = colW + GEO.gutter
+const snapY = (y: number) => Math.round(y / 4) * 4
+const overlaps = (a: ManualItem, b: ManualItem) => a.col < b.col + b.span && b.col < a.col + a.span && a.y < b.y + b.h && b.y < a.y + a.h
+
+/**
+ * Hand layout for one edition: every story / ad is a block on the 6-column A3 grid. Drag a block to move it, drag its
+ * corner to change width (columns) and height; the panel moves it to another page, changes text size or fits the
+ * height to its text. Starts from today's automatic layout; “सेव करें” makes the website e-paper use it.
+ */
+export function EpaperDesigner({ date, dateLabel, editions, stories, ads, fillers, saved }: Props) {
+  const router = useRouter()
+  const auto = usePack(stories, 'hi', ads[0] ?? null, fillers, ads)
+  const [layout, setLayout] = useState<ManualLayout | null>(saved)
+  const [pageIdx, setPageIdx] = useState(0)
+  const [sel, setSel] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const [pending, start] = useTransition()
+  const [natural, setNatural] = useState<Record<string, number>>({})
+  const [toFit, setToFit] = useState<Set<string>>(new Set())
+  const drag = useRef<Drag | null>(null)
+  const box = useRef<HTMLDivElement>(null)
+  const canvas = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(800)
+
+  // No saved design yet → start from what the automatic layout gives today.
+  useEffect(() => {
+    if (!layout && auto.ready && auto.pages.length) setLayout(toManual(auto.pages))
+  }, [layout, auto.ready, auto.pages])
+
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const scale = Math.min(1, width / GEO.pageW)
+
+  const pool = useMemo(() => new Map([...stories, ...ads, ...fillers].map((s) => [s.id, s])), [stories, ads, fillers])
+  const pages = layout?.pages ?? []
+  const page = pages[pageIdx] ?? []
+  const used = new Set(pages.flat().map((i) => i.ref))
+  const unplaced = [...stories, ...ads, ...fillers].filter((s) => !used.has(s.id))
+  const selItem = page.find((i) => i.ref === sel) || null
+  const selStory = sel ? pool.get(sel) : undefined
+
+  const update = (fn: (l: ManualLayout) => ManualLayout) => {
+    setLayout((l) => (l ? fn(l) : l))
+    setDirty(true)
+  }
+  const setItem = (ref: string, patch: Partial<ManualItem>) =>
+    update((l) => ({ pages: l.pages.map((p) => p.map((i) => (i.ref === ref ? clampItem({ ...i, ...patch }) : i))) }))
+
+  // Measure each block's real text height (unscaled) so we can warn about cut text and “fit” heights.
+  useLayoutEffect(() => {
+    const el = canvas.current
+    if (!el) return
+    const next: Record<string, number> = {}
+    el.querySelectorAll<HTMLElement>('[data-inner]').forEach((n) => (next[n.dataset.inner!] = n.offsetHeight))
+    const changed = Object.keys(next).some((k) => Math.abs((natural[k] ?? -1) - next[k]) > 1)
+    if (changed) setNatural((cur) => ({ ...cur, ...next }))
+    if (toFit.size) {
+      const fits = [...toFit].filter((r) => next[r])
+      if (fits.length) {
+        setToFit((s) => new Set([...s].filter((r) => !fits.includes(r))))
+        update((l) => ({ pages: l.pages.map((p) => p.map((i) => (fits.includes(i.ref) ? clampItem({ ...i, h: next[i.ref] + 4 }) : i))) }))
+      }
+    }
+  })
+
+  const onDown = (e: RPointerEvent, ref: string, mode: Drag['mode']) => {
+    const it = page.find((i) => i.ref === ref)
+    if (!it) return
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    drag.current = { ref, mode, px: e.clientX, py: e.clientY, start: it }
+    setSel(ref)
+  }
+  const onMove = (e: RPointerEvent) => {
+    const d = drag.current
+    if (!d) return
+    const dx = (e.clientX - d.px) / scale
+    const dy = (e.clientY - d.py) / scale
+    if (d.mode === 'move') setItem(d.ref, { col: d.start.col + Math.round(dx / STEP), y: snapY(d.start.y + dy) })
+    // widening stops at the page edge (the block stays where it is instead of sliding left)
+    else setItem(d.ref, { span: Math.min(GEO.cols - d.start.col, d.start.span + Math.round(dx / STEP)), h: snapY(d.start.h + dy) })
+  }
+  const onUp = () => (drag.current = null)
+
+  const addToPage = (s: EpStory) => {
+    const bottom = Math.max(contentTop, ...page.map((i) => i.y + i.h + GEO.blockGap))
+    const span = s.slot === 'ad' ? 2 : Math.max(1, Math.min(4, s.layout?.columns ?? 2))
+    update((l) => {
+      const ps = l.pages.length ? l.pages.map((p) => [...p]) : [[]]
+      ps[pageIdx] = [...(ps[pageIdx] ?? []), clampItem({ ref: s.id, col: 0, span, y: Math.min(bottom, contentBottom - 200), h: 400 })]
+      return { pages: ps }
+    })
+    setToFit((t) => new Set(t).add(s.id))
+    setSel(s.id)
+  }
+  const remove = (ref: string) => (update((l) => ({ pages: l.pages.map((p) => p.filter((i) => i.ref !== ref)) })), setSel(null))
+  const toPage = (ref: string, target: number) =>
+    update((l) => {
+      const it = l.pages.flat().find((i) => i.ref === ref)
+      if (!it) return l
+      const ps = l.pages.map((p) => p.filter((i) => i.ref !== ref))
+      while (ps.length <= target) ps.push([])
+      const bottom = Math.max(contentTop, ...ps[target].map((i) => i.y + i.h + GEO.blockGap))
+      ps[target] = [...ps[target], clampItem({ ...it, y: Math.min(bottom, contentBottom - it.h) })]
+      return { pages: ps }
+    })
+
+  const save = () =>
+    start(async () => {
+      if (!layout) return
+      const r = await saveEpaperLayoutAction(date, { pages: layout.pages.filter((p, i) => p.length || i < layout.pages.length - 1) })
+      setNote(r.ok ? { ok: true, text: 'डिज़ाइन सेव ✔ — वेबसाइट के ई-पेपर में यही दिखेगा' } : { ok: false, text: r.error })
+      if (r.ok) setDirty(false)
+    })
+  const backToAuto = () => {
+    if (!window.confirm('हाथ से बना डिज़ाइन हटाकर ई-पेपर को फिर से अपने-आप (ऑटो) बनने दें?')) return
+    start(async () => {
+      const r = await resetEpaperLayoutAction(date)
+      setNote(r.ok ? { ok: true, text: 'ऑटो लेआउट वापस चालू ✔' } : { ok: false, text: r.error })
+      if (r.ok) {
+        setLayout(auto.pages.length ? toManual(auto.pages) : null)
+        setDirty(false)
+      }
+    })
+  }
+
+  const bad = new Set<string>()
+  page.forEach((a, i) => page.slice(i + 1).forEach((b) => overlaps(a, b) && (bad.add(a.ref), bad.add(b.ref))))
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-extrabold text-navy-900">ई-पेपर डिज़ाइनर</h1>
+          <p className="text-sm text-muted">खबर या विज्ञापन को खींचकर जगह बदलें · नीचे-दाएं कोने ◢ को खींचकर चौड़ाई (कॉलम) और लंबाई बदलें · फिर “सेव करें”।</p>
+        </div>
+        <label className="text-sm font-semibold">
+          अंक (तारीख)
+          <select className="mt-1 block rounded-md border border-line bg-bg px-3 py-2" value={date} onChange={(e) => router.push(`/desk/epaper-layout?date=${e.target.value}`)}>
+            {!editions.some((e) => e.date === date) && <option value={date}>{dateLabel}</option>}
+            {editions.map((e) => (
+              <option key={e.date} value={e.date}>
+                {e.label} ({e.count})
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="sticky top-14 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-bg/95 p-2 shadow-sm backdrop-blur">
+        <button type="button" onClick={save} disabled={pending || !layout || !dirty} className="rounded-lg bg-india-600 px-5 py-2 font-extrabold text-white disabled:opacity-50">
+          {pending ? 'सेव हो रहा है…' : dirty ? 'सेव करें' : 'सेव है ✔'}
+        </button>
+        <button type="button" className={btn} disabled={!auto.ready} onClick={() => window.confirm('अभी के बदलाव हटाकर ऑटो लेआउट से दोबारा शुरू करें?') && (setLayout(toManual(auto.pages)), setDirty(true), setPageIdx(0))}>
+          ↺ ऑटो से दोबारा शुरू
+        </button>
+        {saved && (
+          <button type="button" className={btn} onClick={backToAuto} disabled={pending}>
+            ऑटो पर वापस जाएँ
+          </button>
+        )}
+        <a href={`/hi/epaper/${date}`} target="_blank" rel="noreferrer" className={btn}>
+          ई-पेपर देखें ↗
+        </a>
+        {note && <span className={`text-sm font-semibold ${note.ok ? 'text-india-700' : 'text-alert-700'}`}>{note.text}</span>}
+        {saved ? <span className="ml-auto rounded bg-navy-900 px-2 py-1 text-xs font-bold text-white">हाथ से बना डिज़ाइन चालू</span> : <span className="ml-auto rounded bg-slate-200 px-2 py-1 text-xs font-bold">अभी ऑटो लेआउट</span>}
+      </div>
+
+      {!layout ? (
+        <p className="rounded-xl border border-dashed border-line p-10 text-center text-muted">{stories.length ? 'पेज तैयार हो रहे हैं…' : 'इस तारीख की कोई ई-पेपर खबर नहीं है।'}</p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {pages.map((p, i) => (
+                <button key={i} type="button" onClick={() => (setPageIdx(i), setSel(null))} className={`${small} ${i === pageIdx ? '!border-navy-900 !bg-navy-900 text-white' : ''}`}>
+                  पेज {i + 1} <span className="opacity-70">({p.length})</span>
+                </button>
+              ))}
+              <button type="button" className={small} disabled={pages.length >= MAX_PAGES} onClick={() => (update((l) => ({ pages: [...l.pages, []] })), setPageIdx(pages.length), setSel(null))}>
+                + नया पेज
+              </button>
+              {page.length === 0 && pages.length > 1 && (
+                <button type="button" className={`${small} text-alert-700`} onClick={() => (update((l) => ({ pages: l.pages.filter((_, i) => i !== pageIdx) })), setPageIdx((i) => Math.max(0, i - 1)))}>
+                  यह खाली पेज हटाएं
+                </button>
+              )}
+            </div>
+
+            <div ref={box} className="w-full">
+              <div style={{ width: GEO.pageW * scale, height: GEO.pageH * scale }} className="mx-auto">
+                <div
+                  ref={canvas}
+                  onPointerMove={onMove}
+                  onPointerUp={onUp}
+                  onPointerCancel={onUp}
+                  onPointerDown={() => setSel(null)}
+                  style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 2px 12px rgba(0,0,0,.25)' }}
+                >
+                  {/* column guides */}
+                  {Array.from({ length: GEO.cols }, (_, c) => (
+                    <div key={c} style={{ position: 'absolute', left: colX(c), top: contentTop, width: colW, height: contentBottom - contentTop, background: 'rgba(19,41,75,.04)', borderLeft: '1px dashed rgba(19,41,75,.15)', borderRight: '1px dashed rgba(19,41,75,.15)' }} />
+                  ))}
+                  <div style={{ position: 'absolute', left: GEO.margin, top: GEO.margin, right: GEO.margin, height: contentTop - GEO.margin - 12, background: '#e9eef5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 800, color: '#13294b', opacity: 0.8 }}>
+                    मास्टहेड (नाम · तारीख) — पेज {pageIdx + 1}
+                  </div>
+                  <div style={{ position: 'absolute', left: GEO.margin, right: GEO.margin, top: contentBottom, borderTop: '2px dashed #bbb' }} />
+
+                  {page.map((it) => {
+                    const s = pool.get(it.ref)
+                    if (!s) return null
+                    const over = (natural[it.ref] ?? 0) > it.h + 2
+                    const on = sel === it.ref
+                    return (
+                      <div
+                        key={it.ref}
+                        onPointerDown={(e) => onDown(e, it.ref, 'move')}
+                        style={{ position: 'absolute', left: colX(it.col), top: it.y, width: spanW(it.span), height: it.h, overflow: 'hidden', cursor: 'move', touchAction: 'none', outline: bad.has(it.ref) ? '4px solid #d0201a' : on ? '4px solid #1f6fd1' : '2px dashed rgba(19,41,75,.35)', outlineOffset: 2, background: '#fff' }}
+                      >
+                        <div data-inner={it.ref} style={{ pointerEvents: 'none' }}>
+                          <StoryBlock s={s} cols={it.span} scale={it.scale ?? 1} lang="hi" height={it.h} />
+                        </div>
+                        {over && <span style={{ position: 'absolute', left: 0, bottom: 0, background: '#f28c1b', color: '#000', fontSize: 20, fontWeight: 800, padding: '4px 10px' }}>✂ टेक्स्ट कट रहा है</span>}
+                        <span
+                          onPointerDown={(e) => onDown(e, it.ref, 'size')}
+                          title="खींचकर चौड़ाई / लंबाई बदलें"
+                          style={{ position: 'absolute', right: 0, bottom: 0, width: 44, height: 44, background: on ? '#1f6fd1' : 'rgba(19,41,75,.75)', color: '#fff', cursor: 'nwse-resize', touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+            {selItem && selStory ? (
+              <section className="space-y-3 rounded-xl border-2 border-[#1f6fd1] bg-bg p-3">
+                <p className="line-clamp-2 font-bold">{selStory.slot === 'ad' ? `विज्ञापन: ${selStory.title}` : selStory.title}</p>
+                {bad.has(selItem.ref) && <p className="rounded bg-alert-600/10 p-2 text-xs font-bold text-alert-700">यह किसी दूसरे ब्लॉक के ऊपर चढ़ा है — खिसकाकर अलग करें।</p>}
+                {(natural[selItem.ref] ?? 0) > selItem.h + 2 && <p className="rounded bg-saffron-500/20 p-2 text-xs font-bold">टेक्स्ट पूरा नहीं आ रहा — “ऊंचाई फिट करें” दबाएं, या कॉलम / अक्षर का आकार बदलें।</p>}
+                <Row label={`कॉलम (चौड़ाई): ${selItem.span}`}>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { span: selItem.span - 1 })}>−</button>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { span: selItem.span + 1 })}>+</button>
+                </Row>
+                <Row label={`ऊंचाई: ${selItem.h}`}>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { h: selItem.h - 40 })}>−</button>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { h: selItem.h + 40 })}>+</button>
+                  <button type="button" className={small} onClick={() => natural[selItem.ref] && setItem(selItem.ref, { h: natural[selItem.ref] + 4 })}>फिट करें</button>
+                </Row>
+                {selStory.slot !== 'ad' && (
+                  <Row label={`अक्षर का आकार: ${Math.round((selItem.scale ?? 1) * 100)}%`}>
+                    <button type="button" className={small} onClick={() => setItem(selItem.ref, { scale: (selItem.scale ?? 1) - 0.05 })}>A−</button>
+                    <button type="button" className={small} onClick={() => setItem(selItem.ref, { scale: (selItem.scale ?? 1) + 0.05 })}>A+</button>
+                  </Row>
+                )}
+                <Row label="बाएं / दाएं · ऊपर / नीचे">
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { col: selItem.col - 1 })}>◀</button>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { col: selItem.col + 1 })}>▶</button>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { y: selItem.y - 20 })}>▲</button>
+                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { y: selItem.y + 20 })}>▼</button>
+                </Row>
+                <label className="block text-sm font-semibold">
+                  दूसरे पेज पर भेजें
+                  <select className="mt-1 block w-full rounded-md border border-line bg-bg px-2 py-1.5" value={pageIdx} onChange={(e) => (toPage(selItem.ref, Number(e.target.value)), setPageIdx(Number(e.target.value)))}>
+                    {[...pages.map((_, i) => i), pages.length].map((i) => (
+                      <option key={i} value={i}>
+                        {i < pages.length ? `पेज ${i + 1}` : `नया पेज ${i + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" className={`${small} w-full text-alert-700`} onClick={() => remove(selItem.ref)}>
+                  इस पेज से हटाएं (नीचे की सूची में चला जाएगा)
+                </button>
+              </section>
+            ) : (
+              <p className="rounded-xl border border-dashed border-line bg-bg p-3 text-sm text-muted">किसी खबर / विज्ञापन पर क्लिक करें — यहाँ उसके बटन आएंगे।</p>
+            )}
+
+            <section className="rounded-xl border border-line bg-bg p-3">
+              <h2 className="mb-2 font-bold">पेज पर नहीं लगी ({unplaced.length})</h2>
+              {unplaced.length === 0 ? (
+                <p className="text-sm text-muted">सब कुछ किसी न किसी पेज पर लगा है ✔</p>
+              ) : (
+                <ul className="max-h-96 space-y-2 overflow-y-auto">
+                  {unplaced.map((s) => (
+                    <li key={s.id} className="rounded-lg border border-line p-2 text-sm">
+                      <p className="line-clamp-2 font-semibold">{s.slot === 'ad' ? `📢 विज्ञापन: ${s.title}` : s.slot === 'filler' ? `📌 ${s.title}` : s.title}</p>
+                      <button type="button" className={`${small} mt-1`} onClick={() => addToPage(s)}>
+                        पेज {pageIdx + 1} पर लगाएं
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {unplaced.some((s) => !s.slot) && <p className="mt-2 text-xs text-muted">जो खबर किसी पेज पर नहीं लगी, वह ई-पेपर में आखिर के पेजों पर अपने-आप लग जाएगी।</p>}
+            </section>
+          </aside>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="min-w-36 text-sm font-semibold">{label}</span>
+      {children}
+    </div>
+  )
+}

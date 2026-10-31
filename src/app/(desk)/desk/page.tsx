@@ -18,6 +18,7 @@ const ACTIONS = [
   { href: '/desk/team', title: 'हमारी टीम', hint: 'प्रोफ़ाइल जोड़ें / बदलें', color: 'bg-gold-400 text-navy-950' },
   { href: '/desk/ads', title: 'वेबसाइट विज्ञापन', hint: 'होम / खबर के अंदर / वीडियो में', color: 'bg-[#b8860b] text-white' },
   { href: '/desk/epaper-ads', title: 'ई-पेपर विज्ञापन', hint: 'सिर्फ ई-पेपर में, खबरों के बीच-बीच', color: 'bg-[#7a5a0a] text-white' },
+  { href: '/desk/epaper-layout', title: 'ई-पेपर डिज़ाइनर', hint: 'खबर / विज्ञापन खींचकर पेज खुद सेट करें', color: 'bg-[#0b3d91] text-white' },
   { href: '/hi/epaper', title: 'ई-पेपर', hint: 'आज का A3 अंक', color: 'bg-white text-navy-900 ring-1 ring-line' },
 ]
 

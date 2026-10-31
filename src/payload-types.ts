@@ -87,6 +87,7 @@ export interface Config {
     pronunciations: Pronunciation;
     'share-log': ShareLog;
     ads: Ad;
+    'epaper-layouts': EpaperLayout;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -114,6 +115,7 @@ export interface Config {
     pronunciations: PronunciationsSelect<false> | PronunciationsSelect<true>;
     'share-log': ShareLogSelect<false> | ShareLogSelect<true>;
     ads: AdsSelect<false> | AdsSelect<true>;
+    'epaper-layouts': EpaperLayoutsSelect<false> | EpaperLayoutsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -181,13 +183,6 @@ export interface Article {
    * लैपटॉप या मोबाइल से फोटो चुनें (बड़ी फोटो भी चलेगी)। फोटो न हो तो खाली छोड़ें।
    */
   heroImage?: (number | null) | Media;
-  gallery?:
-    | {
-        image: number | Media;
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
   /**
    * पूरी खबर यहाँ पेस्ट करें — यही वेबसाइट और ई-पेपर में छपती है। ई-पेपर में वही खबर आती है जिसमें यहाँ लिखा हो।
    */
@@ -411,9 +406,12 @@ export interface Article {
    */
   layout?: {
     /**
-     * टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।
+     * टिक करने पर खबर केवल ई-पेपर में छपेगी; वेबसाइट के होम, सेक्शन, खोज में नहीं दिखेगी।
      */
     epaperOnly?: boolean | null;
+    /**
+     * टिक रहे तो खबर उसी दिन के ई-पेपर में अपने-आप लग जाती है।
+     */
     inEpaper?: boolean | null;
     template?: ('1' | '2' | '3' | '4' | '5' | '6') | null;
     /**
@@ -455,6 +453,16 @@ export interface Article {
    */
   slug?: string | null;
   format: 'news' | 'factcheck' | 'investigation' | 'question' | 'tracker' | 'documents' | 'opinion' | 'link' | 'video';
+  /**
+   * मुख्य फोटो के अलावा जितनी चाहें फोटो — खबर के नीचे गैलरी में दिखती हैं।
+   */
+  gallery?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   tags?: (number | Tag)[] | null;
   /**
    * Legacy byline (use Reporter below)
@@ -966,9 +974,12 @@ export interface BreakingNew {
    */
   reporterName?: string | null;
   /**
-   * संवाददाता का नाम पाठकों को दिखाएँ
+   * वेबसाइट पर बीच-बीच में अचानक पॉप-अप में भी दिखाएँ (कुछ सेकंड बाद अपने-आप चला जाता है)
    */
   popup?: boolean | null;
+  /**
+   * संवाददाता का नाम पाठकों को दिखाएँ
+   */
   showReporter?: boolean | null;
   duration?: ('30m' | '1h' | '3h' | '6h' | '12h' | '24h' | 'manual') | null;
   publishedAt?: string | null;
@@ -1269,10 +1280,30 @@ export interface Ad {
    * Optional website of the advertiser
    */
   link?: string | null;
-  placements: ('epaper' | 'home-top' | 'article')[];
+  placements: ('epaper' | 'home-top' | 'article' | 'video')[];
   active?: boolean | null;
   startsAt?: string | null;
   endsAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "epaper-layouts".
+ */
+export interface EpaperLayout {
+  id: number;
+  date: string;
+  data:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  editedBy?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1379,6 +1410,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ads';
         value: number | Ad;
+      } | null)
+    | ({
+        relationTo: 'epaper-layouts';
+        value: number | EpaperLayout;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1432,13 +1467,6 @@ export interface ArticlesSelect<T extends boolean = true> {
   excerpt?: T;
   category?: T;
   heroImage?: T;
-  gallery?:
-    | T
-    | {
-        image?: T;
-        caption?: T;
-        id?: T;
-      };
   content?: T;
   sources?:
     | T
@@ -1525,6 +1553,13 @@ export interface ArticlesSelect<T extends boolean = true> {
       };
   slug?: T;
   format?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
   tags?: T;
   author?: T;
   reporterName?: T;
@@ -2014,6 +2049,17 @@ export interface AdsSelect<T extends boolean = true> {
   active?: T;
   startsAt?: T;
   endsAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "epaper-layouts_select".
+ */
+export interface EpaperLayoutsSelect<T extends boolean = true> {
+  date?: T;
+  data?: T;
+  editedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
