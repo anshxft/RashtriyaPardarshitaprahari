@@ -70,6 +70,8 @@ export const adHeight = (aspect: number) => Math.min(640, Math.round(spanW(SLOT_
 export const MAX_PAGES = 40
 /** One e-paper ad between the news after every this many stories. */
 export const AD_EVERY = 4
+/** How many upcoming stories to look at when filling a page's leftover space. */
+export const LOOKAHEAD = 12
 /** Smallest gap (px) worth filling with the paper's own box; anything smaller stays as white space. */
 export const PROMO_MIN = 36
 
@@ -176,6 +178,22 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     }
     queue.splice(0, queue.length, ...out)
   }
+  /** The later story that fills the most of this page's free space while fitting whole (stories only; ads keep their turn). */
+  const bestFit = (pg: PG, p: number) => {
+    let best: { i: number; s: EpStory; v: Variant; height: number; at: { c: number; y: number }; area: number } | null = null
+    for (let i = 0; i < Math.min(queue.length, LOOKAHEAD); i++) {
+      const { s, pin, cont } = queue[i]
+      if (s.slot === 'ad' || cont || (pin != null && pin !== p)) continue
+      for (const cols of [1, 2, 3, 4]) {
+        const v = { cols, scale: bodyScaleOf(s) }
+        const height = h(s, v)
+        const at = slot(pg, cols, height)
+        const area = cols * height
+        if (at && (!best || area > best.area)) best = { i, s, v, height, at, area }
+      }
+    }
+    return best
+  }
   // Client grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
   let lead = true
   while (queue.length) {
@@ -211,6 +229,15 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
         }
       }
       if (done) break
+      // Client: many stories on a page is fine, empty space is not. Before moving on, fill this page's free space with
+      // a later story that fits there whole (best fit, any width 1–4 columns), then try the current story again.
+      const fill = bestFit(pg, p)
+      if (fill) {
+        put(pg, p, fill.s, fill.v, fill.height, fill.at)
+        queue.splice(fill.i, 1)
+        p--
+        continue
+      }
       // Doesn't fit whole: fill the largest free area of this page with the start of the story (as many columns as are
       // free side by side, up to the full width) and carry the rest to the next page — so no page is left half empty.
       // A fresh story keeps the client grid (at most 4 columns); its carried-over part may take the full width.
