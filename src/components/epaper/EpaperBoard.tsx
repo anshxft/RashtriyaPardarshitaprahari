@@ -205,11 +205,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
             <p className="text-muted">
               {dateLabel} · {stories.length} {d.storiesWord} · {pages.length || '…'} {d.pageWord.toLowerCase()}
             </p>
-            {canEdit && (
-              <Link href={`/desk/epaper-layout?date=${date}`} className="mt-1 inline-block rounded-md bg-navy-900 px-3 py-1.5 text-sm font-bold text-white">
-                🖐 {manualPages ? 'हाथ से बना डिज़ाइन — डिज़ाइनर में बदलें' : 'ई-पेपर डिज़ाइनर (खींचकर सेट करें)'}
-              </Link>
-            )}
+
           </div>
           <label className="text-sm font-semibold">
             {d.editionOf}
