@@ -110,7 +110,7 @@ export async function getEpaperFillers(lang: Lang): Promise<EpStory[]> {
   const out: EpStory[] = []
   const now = new Date().toISOString()
   const base = { layout: resolveLayout({ columns: 2, autoFit: false }, { hasPhoto: false }), publishedAt: now, slot: 'filler' as const }
-  const msg = page ? lexicalToParagraphs(page.content).filter((p) => !p.startsWith('—')).slice(0, 3) : []
+  const msg = page ? lexicalToParagraphs(page.content).filter((p) => !p.startsWith('—') && p.length >= 80).slice(0, 3) : [] // real paragraphs only (no heading, greeting or signature)
   if (msg.length) {
     const url = `${siteUrl()}${paths.page(lang, 'editor-in-chief-message')}`
     out.push({ ...base, id: 'filler-editor', title: d.editorMessage, paragraphs: msg, reporter: settings.editorName || undefined, url, qrSvg: await qr(url) })
