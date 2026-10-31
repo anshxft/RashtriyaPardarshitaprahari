@@ -25,6 +25,8 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
   const pct = (n: number) => `${(n * 100).toFixed(2)}%`
   const screen = framed && ad ? { left: pct(ad.win.x), top: pct(ad.win.y), width: pct(ad.win.w), height: pct(ad.win.h) } : { left: '0%', top: '0%', width: '100%', height: '100%' }
   const banded = Boolean(top || bottom)
+  // Bands stay 1–2 lines: longer text gets smaller letters (the full headline is written above the player anyway).
+  const fit = (t: string) => (t.length <= 55 ? 'text-xl sm:text-3xl' : t.length <= 100 ? 'text-lg sm:text-2xl' : 'text-base sm:text-xl')
   const stage = (
     <div className={`relative aspect-video overflow-hidden bg-black ${banded ? '' : 'rounded-lg'}`}>
       {ad && (
@@ -96,14 +98,16 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
     <div className="tv-frame overflow-hidden rounded-lg bg-black">
       {top && (
         <>
-          <p className="tv-top px-3 py-2 text-center font-display text-xl leading-snug font-black text-white sm:px-5 sm:py-3 sm:text-3xl">{top}</p>
+          <p className={`tv-top line-clamp-2 px-3 py-1.5 text-center font-display leading-snug font-black text-white sm:px-5 sm:py-2 ${fit(top)}`} title={top}>
+            {top}
+          </p>
           <p className="tv-bar py-1 text-center text-base font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-2xl">
             <span className="tv-bar-text">HEADLINE NEWS</span>
           </p>
         </>
       )}
       {stage}
-      {bottom && <p className="tv-bottom px-3 py-2 text-center font-display text-xl leading-snug font-black text-black sm:px-5 sm:py-3 sm:text-3xl">{bottom}</p>}
+      {bottom && <p className={`tv-bottom line-clamp-2 px-3 py-1.5 text-center font-display leading-snug font-black text-black sm:px-5 sm:py-2 ${fit(bottom)}`} title={bottom}>{bottom}</p>}
     </div>
   )
 }
