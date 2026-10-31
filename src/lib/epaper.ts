@@ -459,3 +459,63 @@ export function toManual(pages: PackedPage[]): ManualLayout {
 export function isManualLayout(v: unknown): v is ManualLayout {
   return Boolean(v && typeof v === 'object' && Array.isArray((v as ManualLayout).pages) && (v as ManualLayout).pages.every((p) => Array.isArray(p)))
 }
+
+/**
+ * Text flow for hand layouts: each story's blocks (first part, then its “(जारी)” parts in page order) are filled in
+ * turn — every block takes as many paragraphs as fit in the size the editor gave it, the rest goes to the next part.
+ * Text still left after the last part opens a new part at the top of the next page; parts left empty are removed.
+ * `fit(story, from, span, scale, h)` = how many paragraphs starting at `from` fit (≥ 1).
+ */
+export function flowLayout(layout: ManualLayout, byId: Map<string, EpStory>, fit: (s: EpStory, from: number, span: number, scale: number, h: number) => number, heightOf?: (s: EpStory, from: number, take: number, span: number, scale: number) => number): ManualLayout {
+  const pages = layout.pages.map((p) => p.map((i) => ({ ...i })))
+  const bases = new Set(pages.flat().map((i) => i.ref.split('~')[0]))
+  for (const base of bases) {
+    const s = byId.get(base)
+    if (!s || s.slot || s.paragraphs.length < 2) continue
+    const where = () =>
+      pages
+        .flatMap((p, pi) => p.filter((i) => i.ref.split('~')[0] === base).map((it) => ({ it, pi })))
+        .sort((a, b) => a.pi - b.pi || a.it.y - b.it.y)
+    let parts = where()
+    let from = 0
+    const total = s.paragraphs.length
+    const filled = new Set<ManualItem>()
+    for (let k = 0; from < total && k < 40; k++) {
+      if (k >= parts.length) {
+        // new part: top of the next page (first free spot across its width), full remaining height
+        const prev = parts[parts.length - 1]
+        const pi = prev.pi + 1
+        while (pages.length <= pi) pages.push([])
+        const span = Math.max(2, prev.it.span)
+        const col = Math.min(prev.it.col, GEO.cols - span)
+        const y = Math.max(contentTop, ...pages[pi].filter((i) => i.col < col + span && col < i.col + i.span).map((i) => i.y + i.h + GEO.blockGap))
+        if (contentBottom - y < 120) {
+          pages.splice(pi, 0, []) // that page is full at this width: give the rest a fresh page right after
+        }
+        const yy = pages[pi].length ? y : contentTop
+        let ref = `${base}~c${pi + 1}`
+        while (pages.flat().some((i) => i.ref === ref)) ref += 'x'
+        pages[pi].push({ ref, col, span, y: yy, h: contentBottom - yy, scale: prev.it.scale })
+        parts = where()
+      }
+      const { it } = parts[k]
+      const n = Math.max(1, Math.min(total - from, fit(s, from, it.span, it.scale ?? 1, it.h)))
+      it.from = from
+      it.take = n
+      filled.add(it)
+      from += n
+    }
+    // parts no longer needed (the text now ends earlier)
+    for (const p of where()) if (!filled.has(p.it)) pages[p.pi] = pages[p.pi].filter((i) => i !== p.it)
+    // the story's last block ends where its text ends (no empty box; the space below goes to the helpline box)
+    const last = where().pop()
+    if (last && heightOf && last.it.take) last.it.h = Math.min(last.it.h, Math.ceil(heightOf(s, last.it.from ?? 0, last.it.take, last.it.span, last.it.scale ?? 1)) + 4)
+    // a story that fits whole in its first block needs no part markers
+    const left = where()
+    if (left.length === 1 && left[0].it.from === 0 && left[0].it.take === total) {
+      delete left[0].it.from
+      delete left[0].it.take
+    }
+  }
+  return { pages: pages.map((p) => p.map(clampItem)).filter((p, i, all) => p.length || i < all.length - 1) }
+}

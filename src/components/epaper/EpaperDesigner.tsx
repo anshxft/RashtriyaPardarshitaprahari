@@ -3,7 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, type PointerEvent as RPointerEvent } from 'react'
 import { resetEpaperLayoutAction, saveEpaperLayoutAction } from '@/app/(desk)/desk/epaper-layout/actions'
-import { clampItem, colW, colX, contentBottom, contentTop, GEO, manualStory, MAX_PAGES, spanW, toManual, type EpStory, type ManualItem, type ManualLayout } from '@/lib/epaper'
+import { flushSync } from 'react-dom'
+import { createRoot } from 'react-dom/client'
+import { clampItem, colW, colX, contentBottom, contentTop, flowLayout, GEO, manualStory, MAX_PAGES, spanW, toManual, type EpStory, type ManualItem, type ManualLayout } from '@/lib/epaper'
 import { StoryBlock } from './StoryBlock'
 import { usePack } from './usePack'
 
@@ -71,6 +73,15 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
     setNote({ ok: true, text: `डिज़ाइन के बाद अपने-आप बने ${extra.length} पेज भी यहाँ जोड़ दिए — बदलकर “सेव करें”।` })
   }, [restAdded, saved, leftover, rest.ready, rest.pages])
 
+  // Once the pages are there, flow every long story through its blocks (fixes text cut off in older designs).
+  const [flowed, setFlowed] = useState(false)
+  useEffect(() => {
+    if (flowed || !layout || (saved && leftover.length && !restAdded)) return
+    setFlowed(true)
+    reflow(Boolean(saved))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowed, layout, restAdded])
+
   useEffect(() => {
     const el = box.current
     if (!el) return
@@ -93,6 +104,44 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
     setLayout((l) => (l ? fn(l) : l))
     setDirty(true)
   }
+  // Re-flow text after a size change: each block keeps the size given to it and takes the paragraphs that fit; the rest
+  // moves on to the story's next “(जारी)” block (a new one is opened on the next page when needed).
+  const layoutRef = useRef(layout)
+  layoutRef.current = layout
+  const reflow = (markDirty = true) =>
+    setTimeout(async () => {
+      await document.fonts.ready // measure with the real newspaper fonts
+      const l = layoutRef.current
+      if (!l) return
+      const host = document.createElement('div')
+      host.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden;pointer-events:none'
+      document.body.appendChild(host)
+      const root = createRoot(host)
+      const height = (s: EpStory, span: number, scale: number) => {
+        flushSync(() => root.render(<StoryBlock s={s} cols={span} scale={scale} lang="hi" />))
+        return (host.firstElementChild as HTMLElement).getBoundingClientRect().height
+      }
+      try {
+        const next = flowLayout(l, pool, (s, from, span, scale, h) => {
+          const part = (k: number) => manualStory({ ref: from > 0 ? `${s.id}~c1` : s.id, col: 0, span, y: 0, h, from, take: k }, pool)!
+          let lo = 1
+          let hi = s.paragraphs.length - from
+          if (height(part(hi), span, scale) <= h) return hi
+          while (lo < hi) {
+            const mid = Math.ceil((lo + hi) / 2)
+            if (height(part(mid), span, scale) <= h) lo = mid
+            else hi = mid - 1
+          }
+          return lo
+        }, (s, from, take, span, scale) => height(manualStory({ ref: from > 0 ? `${s.id}~c1` : s.id, col: 0, span, y: 0, h: 0, from, take }, pool)!, span, scale))
+        if (JSON.stringify(next) !== JSON.stringify(l)) {
+          setLayout(next)
+          if (markDirty) setDirty(true)
+        }
+      } finally {
+        setTimeout(() => (root.unmount(), host.remove()), 0)
+      }
+    }, 30)
   const setItem = (ref: string, patch: Partial<ManualItem>) =>
     update((l) => ({ pages: l.pages.map((p) => p.map((i) => (i.ref === ref ? clampItem({ ...i, ...patch }) : i))) }))
 
@@ -158,6 +207,7 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
       setPageIdx(target)
     }
     const up = () => {
+      if (drag.current) reflow()
       drag.current = null
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
@@ -338,18 +388,18 @@ export function EpaperDesigner({ date, dateLabel, editions, stories, ads, filler
                 {bad.has(selItem.ref) && <p className="rounded bg-alert-600/10 p-2 text-xs font-bold text-alert-700">यह किसी दूसरे ब्लॉक के ऊपर चढ़ा है — खिसकाकर अलग करें।</p>}
                 {(natural[selItem.ref] ?? 0) > selItem.h + 2 && <p className="rounded bg-saffron-500/20 p-2 text-xs font-bold">टेक्स्ट पूरा नहीं आ रहा — “ऊंचाई फिट करें” दबाएं, या कॉलम / अक्षर का आकार बदलें।</p>}
                 <Row label={`कॉलम (चौड़ाई): ${selItem.span}`}>
-                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { span: selItem.span - 1 })}>−</button>
-                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { span: selItem.span + 1 })}>+</button>
+                  <button type="button" className={small} onClick={() => (setItem(selItem.ref, { span: selItem.span - 1 }), reflow())}>−</button>
+                  <button type="button" className={small} onClick={() => (setItem(selItem.ref, { span: selItem.span + 1 }), reflow())}>+</button>
                 </Row>
                 <Row label={`ऊंचाई: ${selItem.h}`}>
-                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { h: selItem.h - 40 })}>−</button>
-                  <button type="button" className={small} onClick={() => setItem(selItem.ref, { h: selItem.h + 40 })}>+</button>
+                  <button type="button" className={small} onClick={() => (setItem(selItem.ref, { h: selItem.h - 40 }), reflow())}>−</button>
+                  <button type="button" className={small} onClick={() => (setItem(selItem.ref, { h: selItem.h + 40 }), reflow())}>+</button>
                   <button type="button" className={small} onClick={() => natural[selItem.ref] && setItem(selItem.ref, { h: natural[selItem.ref] + 4 })}>फिट करें</button>
                 </Row>
                 {selStory.slot !== 'ad' && (
                   <Row label={`अक्षर का आकार: ${Math.round((selItem.scale ?? 1) * 100)}%`}>
-                    <button type="button" className={small} onClick={() => setItem(selItem.ref, { scale: (selItem.scale ?? 1) - 0.05 })}>A−</button>
-                    <button type="button" className={small} onClick={() => setItem(selItem.ref, { scale: (selItem.scale ?? 1) + 0.05 })}>A+</button>
+                    <button type="button" className={small} onClick={() => (setItem(selItem.ref, { scale: (selItem.scale ?? 1) - 0.05 }), reflow())}>A−</button>
+                    <button type="button" className={small} onClick={() => (setItem(selItem.ref, { scale: (selItem.scale ?? 1) + 0.05 }), reflow())}>A+</button>
                   </Row>
                 )}
                 <Row label="बाएं / दाएं · ऊपर / नीचे">
