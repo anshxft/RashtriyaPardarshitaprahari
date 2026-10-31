@@ -47,8 +47,15 @@ export function toFlashItem(f: BreakingNew, lang: Lang): FlashItem {
   }
 }
 
-/** Live flashes, highest priority first, newest first within the same priority. */
-export async function getFlash(lang: Lang, limit = 10): Promise<FlashItem[]> {
-  const res = await (await db()).find({ collection: 'breaking-news', locale: lang, where: liveFlashWhere(), sort: ['-priority', '-publishedAt'], limit, depth: 1 })
-  return (res.docs as BreakingNew[]).map((f) => toFlashItem(f, lang)).filter((f) => f.lines.length > 0)
+/**
+ * Live flashes, highest priority first, newest first within the same priority. The desk keeps two separate sections:
+ * `ticker` = ब्रेकिंग फ्लैश (red strip + home card), `popup` = फ्लैश पॉप-अप (corner pop-up only).
+ */
+export async function getFlash(lang: Lang, limit = 10, kind: 'ticker' | 'popup' = 'ticker'): Promise<FlashItem[]> {
+  const res = await (await db()).find({ collection: 'breaking-news', locale: lang, where: liveFlashWhere(), sort: ['-priority', '-publishedAt'], limit: 60, depth: 1 })
+  return (res.docs as BreakingNew[])
+    .filter((f) => Boolean(f.popup) === (kind === 'popup'))
+    .map((f) => toFlashItem(f, lang))
+    .filter((f) => f.lines.length > 0)
+    .slice(0, limit)
 }

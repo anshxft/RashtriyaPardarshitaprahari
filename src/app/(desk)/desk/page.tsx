@@ -13,10 +13,22 @@ const ACTIONS = [
   { href: '/desk/link', title: 'लिंक न्यूज़', hint: 'दूसरे पोर्टल की खबर का कार्ड', color: 'bg-navy-900 text-white' },
   { href: '/desk/video', title: 'वीडियो अपलोड', hint: 'लोगो अपने-आप लगेगा', color: 'bg-saffron-500 text-navy-950' },
   { href: '/desk/breaking', title: 'ब्रेकिंग न्यूज़', hint: 'ऊपर की लाल पट्टी', color: 'bg-alert-600 text-white' },
+  { href: '/desk/popup', title: 'फ्लैश पॉप-अप', hint: 'वेबसाइट पर बीच-बीच में पॉप-अप', color: 'bg-[#8b1410] text-white' },
+  { href: '/desk/inbox', title: 'पाठकों के संदेश', hint: 'शिकायत / खबर / संपर्क / मुलाकात', color: 'bg-[#2f5d50] text-white' },
   { href: '/desk/team', title: 'हमारी टीम', hint: 'प्रोफ़ाइल जोड़ें / बदलें', color: 'bg-gold-400 text-navy-950' },
   { href: '/desk/ads', title: 'वेबसाइट विज्ञापन', hint: 'होम / खबर के अंदर / वीडियो में', color: 'bg-[#b8860b] text-white' },
   { href: '/desk/epaper-ads', title: 'ई-पेपर विज्ञापन', hint: 'सिर्फ ई-पेपर में, खबरों के बीच-बीच', color: 'bg-[#7a5a0a] text-white' },
   { href: '/hi/epaper', title: 'ई-पेपर', hint: 'आज का A3 अंक', color: 'bg-white text-navy-900 ring-1 ring-line' },
+]
+
+const MORE: [string, string][] = [
+  ['/admin/collections/corrections', 'सुधार / स्पष्टीकरण'],
+  ['/admin/collections/categories', 'श्रेणियाँ (कैटेगरी)'],
+  ['/admin/collections/tags', 'टैग'],
+  ['/admin/collections/authors', 'लेखक'],
+  ['/admin/collections/pages', 'पेज (हमारे बारे में आदि)'],
+  ['/admin/collections/pronunciations', 'आवाज़ का उच्चारण'],
+  ['/admin/globals/site-settings', 'वेबसाइट सेटिंग'],
 ]
 
 
@@ -55,6 +67,19 @@ export default async function DeskHome() {
           </Link>
         ))}
       </div>
+
+      {user.role !== 'reporter' && (
+        <section className="rounded-xl border border-line bg-bg p-4">
+          <h2 className="mb-2 font-display text-base font-bold">बाकी सब (एडमिन में खुलेगा)</h2>
+          <div className="flex flex-wrap gap-2 text-sm">
+            {MORE.map(([href, label]) => (
+              <Link key={href} href={href} className="rounded-full border border-line px-3 py-1.5 font-semibold hover:bg-surface">
+                {label}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {failedShares > 0 && (
         <Link href="/desk/share-log?failed=1" className="block rounded-xl border-2 border-alert-600 bg-alert-600/10 p-3 font-semibold text-alert-700">
