@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { currentUser } from '@/lib/auth'
 import { db } from '@/lib/data'
 
+export type AdMode = 'web' | 'epaper'
+const WEB = ['home-top', 'article', 'video']
 export type AdInput = { id?: number; title: string; imageId: number | null; link: string; placements: string[]; active: boolean; startsAt: string; endsAt: string }
 type Res = { ok: true; id?: number } | { ok: false; error: string }
 const PLACES = ['epaper', 'home-top', 'article', 'video']
@@ -17,14 +19,18 @@ const fail = (e: unknown): Res => ({ ok: false, error: (e as Error).message?.inc
 const refresh = () => revalidatePath('/', 'layout')
 
 /** Create or edit an ad. Access rules of the Ads collection apply (editors and admins). */
-export async function saveAdAction(input: AdInput): Promise<Res> {
+export async function saveAdAction(input: AdInput, mode: AdMode = 'web'): Promise<Res> {
   try {
     const { user, payload } = await who()
     const title = input.title.trim().slice(0, 120)
     if (!title) return { ok: false, error: 'विज्ञापन का नाम लिखें' }
     if (!input.imageId) return { ok: false, error: 'विज्ञापन की फोटो डालें' }
-    const placements = input.placements.filter((p) => PLACES.includes(p))
-    if (!placements.length) return { ok: false, error: 'कम से कम एक जगह चुनें' }
+    // Each Desk section manages only its own places; whatever the ad already has in the other section is kept.
+    const mine = mode === 'epaper' ? ['epaper'] : input.placements.filter((p) => WEB.includes(p))
+    if (!mine.length) return { ok: false, error: 'कम से कम एक जगह चुनें' }
+    const before = input.id ? (((await payload.findByID({ collection: 'ads', id: input.id, depth: 0, user, overrideAccess: false })) as { placements?: string[] }).placements || []) : []
+    const keep = before.filter((p) => (mode === 'epaper' ? p !== 'epaper' : !WEB.includes(p)))
+    const placements = [...new Set([...keep, ...mine])].filter((p) => PLACES.includes(p))
     const link = input.link.trim()
     if (link && !/^https?:\/\//.test(link)) return { ok: false, error: 'लिंक https:// से शुरू होना चाहिए' }
     const data = {
@@ -57,10 +63,14 @@ export async function setAdActiveAction(id: number, active: boolean): Promise<Re
   }
 }
 
-export async function deleteAdAction(id: number): Promise<Res> {
+export async function deleteAdAction(id: number, mode: AdMode = 'web'): Promise<Res> {
   try {
     const { user, payload } = await who()
-    await payload.delete({ collection: 'ads', id, user, overrideAccess: false })
+    // An ad that also runs in the other section is only removed from this one.
+    const doc = (await payload.findByID({ collection: 'ads', id, depth: 0, user, overrideAccess: false })) as { placements?: string[] }
+    const rest = (doc.placements || []).filter((p) => (mode === 'epaper' ? p !== 'epaper' : !WEB.includes(p)))
+    if (rest.length) await payload.update({ collection: 'ads', id, data: { placements: rest } as never, user, overrideAccess: false })
+    else await payload.delete({ collection: 'ads', id, user, overrideAccess: false })
     refresh()
     return { ok: true }
   } catch (e) {

@@ -68,6 +68,8 @@ export const AD_LABEL_H = 26
 export const adHeight = (aspect: number) => Math.min(640, Math.round(spanW(SLOT_COLS) * aspect) + AD_LABEL_H + 8)
 
 export const MAX_PAGES = 40
+/** One e-paper ad between the news after every this many stories. */
+export const AD_EVERY = 4
 /** Smallest gap (px) worth filling with the paper's own box; anything smaller stays as white space. */
 export const PROMO_MIN = 36
 
@@ -100,7 +102,7 @@ export function variantsFor(s: EpStory, take?: number): Variant[] {
 
 type Measure = (s: EpStory, v: Variant) => number
 
-export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null; fillers?: EpStory[] } = {}): PackedPage[] {
+export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory | null; fillers?: EpStory[]; ads?: EpStory[] } = {}): PackedPage[] {
   type PG = { colTop: number[]; placed: Placed[] }
   const pages: PG[] = []
   const newPage = (): PG => {
@@ -162,10 +164,36 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       adPlaced = true
     }
   }
+  // Desk → ई-पेपर विज्ञापन: ads go between the news, one after every AD_EVERY stories, taking turns (the page-1 column ad
+  // only repeats here when it is the only one).
+  const between = (extra.ads || []).filter((a) => a.ad && a.photo && (!adPlaced || a.id !== extra.ad?.id || (extra.ads || []).length === 1))
+  if (between.length) {
+    const out: typeof queue = []
+    let n = 0
+    for (const item of queue) {
+      out.push(item)
+      if (!item.pin && ++n % AD_EVERY === 0) out.push({ s: { ...between[(n / AD_EVERY - 1) % between.length], slot: 'ad' as const, id: `ad~${n}` }, pin: null, cont: false })
+    }
+    queue.splice(0, queue.length, ...out)
+  }
   // Client grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
   let lead = true
   while (queue.length) {
     const { s, pin, cont } = queue.shift()!
+    if (s.slot === 'ad') {
+      // an ad between the news: 2 columns, never split; next page if this one has no room
+      const v = { cols: SLOT_COLS, scale: 1 }
+      const height = h(s, v)
+      for (let p = pages.length; ; p++) {
+        while (pages.length < p) newPage()
+        const at = slot(pages[p - 1], v.cols, height)
+        if (at) {
+          put(pages[p - 1], p, s, v, height, at)
+          break
+        }
+      }
+      continue
+    }
     const vs = cont ? variantsFor({ ...s, layout: { ...s.layout, columns: 4, autoFit: false } }) : variantsFor({ ...s, layout: { ...s.layout, columns: lead ? 4 : 2, autoFit: true } })
     if (!cont) lead = false
     const target = pin || 1

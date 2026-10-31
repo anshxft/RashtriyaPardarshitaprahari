@@ -3,7 +3,7 @@ import { publicArticleWhere } from '@/collections/Articles'
 import { proxied } from '@/components/ShareCard'
 import type { Article } from '@/payload-types'
 import { istDate } from './articleHooks'
-import { asCat, cardImage, db, getAd, getBySlug, getSettings } from './data'
+import { asCat, cardImage, db, getAds, getBySlug, getSettings } from './data'
 import type { EpStory } from './epaper'
 import { lexicalToParagraphs, storyText } from './lexical'
 import { t, type Lang } from './i18n'
@@ -80,13 +80,15 @@ export async function listEditions(limitDays = 30): Promise<{ date: string; coun
   return [...count.entries()].slice(0, limitDays).map(([date, n]) => ({ date, count: n }))
 }
 
-/** The live e-paper advertisement (Advertisement Manager, placement “epaper”) as a page-1 column block, or null. */
-export async function getEpaperAd(): Promise<EpStory | null> {
-  const ad = await getAd('epaper')
-  if (!ad) return null
+/** Every live e-paper ad (Desk → ई-पेपर विज्ञापन) as blocks: the first takes the page-1 column, the rest go between the news. */
+export async function getEpaperAds(): Promise<EpStory[]> {
+  return (await getAds('epaper')).map((ad) => toAdStory(ad))
+}
+
+function toAdStory(ad: { id?: number; title: string; image: string; link?: string | null; w?: number | null; h?: number | null }): EpStory {
   const known = ad.image.startsWith('/') || /vercel-storage\.com\//.test(ad.image)
   return {
-    id: 'ad',
+    id: `ad-${ad.id ?? 0}`,
     title: ad.title,
     url: ad.link || '',
     paragraphs: [],
