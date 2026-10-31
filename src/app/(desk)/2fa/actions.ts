@@ -12,7 +12,7 @@ const LOCK_MS = 15 * 60_000
 /** Checks the 6-digit code; on success sets the signed "2-step done" cookie. Wrong codes are counted and lock the account for 15 min. */
 export async function verifyTwoFactor(formData: FormData) {
   const user = await currentUser(true)
-  if (!user) redirect('/admin/login?redirect=/2fa')
+  if (!user) redirect('/login?next=/2fa')
   const next = String(formData.get('next') || '/desk')
   const back = (e: string) => redirect(`/2fa?err=${e}&next=${encodeURIComponent(next)}`)
   const payload = await db()

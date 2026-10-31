@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 const ITEMS = [
   { href: '/desk', label: 'होम', match: /^\/desk$/ },
@@ -32,14 +32,13 @@ export function DeskNav({ bottom }: { bottom?: boolean }) {
 }
 
 export function LogoutButton() {
-  const router = useRouter()
   return (
     <button
       type="button"
       className="rounded px-2 py-1 hover:bg-white/10"
       onClick={async () => {
         await fetch('/api/users/logout', { method: 'POST' })
-        router.push('/admin/login?redirect=/desk')
+        window.location.assign('/login?next=/desk')
       }}
     >
       बाहर
