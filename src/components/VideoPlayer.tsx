@@ -5,7 +5,11 @@ import { VideoStage, type FlashProps, type VideoTags } from './VideoStage'
 export type WM = { enabled?: boolean | null; position?: string | null; sizePercent?: number | null; opacity?: number | null; marginPercent?: number | null }
 
 /** Poster / thumbnail through the checking route (never a raw storage address). */
-export const videoPoster = (v: Pick<Video, 'id' | 'posterUrl' | 'thumbnail'>) => (v.posterUrl || v.thumbnail ? `/api/v/${v.id}/poster` : undefined)
+// ?t= changes when the thumbnail is changed, so browsers never keep showing the old picture.
+export const videoPoster = (v: Pick<Video, 'id' | 'posterUrl' | 'thumbnail'>) => {
+  const t = typeof v.thumbnail === 'object' && v.thumbnail ? v.thumbnail.id : v.thumbnail
+  return v.posterUrl || t ? `/api/v/${v.id}/poster?t=${t || 'auto'}` : undefined
+}
 export const videoThumb = videoPoster
 
 /**

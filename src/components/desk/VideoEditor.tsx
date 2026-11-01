@@ -218,6 +218,19 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         )}
       </section>
 
+      {/* thumbnail: the cover photo readers see before pressing play */}
+      <section className={`${card} space-y-2`}>
+        <p className="font-display text-lg font-bold">🖼 थंबनेल (कवर फोटो)</p>
+        <p className="text-sm text-muted">वेबसाइट पर वीडियो की लिस्ट, होम पेज और Play दबाने से पहले यही फोटो दिखेगी। न डालें तो वीडियो का एक फ्रेम अपने-आप लगेगा।</p>
+        {!f.thumb.id && f.posterUrl && (
+          <div>
+            <p className="text-xs font-semibold text-muted">अभी अपने-आप बना थंबनेल:</p>
+            <img src={f.posterUrl} alt="" className="mt-1 aspect-video w-56 rounded object-cover ring-1 ring-line" />
+          </div>
+        )}
+        <PhotoField photo={f.thumb} onChange={(p) => set('thumb', p)} alt={f.title} credit="" onCredit={() => {}} />
+      </section>
+
       {/* 2 · fields (only the ones the spec asks for) */}
       <section className={`${card} space-y-3`}>
         <label className="block text-sm font-semibold">
@@ -289,11 +302,6 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <p className="font-semibold">तारीख और समय</p>
             <p className="mt-2 text-muted">प्रकाशित करते समय अपने-आप (भारतीय समय)। आगे के लिए नीचे “शेड्यूल” चुनें।</p>
           </div>
-        </div>
-        <div>
-          <p className="mb-1 text-sm font-semibold">थंबनेल (खाली = वीडियो का एक फ्रेम अपने-आप)</p>
-          {!f.thumb.id && f.posterUrl && <img src={f.posterUrl} alt="" className="mb-2 aspect-video w-48 rounded object-cover" />}
-          <PhotoField photo={f.thumb} onChange={(p) => set('thumb', p)} alt={f.title} credit="" onCredit={() => {}} />
         </div>
       </section>
 
