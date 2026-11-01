@@ -42,8 +42,13 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
           <div className="mt-3 flex justify-center">
             <Qr value={otpauthUri(secret, user.email)} size={180} />
           </div>
+          {/* Setting up on the same phone that shows this page: the QR can't be scanned, so open the app directly. */}
+          <a href={otpauthUri(secret, user.email)} className="mt-3 block rounded-lg bg-india-600 px-4 py-3 text-center font-bold text-white">
+            📱 इसी फ़ोन के ऑथेंटिकेटर ऐप में जोड़ें
+          </a>
+          <p className="mt-1 text-center text-xs text-muted">(यह पेज उसी फ़ोन में खुला हो जिसमें Google Authenticator है)</p>
           <p className="mt-2 text-center text-xs break-all text-muted">
-            QR न चले तो यह कोड ऐप में हाथ से डालें: <code>{secret}</code>
+            QR / बटन न चले तो ऐप में “Enter a setup key” चुनकर यह कोड हाथ से डालें: <code>{secret}</code>
           </p>
         </div>
       )}
