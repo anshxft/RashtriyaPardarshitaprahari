@@ -1,5 +1,8 @@
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import { PackageRecorder } from '@/components/desk/PackageRecorder'
+import { resolveUrl } from '@/lib/storage'
+import type { Video } from '@/payload-types'
 import { ShareCard } from '@/components/ShareCard'
 import { StoryTools } from '@/components/StoryTools'
 import { currentUser } from '@/lib/auth'
@@ -24,8 +27,42 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
   if (!allowed(user, 'download')) return <p className="rounded-xl bg-bg p-6 text-center">डाउनलोड का अधिकार आपकी भूमिका में नहीं है।</p>
   const a = await getArticleForPreview('hi', id, user)
   if (!a) notFound()
-  // Video news: “Download” gives just the video (website version with the logo) — no news card / PDF / text.
-  if (a.format === 'video' && a.video) redirect(`/api/desk/download?video=${typeof a.video === 'object' ? a.video.id : a.video}&kind=published`)
+  // Video news: the video itself — with the whole on-screen package (made in this browser), or the plain file.
+  if (a.format === 'video' && a.video) {
+    const vid = typeof a.video === 'object' ? a.video.id : a.video
+    const v = (await (await db()).findByID({ collection: 'videos', id: vid, depth: 0, draft: true })) as Video
+    const src = await resolveUrl(v.processedUrl)
+    const stamp0 = a.firstPublishedAt || a.publishedAt
+    return (
+      <div className="max-w-3xl space-y-4">
+        <h1 className="font-display text-xl font-extrabold text-navy-900">⬇ वीडियो डाउनलोड</h1>
+        <p className="rounded-xl bg-bg p-4 font-semibold">{a.title}</p>
+        {src ? (
+          <PackageRecorder
+            onDownload={logDownload.bind(null, a.id)}
+            input={{
+              src,
+              fileName: downloadName(a.newsId, a.title, stamp0, 'mp4').replace(/\.mp4$/, ''),
+              top: a.title,
+              bottom: a.subheadline,
+              script: a.flash?.enabled ? a.flash?.script : null,
+              breaking: Boolean(a.flash?.breaking),
+              place: a.videoTag?.place,
+              name: a.videoTag?.name,
+              role: a.videoTag?.role,
+              ticker: a.videoTag?.ticker,
+            }}
+          />
+        ) : (
+          <p className="rounded-xl border border-line bg-bg p-4 text-muted">वीडियो अभी तैयार हो रहा है — प्रोसेसिंग पूरी होने के बाद यहाँ आएं।</p>
+        )}
+        <a className={row} href={`/api/desk/download?video=${vid}&kind=published`}>
+          सिर्फ वीडियो (बिना डिज़ाइन, लोगो के साथ) <span aria-hidden>⬇</span>
+        </a>
+        <p className="text-xs text-muted">हर डाउनलोड ऑडिट लॉग में दर्ज होता है।</p>
+      </div>
+    )
+  }
   const d = t('hi')
   const settings = await getSettings('hi')
   const img = cardImage(a, 'hero')
