@@ -78,7 +78,8 @@ export const otpauthUri = (secretB32: string, account: string, issuer = 'रा�
 
 // ── "2FA done" cookie: signed (userId, expiry) — checked by the proxy and by currentUser() ─────────
 export const TWOFA_COOKIE = 'prahari-2fa'
-export const TWOFA_TTL_MS = 8 * 60 * 60 * 1000
+/** “Trusted device”: once the code is entered in a browser, that browser is not asked again for 90 days (per user). */
+export const TWOFA_TTL_MS = 90 * 24 * 60 * 60 * 1000
 const sig = (s: string) => createHmac('sha256', key('2fa')).update(s).digest('base64url')
 export function twofaIssue(userId: string | number, now = Date.now()): string {
   const body = `${userId}.${now + TWOFA_TTL_MS}`

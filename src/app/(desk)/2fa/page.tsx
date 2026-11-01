@@ -59,6 +59,7 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
         </label>
         <input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required autoFocus className="w-full rounded-lg border border-line bg-bg px-3 py-3 text-center text-2xl tracking-[0.4em]" />
         <button className="w-full rounded-lg bg-navy-900 px-4 py-3 font-bold text-white">{enrolling ? 'चालू करें और आगे बढ़ें' : 'आगे बढ़ें'}</button>
+        <p className="text-center text-xs text-muted">एक बार कोड डालने के बाद इस फोन / कंप्यूटर पर 90 दिन तक दोबारा कोड नहीं मांगा जाएगा। किसी और के या सार्वजनिक कंप्यूटर पर काम खत्म होने पर लॉग-आउट करें।</p>
       </form>
       <p className="mt-6 text-center text-sm">
         <a href="/admin/logout" className="text-link underline">

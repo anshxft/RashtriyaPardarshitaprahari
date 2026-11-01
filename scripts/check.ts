@@ -94,7 +94,7 @@ assert.equal(totpVerify(RFC, '000000', 0, 59_000), null)
 assert.equal(unseal(seal('गुप्त')).toString(), 'गुप्त')
 assert.throws(() => unseal(seal('x').slice(0, -2) + 'AA'))
 const ck = twofaIssue(7)
-assert.ok(twofaValid(ck, 7) && !twofaValid(ck, 8) && !twofaValid(ck.slice(0, -1) + 'x', 7) && !twofaValid(ck, 7, Date.now() + 9 * 3600_000) && !twofaValid(undefined, 7))
+assert.ok(twofaValid(ck, 7) && !twofaValid(ck, 8) && !twofaValid(ck.slice(0, -1) + 'x', 7) && !twofaValid(ck, 7, Date.now() + 91 * 86_400_000) && twofaValid(ck, 7, Date.now() + 89 * 86_400_000) && !twofaValid(undefined, 7))
 assert.equal(jwtUserId('a.' + Buffer.from('{"id":5}').toString('base64url') + '.c'), '5')
 
 // contact numbers: every common way of writing an Indian mobile number → 10 digits; junk never becomes a link
