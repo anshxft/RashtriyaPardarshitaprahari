@@ -273,7 +273,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <input value={f.tagRole} onChange={(e) => set('tagRole', e.target.value)} maxLength={60} className={`${input} mt-1`} placeholder="जैसे: स्थानीय ग्रामीण" />
           </label>
           <label className="block text-sm font-semibold sm:col-span-3">
-            नीचे चलने वाली सफेद पट्टी <span className="font-normal text-muted">— हर लाइन अलग सूचना; हेल्पलाइन / वेबसाइट के साथ चलेगी</span>
+            नीचे चलने वाली सफेद पट्टी <span className="font-normal text-muted">— हर लाइन अलग सूचना; पहले यह चलेगी, फिर हमेशा वाली अपील (खबरें भेजें / संवाददाता बनें / हेल्पलाइन)</span>
             <textarea value={f.ticker} onChange={(e) => set('ticker', e.target.value)} rows={3} maxLength={1500} className={`${input} mt-1`} placeholder={'जैसे: कल सुबह 10 बजे जिला मुख्यालय पर धरना\nअपनी समस्या भेजें — व्हाट्सऐप 94319 24522'} />
           </label>
         </div>

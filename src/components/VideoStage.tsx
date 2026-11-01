@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { HELPLINE, TAGLINE_SHORT } from '@/content/brand'
+import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
 import { flashTimes } from '@/lib/videoArgs'
 
 export type FlashProps = { on: boolean; voice?: boolean; script: string; breaking?: boolean; repeat?: boolean; intervalSec?: number }
@@ -215,10 +215,11 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
   // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
   const cur = lines[li % Math.max(1, nLines)]
-  // Desk lines (one per line) run first, then the paper's own name · tagline · helpline · website.
+  // Desk lines for this video (one per line) run first, then the paper's standing appeal (client's text).
   const own = (tags?.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
-  const ticker = [...own, 'राष्ट्रीय पारदर्शिता प्रहरी', TAGLINE_SHORT, `हेल्पलाइन (24x7): ${HELPLINE}`, 'www.rashtriyapardarshitaprahari.org'].join('  •  ') + '  •  '
-  const tickerSec = Math.max(30, Math.round(ticker.length * 0.35))
+  const ticker = [...own, ...VIDEO_TICKER_DEFAULT].join('   ✦   ') + '   ✦   '
+  // ~60 px a second, like a TV ticker (the text is written twice so the loop has no gap)
+  const tickerSec = Math.max(30, Math.round(ticker.length * 0.26 + 12))
   return (
     <div className="tv-frame tv-redframe overflow-hidden rounded-lg p-1 sm:p-1.5">
       {top && (
@@ -258,7 +259,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         </div>
       )}
       <div className="mt-1 overflow-hidden bg-white py-0.5 text-[11px] font-bold whitespace-nowrap text-[#7a0000] sm:text-sm">
-        <span className="tv-ticker inline-block" style={{ animationDuration: `${tickerSec * 2}s` }}>
+        <span className="tv-ticker inline-block" style={{ animationDuration: `${tickerSec}s` }}>
           {ticker.repeat(2)}
         </span>
       </div>
