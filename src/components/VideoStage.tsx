@@ -109,6 +109,18 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   const banded = Boolean(top || bottom)
   // Bands stay 1–2 lines: longer text gets smaller letters (the full headline is written above the player anyway).
   const fit = (t: string) => (t.length <= 55 ? 'text-xl sm:text-3xl' : t.length <= 100 ? 'text-lg sm:text-2xl' : 'text-base sm:text-xl')
+  // Desk lines for this video (one per line) run first, then the paper's standing appeal (client's text).
+  const own = (tags?.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
+  const ticker = [...own, ...VIDEO_TICKER_DEFAULT].join('   ✦   ') + '   ✦   '
+  // Fixed speed whatever the text length: the real width is measured and the run takes width ÷ speed seconds.
+  const tickerRef = useRef<HTMLSpanElement>(null)
+  const [tickerSec, setTickerSec] = useState(60)
+  useEffect(() => {
+    const el = tickerRef.current
+    if (!el) return
+    const pxPerSec = window.innerWidth < 640 ? 70 : 110
+    setTickerSec(Math.max(8, Math.round(el.scrollWidth / pxPerSec)))
+  }, [ticker])
   const stage = (
     <div className={`relative aspect-video overflow-hidden bg-black ${banded ? '' : 'rounded-lg'}`}>
       {ad && (
@@ -215,11 +227,6 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
   // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
   const cur = lines[li % Math.max(1, nLines)]
-  // Desk lines for this video (one per line) run first, then the paper's standing appeal (client's text).
-  const own = (tags?.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
-  const ticker = [...own, ...VIDEO_TICKER_DEFAULT].join('   ✦   ') + '   ✦   '
-  // ~60 px a second, like a TV ticker (the text is written twice so the loop has no gap)
-  const tickerSec = Math.max(30, Math.round(ticker.length * 0.26 + 12))
   return (
     <div className="tv-frame tv-redframe overflow-hidden rounded-lg p-1 sm:p-1.5">
       {top && (
@@ -259,7 +266,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         </div>
       )}
       <div className="mt-1 overflow-hidden bg-white py-0.5 text-[11px] font-bold whitespace-nowrap text-[#7a0000] sm:text-sm">
-        <span className="tv-ticker inline-block" style={{ animationDuration: `${tickerSec}s` }}>
+        <span ref={tickerRef} className="tv-ticker inline-block" style={{ animationDuration: `${tickerSec}s` }}>
           {ticker.repeat(2)}
         </span>
       </div>
