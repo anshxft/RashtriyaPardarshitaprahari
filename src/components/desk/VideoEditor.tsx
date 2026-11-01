@@ -208,6 +208,21 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <button type="button" className={chip} onClick={() => ((replacing.current = true), pick.current?.click())}>
               वीडियो बदलें (पुराना इतिहास में रहेगा)
             </button>
+            {f.processing === 'ready' && (
+              <button
+                type="button"
+                className={`${chip} ml-2`}
+                title="वीडियो दोबारा प्रोसेस होगा और उस पर आज का (नया) लोगो लगेगा; तब तक पुराना वीडियो चलता रहेगा"
+                onClick={async () => {
+                  if (!window.confirm('इस वीडियो पर नया लोगो लगाने के लिए इसे दोबारा प्रोसेस करें? (कुछ मिनट लगेंगे, तब तक पुराना वीडियो चलता रहेगा)')) return
+                  const r = await retryVideoAction(f.id!)
+                  if (r.ok) set('processing', 'queued')
+                  setNote(r.ok ? { kind: 'ok', text: 'दोबारा प्रोसेसिंग शुरू ✔ — कुछ मिनट में नया लोगो लग जाएगा।' } : { kind: 'err', text: r.error })
+                }}
+              >
+                🔄 नया लोगो लगाएं
+              </button>
+            )}
           </div>
         ) : (
           <button type="button" onClick={() => pick.current?.click()} className="flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface text-muted hover:bg-white">
