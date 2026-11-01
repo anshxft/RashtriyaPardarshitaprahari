@@ -339,6 +339,7 @@ export const Articles: CollectionConfig = {
         { name: 'place', type: 'text', label: 'जगह का नाम (ऊपर कोने में)' },
         { name: 'name', type: 'text', label: 'बोलने वाले का नाम (नीचे पट्टी में)' },
         { name: 'role', type: 'text', label: 'पद / परिचय (नाम के नीचे, वैकल्पिक)' },
+        { name: 'ticker', type: 'textarea', label: 'नीचे चलने वाली पट्टी (हर लाइन अलग खबर/सूचना)' },
       ],
     },
     { name: 'video', type: 'relationship', relationTo: 'videos', admin: { position: 'sidebar', condition: (d) => d?.format === 'video', description: 'Video news: the uploaded video (website version, social versions, flash + voice).' } },

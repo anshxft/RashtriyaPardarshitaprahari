@@ -32,6 +32,7 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
     tagPlace: a?.videoTag?.place || '',
     tagName: a?.videoTag?.name || '',
     tagRole: a?.videoTag?.role || '',
+    ticker: a?.videoTag?.ticker || '',
     flashScript: fl?.script || '',
     description: v.description || '',
     location: a?.location || v.location || '',

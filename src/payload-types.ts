@@ -543,6 +543,7 @@ export interface Article {
     place?: string | null;
     name?: string | null;
     role?: string | null;
+    ticker?: string | null;
   };
   /**
    * Video news: the uploaded video (website version, social versions, flash + voice).
@@ -1606,6 +1607,7 @@ export interface ArticlesSelect<T extends boolean = true> {
         place?: T;
         name?: T;
         role?: T;
+        ticker?: T;
       };
   video?: T;
   externalImage?:

@@ -13,7 +13,7 @@ type Ad = { title: string; image: string; link?: string | null; win: { x: number
 const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 
 /** The <video> with the red FLASH strip shown over the bottom while it plays (when not already burned in). */
-export type VideoTags = { place?: string | null; name?: string | null; role?: string | null } | null
+export type VideoTags = { place?: string | null; name?: string | null; role?: string | null; ticker?: string | null } | null
 
 const BUMP = '\u0000BREAKING'
 
@@ -215,7 +215,10 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
   // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
   const cur = lines[li % Math.max(1, nLines)]
-  const ticker = `राष्ट्रीय पारदर्शिता प्रहरी  •  ${TAGLINE_SHORT}  •  हेल्पलाइन (24x7): ${HELPLINE}  •  www.rashtriyapardarshitaprahari.org  •  `
+  // Desk lines (one per line) run first, then the paper's own name · tagline · helpline · website.
+  const own = (tags?.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
+  const ticker = [...own, 'राष्ट्रीय पारदर्शिता प्रहरी', TAGLINE_SHORT, `हेल्पलाइन (24x7): ${HELPLINE}`, 'www.rashtriyapardarshitaprahari.org'].join('  •  ') + '  •  '
+  const tickerSec = Math.max(30, Math.round(ticker.length * 0.35))
   return (
     <div className="tv-frame tv-redframe overflow-hidden rounded-lg p-1 sm:p-1.5">
       {top && (
@@ -249,7 +252,9 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         </div>
       )}
       <div className="mt-1 overflow-hidden bg-white py-0.5 text-[11px] font-bold whitespace-nowrap text-[#7a0000] sm:text-sm">
-        <span className="tv-ticker inline-block">{ticker.repeat(3)}</span>
+        <span className="tv-ticker inline-block" style={{ animationDuration: `${tickerSec * 2}s` }}>
+          {ticker.repeat(2)}
+        </span>
       </div>
     </div>
   )

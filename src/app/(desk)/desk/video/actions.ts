@@ -95,6 +95,7 @@ export type VideoNewsInput = {
   tagPlace?: string
   tagName?: string
   tagRole?: string
+  ticker?: string
   flashScript: string
   description?: string
   reporterName?: string
@@ -152,7 +153,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     const data: Record<string, unknown> = {
       title: input.title.trim(),
       subheadline: clean(input.bottomLine),
-      videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole) },
+      videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole), ticker: clean(input.ticker?.slice(0, 1500)) },
       excerpt: clean(input.flashScript) || clean(input.description),
       content: paragraphsToLexical(text),
       format: 'video',
