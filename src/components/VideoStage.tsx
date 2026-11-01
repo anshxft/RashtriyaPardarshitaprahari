@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { HELPLINE, TAGLINE_SHORT } from '@/content/brand'
 import { flashTimes } from '@/lib/videoArgs'
 
 export type FlashProps = { on: boolean; voice?: boolean; script: string; breaking?: boolean; repeat?: boolean; intervalSec?: number }
@@ -14,11 +15,86 @@ const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 /** The <video> with the red FLASH strip shown over the bottom while it plays (when not already burned in). */
 export type VideoTags = { place?: string | null; name?: string | null; role?: string | null } | null
 
+const BUMP = '\u0000BREAKING'
+
+/**
+ * Logo “sting” sound, made in the browser (no audio file): a filtered-noise whoosh rising and falling, a soft low hit
+ * and a short bright shimmer. Plays only when the viewer has the video's sound on.
+ */
+function whoosh(volume: number) {
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const ctx = new AC()
+    const now = ctx.currentTime
+    const v = Math.max(0.05, Math.min(1, volume)) * 0.35
+    const len = Math.floor(ctx.sampleRate * 1.4)
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+    const noise = ctx.createBufferSource()
+    noise.buffer = buf
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.Q.value = 1.2
+    bp.frequency.setValueAtTime(300, now)
+    bp.frequency.exponentialRampToValueAtTime(3200, now + 0.55)
+    bp.frequency.exponentialRampToValueAtTime(500, now + 1.3)
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.0001, now)
+    g.gain.exponentialRampToValueAtTime(v, now + 0.5)
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.35)
+    noise.connect(bp).connect(g).connect(ctx.destination)
+    noise.start(now)
+    noise.stop(now + 1.4)
+    // low hit when the logo lands
+    const boom = ctx.createOscillator()
+    boom.type = 'sine'
+    boom.frequency.setValueAtTime(110, now + 0.5)
+    boom.frequency.exponentialRampToValueAtTime(42, now + 1.1)
+    const bg = ctx.createGain()
+    bg.gain.setValueAtTime(0.0001, now + 0.48)
+    bg.gain.exponentialRampToValueAtTime(v * 1.6, now + 0.52)
+    bg.gain.exponentialRampToValueAtTime(0.0001, now + 1.2)
+    boom.connect(bg).connect(ctx.destination)
+    boom.start(now + 0.48)
+    boom.stop(now + 1.25)
+    // shimmer
+    const sh = ctx.createOscillator()
+    sh.type = 'triangle'
+    sh.frequency.setValueAtTime(1400, now + 0.5)
+    sh.frequency.exponentialRampToValueAtTime(2400, now + 0.9)
+    const sg = ctx.createGain()
+    sg.gain.setValueAtTime(0.0001, now + 0.5)
+    sg.gain.exponentialRampToValueAtTime(v * 0.25, now + 0.55)
+    sg.gain.exponentialRampToValueAtTime(0.0001, now + 1.0)
+    sh.connect(sg).connect(ctx.destination)
+    sh.start(now + 0.5)
+    sh.stop(now + 1.05)
+    setTimeout(() => ctx.close().catch(() => {}), 1800)
+  } catch {
+    /* no Web Audio — silent sting */
+  }
+}
+
 /** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
 const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
 export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null; tags?: VideoTags }) {
   const [nameShow, setNameShow] = useState(false)
+  // Logo sting (intro): when the video starts and then once a minute.
+  const [sting, setSting] = useState(0)
+  const lastSting = useRef(-1)
+  // Lower band: lines take turns (BREAKING NEWS · second headline · each sentence of the approved flash script).
+  const script = (flash?.on ? flash.script : '').split(/[।!?\n]+/).map((x) => x.trim()).filter(Boolean).slice(0, 6)
+  const lines = [...(breaking ? [BUMP] : []), ...(bottom ? [bottom] : []), ...script]
+  if (!lines.length && top) lines.push(top)
+  const [li, setLi] = useState(0)
+  const nLines = lines.length
+  useEffect(() => {
+    if (nLines < 2) return
+    const t = setInterval(() => setLi((i) => (i + 1) % nLines), 4500)
+    return () => clearInterval(t)
+  }, [nLines])
   const times = useRef<number[]>([])
   const [show, setShow] = useState(false)
   const [adShow, setAdShow] = useState(false)
@@ -61,6 +137,14 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
             if (tags?.name) setNameShow(nameOn(t))
+            const minute = Math.floor(t / 60)
+            if (banded && t % 60 < 0.8 && lastSting.current !== minute && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              lastSting.current = minute
+              setSting(Date.now())
+              setTimeout(() => setSting(0), 2000)
+              const vid = e.currentTarget
+              if (!vid.muted && vid.volume > 0) whoosh(vid.volume)
+            }
             // The video's details can load before the page wakes up (then onLoadedMetadata is missed): work the times out here.
             if (strip && !times.current.length && e.currentTarget.duration) times.current = flashTimes(e.currentTarget.duration, showSec, flash?.repeat !== false, flash?.intervalSec || 20)
             if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
@@ -80,13 +164,13 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         )}
         {/* speaker name strap (lower third, above the red ticker) */}
         {tags?.name && nameShow && (
-          <div className="tv-name pointer-events-none absolute bottom-10 left-2 max-w-[75%] sm:bottom-14 sm:left-4">
+          <div className={`tv-name pointer-events-none absolute left-2 max-w-[75%] sm:left-4 ${banded ? 'bottom-3 sm:bottom-5' : 'bottom-10 sm:bottom-14'}`}>
             <p className="bg-white px-2 py-0.5 text-sm leading-snug font-black text-[#0b1f4d] shadow-lg sm:px-3 sm:py-1 sm:text-xl">{tags.name}</p>
             {tags.role && <p className="inline-block bg-[#c8102e] px-2 py-0.5 text-[11px] font-bold text-white sm:px-3 sm:text-sm">{tags.role}</p>}
           </div>
         )}
         {breaking && <span className="pointer-events-none absolute top-2 left-2 animate-pulse rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide text-white motion-reduce:animate-none sm:top-3 sm:left-3 sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>}
-        {strip && show && (
+        {strip && show && !banded && (
           <div className="anim-strip tv-strip pointer-events-none absolute inset-x-0 bottom-1 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-2 sm:px-3 sm:py-2 sm:text-base">
             <style>{`@keyframes vs-tick { from { transform: translateX(0) } to { transform: translateX(-100%) } }`}</style>
             <span className="tv-pill shrink-0 rounded bg-white px-1 py-0.5 text-[10px] font-black text-[#c8102e] sm:px-1.5 sm:text-xs">● {flash?.breaking ? 'BREAKING' : 'FLASH'}</span>
@@ -102,6 +186,12 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
             </span>
           </div>
         )}
+        {/* logo sting */}
+        {sting > 0 && (
+          <div key={sting} className="tv-sting pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            <img src="/logo-watermark.png" alt="" className="tv-sting-logo w-[46%] max-w-md drop-shadow-[0_0_30px_rgba(255,210,63,0.9)]" />
+          </div>
+        )}
       </div>
       {framed && (
         <div className="absolute top-1 right-1 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 text-[10px] font-bold text-white">
@@ -114,9 +204,12 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
     </div>
   )
   if (!banded) return stage
-  // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top, yellow second headline under the video.
+  // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
+  // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
+  const cur = lines[li % Math.max(1, nLines)]
+  const ticker = `राष्ट्रीय पारदर्शिता प्रहरी  •  ${TAGLINE_SHORT}  •  हेल्पलाइन (24x7): ${HELPLINE}  •  www.rashtriyapardarshitaprahari.org  •  `
   return (
-    <div className="tv-frame overflow-hidden rounded-lg bg-black">
+    <div className="tv-frame tv-redframe overflow-hidden rounded-lg p-1 sm:p-1.5">
       {top && (
         <>
           <p className={`tv-top line-clamp-2 px-3 py-1.5 text-center font-display leading-snug font-black text-white sm:px-5 sm:py-2 ${fit(top)}`} title={top}>
@@ -128,7 +221,28 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         </>
       )}
       {stage}
-      {bottom && <p className={`tv-bottom line-clamp-2 px-3 py-1.5 text-center font-display leading-snug font-black text-black sm:px-5 sm:py-2 ${fit(bottom)}`} title={bottom}>{bottom}</p>}
+      {cur && (
+        <div className="tv-lower mt-1 flex items-stretch gap-1">
+          <div className="tv-lower-main relative flex min-h-12 flex-1 items-center justify-center overflow-hidden px-2 sm:min-h-20 sm:px-4">
+            {cur === BUMP ? (
+              <span key={`b${li}`} className="tv-bnews text-2xl font-black tracking-wide text-[#ffd84a] italic sm:text-5xl">
+                BREAKING NEWS
+              </span>
+            ) : (
+              <span key={`l${li}`} className={`tv-line line-clamp-2 text-center font-display leading-snug font-black text-white ${fit(cur)}`}>
+                {cur}
+              </span>
+            )}
+          </div>
+          <div className="tv-see flex w-16 shrink-0 flex-col items-center justify-center border-2 border-white/90 bg-[#c8102e] px-1 text-center text-white sm:w-28">
+            <img src="/logo-watermark.png" alt="" className="w-10 sm:w-16" />
+            <span className="text-[9px] leading-tight font-bold sm:text-xs">देखें वेबसाइट</span>
+          </div>
+        </div>
+      )}
+      <div className="mt-1 overflow-hidden bg-white py-0.5 text-[11px] font-bold whitespace-nowrap text-[#7a0000] sm:text-sm">
+        <span className="tv-ticker inline-block">{ticker.repeat(3)}</span>
+      </div>
     </div>
   )
 }

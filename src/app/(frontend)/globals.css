@@ -371,3 +371,76 @@ body {
 @keyframes tv-bump-out {
   to { opacity: 0; visibility: hidden; }
 }
+
+/* ── Video news package: red frame, lower band with turning lines, logo sting, white ticker ── */
+.tv-redframe {
+  background: radial-gradient(120% 140% at 20% 10%, #e3171b 0%, #a80d10 45%, #5c0003 100%);
+  background-size: 200% 200%;
+}
+.tv-lower-main {
+  background: linear-gradient(180deg, #ff2b1f 0%, #d40c0c 55%, #9e0000 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 40, 30, 0.5);
+}
+.tv-line {
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+.tv-bnews {
+  text-shadow: 0 2px 0 #7a0000, 0 0 14px rgba(255, 216, 74, 0.85);
+}
+.tv-see {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+}
+.tv-ticker {
+  padding-left: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tv-redframe {
+    animation: tv-redshift 8s ease-in-out infinite alternate;
+  }
+  .tv-line {
+    animation: tv-line-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .tv-bnews {
+    animation: tv-bnews 4.5s ease-out both;
+  }
+  .tv-ticker {
+    animation: tv-ticker 45s linear infinite;
+  }
+  .tv-sting {
+    animation: tv-sting-bg 2s ease-out both;
+  }
+  .tv-sting-logo {
+    animation: tv-sting-logo 2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+@keyframes tv-redshift {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 100%; }
+}
+@keyframes tv-line-in {
+  from { opacity: 0; transform: translateY(70%) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tv-bnews {
+  0% { opacity: 0; transform: scale(2.2); filter: blur(4px); }
+  12% { opacity: 1; transform: scale(0.95); filter: none; }
+  18% { transform: scale(1.04); }
+  24%, 100% { transform: scale(1); }
+}
+@keyframes tv-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes tv-sting-bg {
+  0% { background: rgba(255, 255, 255, 0); }
+  22% { background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(200, 16, 46, 0.55) 45%, rgba(0, 0, 0, 0.45) 100%); }
+  80% { background: radial-gradient(circle, rgba(200, 16, 46, 0.35) 0%, rgba(0, 0, 0, 0.35) 100%); }
+  100% { background: rgba(0, 0, 0, 0); }
+}
+@keyframes tv-sting-logo {
+  0% { opacity: 0; transform: scale(0.15) rotate(-14deg); }
+  28% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+  38% { transform: scale(0.97) rotate(0); }
+  45%, 78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
