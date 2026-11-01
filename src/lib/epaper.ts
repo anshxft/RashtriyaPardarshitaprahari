@@ -519,3 +519,31 @@ export function flowLayout(layout: ManualLayout, byId: Map<string, EpStory>, fit
   }
   return { pages: pages.map((p) => p.map(clampItem)).filter((p, i, all) => p.length || i < all.length - 1) }
 }
+
+/** Push blocks that overlap `fixed` (and then each other) down below it — dropping a block never covers another. */
+export function settleDown(items: ManualItem[], fixed: string): ManualItem[] {
+  const pin = items.find((i) => i.ref === fixed)
+  if (!pin) return items
+  const placed: ManualItem[] = [pin]
+  const rest = items.filter((i) => i !== pin).sort((a, b) => a.y - b.y)
+  for (const it of rest) {
+    let y = it.y
+    for (let guard = 0; guard < 50; guard++) {
+      const hit = placed.filter((p) => it.col < p.col + p.span && p.col < it.col + it.span && y < p.y + p.h + GEO.blockGap && p.y < y + it.h)
+      if (!hit.length) break
+      y = Math.max(...hit.map((p) => p.y + p.h + GEO.blockGap))
+    }
+    placed.push(clampItem({ ...it, y }))
+  }
+  return items.map((i) => placed.find((p) => p.ref === i.ref)!)
+}
+
+/** “खाली जगह भरें”: every block slides up as far as it can (top of the page or the block above it). */
+export function compactUp(items: ManualItem[]): ManualItem[] {
+  const placed: ManualItem[] = []
+  for (const it of [...items].sort((a, b) => a.y - b.y || a.col - b.col)) {
+    const above = placed.filter((p) => it.col < p.col + p.span && p.col < it.col + it.span)
+    placed.push(clampItem({ ...it, y: Math.max(contentTop, ...above.map((p) => p.y + p.h + GEO.blockGap)) }))
+  }
+  return items.map((i) => placed.find((p) => p.ref === i.ref)!)
+}
