@@ -537,6 +537,14 @@ export interface Article {
     approvedAt?: string | null;
   };
   /**
+   * वीडियो के ऊपर दिखने वाला जगह का नाम और बोलने वाले व्यक्ति का नाम (वैकल्पिक)।
+   */
+  videoTag?: {
+    place?: string | null;
+    name?: string | null;
+    role?: string | null;
+  };
+  /**
    * Video news: the uploaded video (website version, social versions, flash + voice).
    */
   video?: (number | null) | Video;
@@ -1591,6 +1599,13 @@ export interface ArticlesSelect<T extends boolean = true> {
         audioKey?: T;
         approvedBy?: T;
         approvedAt?: T;
+      };
+  videoTag?:
+    | T
+    | {
+        place?: T;
+        name?: T;
+        role?: T;
       };
   video?: T;
   externalImage?:

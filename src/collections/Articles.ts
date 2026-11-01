@@ -330,6 +330,17 @@ export const Articles: CollectionConfig = {
         { name: 'approvedAt', type: 'date', admin: { readOnly: true } },
       ],
     },
+    {
+      name: 'videoTag',
+      type: 'group',
+      label: 'वीडियो पर नाम / जगह (video name & place tags)',
+      admin: { position: 'sidebar', condition: (d) => d?.format === 'video', description: 'वीडियो के ऊपर दिखने वाला जगह का नाम और बोलने वाले व्यक्ति का नाम (वैकल्पिक)।' },
+      fields: [
+        { name: 'place', type: 'text', label: 'जगह का नाम (ऊपर कोने में)' },
+        { name: 'name', type: 'text', label: 'बोलने वाले का नाम (नीचे पट्टी में)' },
+        { name: 'role', type: 'text', label: 'पद / परिचय (नाम के नीचे, वैकल्पिक)' },
+      ],
+    },
     { name: 'video', type: 'relationship', relationTo: 'videos', admin: { position: 'sidebar', condition: (d) => d?.format === 'video', description: 'Video news: the uploaded video (website version, social versions, flash + voice).' } },
     {
       name: 'externalImage',

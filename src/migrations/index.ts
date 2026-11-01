@@ -15,6 +15,7 @@ import * as migration_20261029_200000_video_ads from './20261029_200000_video_ad
 import * as migration_20261031_120000_article_gallery from './20261031_120000_article_gallery';
 import * as migration_20261101_120000_epaper_layouts from './20261101_120000_epaper_layouts';
 import * as migration_20261101_150000_editor_message from './20261101_150000_editor_message';
+import * as migration_20261101_180000_video_tags from './20261101_180000_video_tags';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261101_150000_editor_message.up,
     down: migration_20261101_150000_editor_message.down,
     name: '20261101_150000_editor_message'
+  },
+  {
+    up: migration_20261101_180000_video_tags.up,
+    down: migration_20261101_180000_video_tags.down,
+    name: '20261101_180000_video_tags'
   },
 ];

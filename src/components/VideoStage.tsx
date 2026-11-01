@@ -12,7 +12,13 @@ type Ad = { title: string; image: string; link?: string | null; win: { x: number
 const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 
 /** The <video> with the red FLASH strip shown over the bottom while it plays (when not already burned in). */
-export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null }) {
+export type VideoTags = { place?: string | null; name?: string | null; role?: string | null } | null
+
+/** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
+const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
+
+export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null; tags?: VideoTags }) {
+  const [nameShow, setNameShow] = useState(false)
   const times = useRef<number[]>([])
   const [show, setShow] = useState(false)
   const [adShow, setAdShow] = useState(false)
@@ -54,6 +60,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
           onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, flash?.repeat !== false, flash?.intervalSec || 20))}
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
+            if (tags?.name) setNameShow(nameOn(t))
             // The video's details can load before the page wakes up (then onLoadedMetadata is missed): work the times out here.
             if (strip && !times.current.length && e.currentTarget.duration) times.current = flashTimes(e.currentTarget.duration, showSec, flash?.repeat !== false, flash?.intervalSec || 20)
             if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
@@ -64,6 +71,20 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom }: { 
             }
           }}
         />
+        {/* place tag (top-left, under BREAKING when that is on) */}
+        {tags?.place && (
+          <span className={`tv-place pointer-events-none absolute left-2 flex items-center text-[11px] font-extrabold text-white sm:left-3 sm:text-sm ${breaking ? 'top-8 sm:top-11' : 'top-2 sm:top-3'}`}>
+            <span className="bg-[#c8102e] px-1.5 py-0.5 sm:px-2">📍</span>
+            <span className="bg-black/80 px-2 py-0.5 sm:px-3">{tags.place}</span>
+          </span>
+        )}
+        {/* speaker name strap (lower third, above the red ticker) */}
+        {tags?.name && nameShow && (
+          <div className="tv-name pointer-events-none absolute bottom-10 left-2 max-w-[75%] sm:bottom-14 sm:left-4">
+            <p className="bg-white px-2 py-0.5 text-sm leading-snug font-black text-[#0b1f4d] shadow-lg sm:px-3 sm:py-1 sm:text-xl">{tags.name}</p>
+            {tags.role && <p className="inline-block bg-[#c8102e] px-2 py-0.5 text-[11px] font-bold text-white sm:px-3 sm:text-sm">{tags.role}</p>}
+          </div>
+        )}
         {breaking && <span className="pointer-events-none absolute top-2 left-2 animate-pulse rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide text-white motion-reduce:animate-none sm:top-3 sm:left-3 sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>}
         {strip && show && (
           <div className="anim-strip tv-strip pointer-events-none absolute inset-x-0 bottom-1 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-2 sm:px-3 sm:py-2 sm:text-base">

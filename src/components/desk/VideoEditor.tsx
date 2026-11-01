@@ -17,6 +17,9 @@ export type VideoForm = {
   newsId?: string | null
   title: string
   bottomLine: string
+  tagPlace: string
+  tagName: string
+  tagRole: string
   flashScript: string
   description: string
   location: string
@@ -118,6 +121,9 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         mode,
         title: f.title,
         bottomLine: f.bottomLine,
+        tagPlace: f.tagPlace,
+        tagName: f.tagName,
+        tagRole: f.tagRole,
         flashScript: f.flashScript,
         description: f.description,
         reporterName: f.reporterName,
@@ -222,6 +228,21 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           दूसरी हेडलाइन (वैकल्पिक) <span className="font-normal text-muted">— वीडियो के नीचे पीली पट्टी में दिखेगी</span>
           <input value={f.bottomLine} onChange={(e) => set('bottomLine', e.target.value)} maxLength={160} className={`${input} mt-1 font-bold`} placeholder="जैसे: बोकारो के गरगा डैम में 35 वर्षों से छठ व्रतियों की सेवा" />
         </label>
+        <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
+          <p className="text-sm font-semibold sm:col-span-3">वीडियो के ऊपर दिखेगा (वैकल्पिक)</p>
+          <label className="block text-sm font-semibold">
+            जगह का नाम <span className="font-normal text-muted">— ऊपर कोने में</span>
+            <input value={f.tagPlace} onChange={(e) => set('tagPlace', e.target.value)} maxLength={40} className={`${input} mt-1`} placeholder="जैसे: बोकारो" />
+          </label>
+          <label className="block text-sm font-semibold">
+            बोलने वाले का नाम <span className="font-normal text-muted">— नीचे पट्टी में</span>
+            <input value={f.tagName} onChange={(e) => set('tagName', e.target.value)} maxLength={60} className={`${input} mt-1`} placeholder="जैसे: रमेश कुमार" />
+          </label>
+          <label className="block text-sm font-semibold">
+            पद / परिचय
+            <input value={f.tagRole} onChange={(e) => set('tagRole', e.target.value)} maxLength={60} className={`${input} mt-1`} placeholder="जैसे: स्थानीय ग्रामीण" />
+          </label>
+        </div>
         <label className="block text-sm font-semibold">
           पूरी खबर — वेबसाइट पर लिखी नहीं दिखेगी; पाठक “🔊 पूरी खबर सुनें” दबाकर आवाज़ में सुनेंगे (पेज पर सिर्फ शीर्षक और वीडियो)
           <textarea value={f.description} onChange={(e) => set('description', e.target.value)} rows={10} className={`${input} mt-1 leading-relaxed`} placeholder="यहाँ पूरी खबर लिखें या पेस्ट करें। हर पैराग्राफ के बीच एक खाली लाइन छोड़ें।" />

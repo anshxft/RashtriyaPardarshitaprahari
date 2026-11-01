@@ -91,6 +91,10 @@ export type VideoNewsInput = {
   title: string
   /** Yellow band under the video (second headline); stored as the story's sub-headline. */
   bottomLine?: string
+  /** shown over the video: place (top corner), speaker name + role (lower strap) */
+  tagPlace?: string
+  tagName?: string
+  tagRole?: string
   flashScript: string
   description?: string
   reporterName?: string
@@ -148,6 +152,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     const data: Record<string, unknown> = {
       title: input.title.trim(),
       subheadline: clean(input.bottomLine),
+      videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole) },
       excerpt: clean(input.flashScript) || clean(input.description),
       content: paragraphsToLexical(text),
       format: 'video',

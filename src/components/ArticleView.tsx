@@ -194,6 +194,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
             aiNote={Boolean(settings.aiVoiceNote)}
             top={a.title}
             bottom={a.subheadline}
+            tags={a.videoTag}
             flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
           />
           {text.paragraphs.length > 0 && (
