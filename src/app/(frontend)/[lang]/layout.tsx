@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
+import { Anton, Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer, Header } from '@/components/Chrome'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
@@ -15,6 +15,8 @@ import '../globals.css'
 // 'optional': on a slow first visit the system Devanagari font is kept instead of a late swap (better LCP); cached afterwards.
 const body = Noto_Sans_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-noto', display: 'optional' })
 const display = Noto_Serif_Devanagari({ subsets: ['devanagari', 'latin'], variable: '--font-head', display: 'swap' })
+// TV-style Latin display face for the video news “HEADLINE NEWS” bar only (not preloaded: other pages don't pay for it).
+const tv = Anton({ weight: '400', subsets: ['latin'], variable: '--font-tv', display: 'swap', preload: false })
 
 // Empty list = nothing prerendered at build (no DB needed); pages render on first request, then cached (ISR).
 export const generateStaticParams = async () => []
@@ -44,7 +46,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   const s = await getSettings(lang)
   const wa = s.whatsappButton === false ? [] : officeNumbers(s.offices).filter((n) => n.whatsapp)
   return (
-    <html lang={lang} className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang={lang} className={`${body.variable} ${display.variable} ${tv.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

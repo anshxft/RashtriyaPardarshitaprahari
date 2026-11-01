@@ -474,3 +474,39 @@ body {
   50%, 90% { transform: rotateX(180deg); }
   100% { transform: rotateX(360deg); }
 }
+
+/* “HEADLINE NEWS”: condensed TV face, 3-D extruded letters, a wave of 3-D letter turns on a loop */
+.tv-3d {
+  font-family: var(--font-tv), 'Anton', 'Arial Narrow', Impact, sans-serif;
+  letter-spacing: 0.12em;
+  perspective: 500px;
+  display: inline-block;
+}
+.tv-3d-ch {
+  display: inline-block;
+  color: #fff;
+  text-shadow:
+    0 1px 0 #cfe6ff,
+    0 2px 0 #9cc8ff,
+    0 3px 0 #5e9eea,
+    0 4px 0 #2f6fc0,
+    0 5px 0 #184f98,
+    0 6px 6px rgba(0, 0, 0, 0.55),
+    0 0 14px rgba(120, 190, 255, 0.85);
+  transform-origin: 50% 60%;
+  backface-visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tv-3d-ch {
+    animation: tv-3d-turn 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  /* the old blink is replaced by the 3-D wave */
+  .tv-bar-text.tv-3d {
+    animation: none;
+  }
+}
+@keyframes tv-3d-turn {
+  0%, 62% { transform: rotateX(0) translateZ(0); }
+  70% { transform: rotateX(-180deg) translateZ(8px) scale(1.12); }
+  78%, 100% { transform: rotateX(-360deg) translateZ(0); }
+}

@@ -226,8 +226,14 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
           <p className={`tv-top line-clamp-2 px-3 py-1.5 text-center font-display leading-snug font-black text-white sm:px-5 sm:py-2 ${fit(top)}`} title={top}>
             {top}
           </p>
-          <p className="tv-bar py-1 text-center text-base font-black tracking-[0.2em] text-white sm:py-1.5 sm:text-2xl">
-            <span className="tv-bar-text">HEADLINE NEWS</span>
+          <p className="tv-bar py-1 text-center text-xl text-white sm:py-1.5 sm:text-4xl" aria-label="HEADLINE NEWS">
+            <span className="tv-bar-text tv-3d" aria-hidden>
+              {'HEADLINE NEWS'.split('').map((ch, i) => (
+                <span key={i} className="tv-3d-ch" style={{ animationDelay: `${i * 0.07}s` }}>
+                  {ch === ' ' ? '\u00a0' : ch}
+                </span>
+              ))}
+            </span>
           </p>
         </>
       )}
