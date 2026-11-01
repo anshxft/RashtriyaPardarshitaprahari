@@ -174,7 +174,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
           <span className="tv-flipbox pointer-events-none absolute top-2 left-2 sm:top-3 sm:left-3" aria-label="BREAKING NEWS">
             <span className="tv-flipcard">
               <span className="tv-face rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide whitespace-nowrap text-white sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>
-              <span className="tv-face tv-back rounded bg-[#ffd84a] px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#a80000] sm:px-2 sm:py-1 sm:text-xs">● ब्रेकिंग न्यूज़</span>
+              <span className="tv-face tv-back rounded px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-white sm:px-2 sm:py-1 sm:text-xs">● ब्रेकिंग न्यूज़</span>
             </span>
           </span>
         )}

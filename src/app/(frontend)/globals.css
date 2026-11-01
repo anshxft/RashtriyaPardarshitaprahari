@@ -463,12 +463,44 @@ body {
 }
 .tv-back {
   transform: rotateX(180deg);
-  box-shadow: 0 0 12px rgba(255, 216, 74, 0.85);
+  background: linear-gradient(180deg, #4a0408 0%, #1c0002 100%);
+  border: 1px solid #e8b931;
+  box-shadow: 0 0 12px rgba(232, 185, 49, 0.8);
+  text-shadow: 0 0 6px rgba(255, 214, 102, 0.9);
+}
+/* glow on the labels over the picture */
+.tv-place > span:last-child,
+.tv-name > p {
+  box-shadow: 0 0 12px rgba(255, 60, 40, 0.55);
+}
+.tv-name > p:first-child {
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.7), 0 0 4px rgba(232, 185, 49, 0.9);
+}
+.tv-place > span:first-child {
+  box-shadow: 0 0 10px rgba(255, 40, 30, 0.9);
 }
 @media (prefers-reduced-motion: no-preference) {
   .tv-flipcard {
     animation: tv-flip 6s ease-in-out infinite;
   }
+  .tv-face {
+    animation: tv-glow-red 1.6s ease-in-out infinite;
+  }
+  .tv-back {
+    animation: tv-glow-gold 1.6s ease-in-out infinite;
+  }
+  .tv-place > span:first-child,
+  .tv-name > p:last-child {
+    animation: tv-glow-red 2s ease-in-out infinite;
+  }
+}
+@keyframes tv-glow-red {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 40, 30, 0.55); }
+  50% { box-shadow: 0 0 18px rgba(255, 60, 40, 1), 0 0 4px rgba(255, 255, 255, 0.6); }
+}
+@keyframes tv-glow-gold {
+  0%, 100% { box-shadow: 0 0 6px rgba(232, 185, 49, 0.55); }
+  50% { box-shadow: 0 0 18px rgba(255, 214, 102, 1), 0 0 4px rgba(255, 255, 255, 0.5); }
 }
 @keyframes tv-flip {
   0%, 40% { transform: rotateX(0); }
