@@ -169,7 +169,15 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
             {tags.role && <p className="inline-block bg-[#c8102e] px-2 py-0.5 text-[11px] font-bold text-white sm:px-3 sm:text-sm">{tags.role}</p>}
           </div>
         )}
-        {breaking && <span className="pointer-events-none absolute top-2 left-2 animate-pulse rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide text-white motion-reduce:animate-none sm:top-3 sm:left-3 sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>}
+        {/* BREAKING label: keeps flipping over — “BREAKING NEWS” on one side, “ब्रेकिंग न्यूज़” on the other */}
+        {breaking && (
+          <span className="tv-flipbox pointer-events-none absolute top-2 left-2 sm:top-3 sm:left-3" aria-label="BREAKING NEWS">
+            <span className="tv-flipcard">
+              <span className="tv-face rounded bg-[#c8102e] px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide whitespace-nowrap text-white sm:px-2 sm:py-1 sm:text-xs">● BREAKING NEWS</span>
+              <span className="tv-face tv-back rounded bg-[#ffd84a] px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#a80000] sm:px-2 sm:py-1 sm:text-xs">● ब्रेकिंग न्यूज़</span>
+            </span>
+          </span>
+        )}
         {strip && show && !banded && (
           <div className="anim-strip tv-strip pointer-events-none absolute inset-x-0 bottom-1 flex items-center gap-2 bg-[#c8102e]/95 px-2 py-1 text-xs font-bold text-white sm:bottom-2 sm:px-3 sm:py-2 sm:text-base">
             <style>{`@keyframes vs-tick { from { transform: translateX(0) } to { transform: translateX(-100%) } }`}</style>

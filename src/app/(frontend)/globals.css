@@ -444,3 +444,33 @@ body {
   45%, 78% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.5); }
 }
+
+/* BREAKING label on the video: a two-sided card that flips over */
+.tv-flipbox {
+  perspective: 300px;
+}
+.tv-flipcard {
+  position: relative;
+  display: inline-grid;
+  transform-style: preserve-3d;
+}
+.tv-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  box-shadow: 0 0 10px rgba(255, 40, 30, 0.7);
+  text-align: center;
+}
+.tv-back {
+  transform: rotateX(180deg);
+  box-shadow: 0 0 12px rgba(255, 216, 74, 0.85);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tv-flipcard {
+    animation: tv-flip 6s ease-in-out infinite;
+  }
+}
+@keyframes tv-flip {
+  0%, 40% { transform: rotateX(0); }
+  50%, 90% { transform: rotateX(180deg); }
+  100% { transform: rotateX(360deg); }
+}
