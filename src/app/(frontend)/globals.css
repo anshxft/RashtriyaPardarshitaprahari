@@ -543,3 +543,24 @@ body {
   70% { transform: rotateX(-180deg) translateZ(8px) scale(1.12); }
   78%, 100% { transform: rotateX(-360deg) translateZ(0); }
 }
+
+/* Story text and pictures can't be selected / long-pressed out (see ContentGuard); form fields stay normal */
+#story,
+#story img,
+main img {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+#story input,
+#story textarea,
+#story [data-allow-copy] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+@media print {
+  #story {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+}

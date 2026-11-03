@@ -4,6 +4,7 @@ import { Anton, Noto_Sans_Devanagari, Noto_Serif_Devanagari } from 'next/font/go
 import type { ReactNode } from 'react'
 import { Footer, Header } from '@/components/Chrome'
 import { WhatsAppFloat } from '@/components/WhatsAppFloat'
+import { ContentGuard } from '@/components/ContentGuard'
 import { FlashPopup } from '@/components/FlashPopup'
 import { officeNumbers } from '@/lib/contact'
 import { getSettings } from '@/lib/data'
@@ -56,6 +57,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           {children}
         </main>
         <Footer lang={lang} />
+        <ContentGuard lang={lang} />
         <FlashPopup lang={lang} />
         <WhatsAppFloat
           numbers={wa}

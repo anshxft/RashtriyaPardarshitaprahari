@@ -137,7 +137,7 @@ const dict = {
     membersFound: 'सदस्य',
     previewBanner: 'प्रीव्यू: यह प्रोफ़ाइल अभी प्रकाशित नहीं है।',
     address: 'पता',
-    rights: 'सर्वाधिकार सुरक्षित',
+    rights: 'सर्वाधिकार सुरक्षित। बिना लिखित अनुमति के किसी भी समाचार, फोटो या वीडियो का पुनः प्रकाशन वर्जित है',
     lawyerReview: 'मसौदा: यह पृष्ठ वकील द्वारा समीक्षा किया जाना बाकी है।',
     darkMode: 'डार्क मोड',
     form: {
@@ -282,7 +282,7 @@ const dict = {
     membersFound: 'members',
     previewBanner: 'Preview: this profile is not published yet.',
     address: 'Address',
-    rights: 'All rights reserved',
+    rights: 'All rights reserved. No news, photo or video may be republished without written permission',
     lawyerReview: 'Draft: this page is yet to be reviewed by a lawyer.',
     darkMode: 'Dark mode',
     form: {
