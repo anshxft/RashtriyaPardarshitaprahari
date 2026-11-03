@@ -59,7 +59,10 @@ export function ListenButton({ parts, lang, label }: { parts: string[]; lang: 'h
     <div className="flex flex-wrap items-center gap-2" aria-live="polite">
       {state === 'idle' ? (
         <button type="button" onClick={start} className={`${btn} bg-brand-600 text-white hover:bg-brand-700`}>
-          🔊 {label || (hi ? 'खबर सुनें' : 'Listen to this story')}
+          <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+            <path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z" />
+          </svg>
+          {label || (hi ? 'खबर सुनें' : 'Listen to this story')}
         </button>
       ) : (
         <>

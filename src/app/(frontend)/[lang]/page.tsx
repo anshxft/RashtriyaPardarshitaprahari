@@ -198,7 +198,16 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
           <SectionTitle lang={lang} href={paths.category(lang, 'jan-manch')}>
             {d.publicForum}
           </SectionTitle>
-          {forum.docs.length ? forum.docs.map((a) => <ArticleCard key={a.id} a={a} lang={lang} variant="row" />) : <p className="text-muted">{d.comingSoon}</p>}
+          {forum.docs.length ? (
+            forum.docs.map((a) => <ArticleCard key={a.id} a={a} lang={lang} variant="row" />)
+          ) : (
+            <p className="rounded-lg border border-line bg-surface p-4 text-muted">
+              {lang === 'hi' ? 'इस मंच पर पाठकों की आवाज़ और उनके सवाल प्रकाशित होते हैं। अपनी समस्या, राय या सुझाव भेजें — ' : 'Readers’ voices and questions are published here. Send us your issue, view or suggestion — '}
+              <Link href={paths.submit(lang)} className="font-semibold text-link underline">
+                {lang === 'hi' ? 'अपनी बात भेजें →' : 'Write to us →'}
+              </Link>
+            </p>
+          )}
         </div>
         <SubmitCta lang={lang} />
       </section>

@@ -170,7 +170,11 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
         {/* place tag (top-left, under BREAKING when that is on) */}
         {tags?.place && (
           <span className={`tv-place pointer-events-none absolute left-2 flex items-center text-[11px] font-extrabold text-white sm:left-3 sm:text-sm ${breaking ? 'top-8 sm:top-11' : 'top-2 sm:top-3'}`}>
-            <span className="bg-[#c8102e] px-1.5 py-0.5 sm:px-2">📍</span>
+            <span className="flex items-center self-stretch bg-[#c8102e] px-1.5 sm:px-2">
+              <svg aria-hidden viewBox="0 0 24 24" className="h-3 w-3 fill-white sm:h-4 sm:w-4">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+              </svg>
+            </span>
             <span className="bg-black/80 px-2 py-0.5 sm:px-3">{tags.place}</span>
           </span>
         )}

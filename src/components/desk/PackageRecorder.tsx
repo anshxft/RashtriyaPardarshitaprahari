@@ -271,7 +271,18 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.fillRect(VID.x + 52, ly, pw, 34)
           ctx.fillStyle = '#fff'
           ctx.textAlign = 'left'
-          ctx.fillText('📍', VID.x + 22, ly + 18)
+          // map pin (drawn, so it looks the same on every computer)
+          ctx.fillStyle = '#fff'
+          ctx.beginPath()
+          ctx.arc(VID.x + 35, ly + 14, 7, Math.PI, 0)
+          ctx.lineTo(VID.x + 35, ly + 28)
+          ctx.closePath()
+          ctx.fill()
+          ctx.fillStyle = '#c8102e'
+          ctx.beginPath()
+          ctx.arc(VID.x + 35, ly + 14, 3, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = '#fff'
           ctx.fillText(input.place, VID.x + 64, ly + 18)
         }
         // speaker name strap: from 3 s for 10 s, every 45 s
