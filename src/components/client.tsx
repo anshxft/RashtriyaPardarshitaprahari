@@ -5,6 +5,9 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import type { Lang } from '@/lib/i18n'
 
+/** Sub-sections listed under a section in the menus; bigger groups end with “see all”. */
+const MENU_SUBS = 5
+
 type NavCat = { slug: string; title: string; group?: string | null; children: { slug: string; title: string }[] }
 type Groups = { key: string; label: string; items: NavCat[] }[]
 
@@ -92,7 +95,7 @@ export function Nav({ lang, primary, groups, labels }: { lang: Lang; primary: Na
               </Link>
               {c.children.length > 0 && (
                 <ul className="invisible absolute top-full left-0 z-50 min-w-56 rounded-b-md border-t-2 border-brand-600 bg-bg py-2 ring-1 ring-line opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
-                  {c.children.map((k) => (
+                  {c.children.slice(0, MENU_SUBS * 2).map((k) => (
                     <li key={k.slug}>
                       <Link href={href(k.slug)} className="block px-4 py-2 text-sm hover:bg-surface hover:text-brand-600">
                         {k.title}
@@ -128,13 +131,20 @@ export function Nav({ lang, primary, groups, labels }: { lang: Lang; primary: Na
                     </Link>
                     {c.children.length > 0 && (
                       <ul className="mt-0.5 mb-1 ml-3 border-l border-line pl-3">
-                        {c.children.map((k) => (
+                        {c.children.slice(0, MENU_SUBS).map((k) => (
                           <li key={k.slug}>
                             <Link href={href(k.slug)} className="text-sm text-muted hover:text-brand-600">
                               {k.title}
                             </Link>
                           </li>
                         ))}
+                        {c.children.length > MENU_SUBS && (
+                          <li>
+                            <Link href={href(c.slug)} className="text-sm font-semibold text-brand-600 hover:underline">
+                              {lang === 'hi' ? `सभी ${c.children.length} देखें →` : `All ${c.children.length} →`}
+                            </Link>
+                          </li>
+                        )}
                       </ul>
                     )}
                   </li>
@@ -168,11 +178,16 @@ export function Nav({ lang, primary, groups, labels }: { lang: Lang; primary: Na
                         <Link href={href(c.slug)} className="block py-1.5 font-semibold">
                           {c.title}
                         </Link>
-                        {c.children.map((k) => (
+                        {c.children.slice(0, MENU_SUBS).map((k) => (
                           <Link key={k.slug} href={href(k.slug)} className="block py-1 pl-4 text-sm text-muted">
                             – {k.title}
                           </Link>
                         ))}
+                        {c.children.length > MENU_SUBS && (
+                          <Link href={href(c.slug)} className="block py-1 pl-4 text-sm font-semibold text-brand-600">
+                            {lang === 'hi' ? `सभी ${c.children.length} देखें →` : `All ${c.children.length} →`}
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>

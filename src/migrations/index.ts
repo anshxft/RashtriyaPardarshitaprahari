@@ -17,6 +17,7 @@ import * as migration_20261101_120000_epaper_layouts from './20261101_120000_epa
 import * as migration_20261101_150000_editor_message from './20261101_150000_editor_message';
 import * as migration_20261101_180000_video_tags from './20261101_180000_video_tags';
 import * as migration_20261101_200000_video_ticker from './20261101_200000_video_ticker';
+import * as migration_20261103_120000_new_sections from './20261103_120000_new_sections';
 
 export const migrations = [
   {
@@ -113,5 +114,10 @@ export const migrations = [
     up: migration_20261101_200000_video_ticker.up,
     down: migration_20261101_200000_video_ticker.down,
     name: '20261101_200000_video_ticker'
+  },
+  {
+    up: migration_20261103_120000_new_sections.up,
+    down: migration_20261103_120000_new_sections.down,
+    name: '20261103_120000_new_sections'
   },
 ];
