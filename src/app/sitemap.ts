@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl()
   const [articles, english, cats, pages, videos] = await Promise.all([
     payload.find({ collection: 'articles', where: publicArticleWhere(), limit: 5000, depth: 0, select: { slug: true, updatedAt: true, demoContent: true, format: true }, sort: '-publishedAt' }),
-    payload.find({ collection: 'articles', locale: 'en', where: publicArticleWhere('en'), limit: 5000, depth: 0, select: { slug: true } }),
+    payload.find({ collection: 'articles', locale: 'en', where: publicArticleWhere('en', { englishOnly: true }), limit: 5000, depth: 0, select: { slug: true } }),
     payload.find({ collection: 'categories', limit: 500, depth: 0, select: { slug: true } }),
     payload.find({ collection: 'pages', limit: 100, depth: 0, select: { slug: true, updatedAt: true } }),
     payload.find({ collection: 'videos', where: publicVideoWhere(), limit: 2000, depth: 0, select: { slug: true, updatedAt: true, demoContent: true } }),

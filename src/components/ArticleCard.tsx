@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { asCat, cardImage, type Card, type Img } from '@/lib/data'
-import { t, timeAgo, type Lang } from '@/lib/i18n'
+import { looksHindi, t, timeAgo, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 import { Cover, FormatBadge, QuestionBadge, SampleBadge, VerdictBadge } from './ui'
 
@@ -34,8 +34,11 @@ export function ArticleCard({ a, lang, variant = 'card', priority }: { a: Card; 
   const href = external ? external.url! : paths.article(lang, a.slug)
   const img: Img | undefined = cardImage(a, variant === 'lead' ? 'hero' : 'card') ?? (external?.imageUrl ? { src: external.imageUrl, alt: a.title } : undefined)
   const linkProps = external ? { target: '_blank', rel: 'noopener noreferrer nofollow' } : {}
+  // English site, story without an English version: Hindi title, marked as Hindi (for readers and screen readers)
+  const hindi = lang === 'en' && looksHindi(a.title)
   const title = (
-    <Link href={href} {...linkProps} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
+    <Link href={href} {...linkProps} lang={hindi ? 'hi' : undefined} className="after:absolute after:inset-0 hover:text-brand-600 dark:hover:text-white">
+      {hindi && <span className="mr-1.5 inline-block rounded bg-surface px-1.5 py-0.5 align-middle font-sans text-[11px] font-bold text-muted ring-1 ring-line">हिन्दी</span>}
       {a.title}
       {external && <span aria-hidden> ↗</span>}
     </Link>

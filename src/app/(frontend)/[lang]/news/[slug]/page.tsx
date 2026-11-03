@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArticleView } from '@/components/ArticleView'
 import { asCat, cardImage, getArchivedStub, getArticle } from '@/lib/data'
-import { assertLang, formatDate, other } from '@/lib/i18n'
+import { assertLang, formatDate, looksHindi, other } from '@/lib/i18n'
 import { decodeSlug, paths } from '@/lib/paths'
 
 export const revalidate = 60
@@ -18,14 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!a) return { robots: { index: false } }
   const img = cardImage(a, 'hero')
   const description = a.subheadline || a.excerpt || undefined
-  // hreflang only to a language version that really exists
-  const translated = lang === 'en' || Boolean(await getArticle('en', decodeSlug(p.slug)))
+  // hreflang only to a language version that really exists; an English page that shows the Hindi text (no English
+  // version yet) points search engines at the Hindi page.
+  const hindiOnly = lang === 'en' && looksHindi(a.title)
+  const en = lang === 'hi' ? await getArticle('en', decodeSlug(p.slug)) : null
+  const translated = lang === 'en' ? !hindiOnly : Boolean(en && !looksHindi(en.title))
   return {
     title: a.title,
     description,
     alternates: {
-      canonical: paths.article(lang, a.slug),
-      languages: translated ? { [lang]: paths.article(lang, a.slug), [other(lang)]: paths.article(other(lang), a.slug) } : { [lang]: paths.article(lang, a.slug) },
+      canonical: paths.article(hindiOnly ? 'hi' : lang, a.slug),
+      languages: translated ? { [lang]: paths.article(lang, a.slug), [other(lang)]: paths.article(other(lang), a.slug) } : { hi: paths.article('hi', a.slug) },
     },
     openGraph: {
       type: 'article',

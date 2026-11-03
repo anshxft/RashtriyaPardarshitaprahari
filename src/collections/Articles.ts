@@ -28,7 +28,11 @@ export const liveLifecycle = (): Where => ({ or: [{ lifecycle: { equals: 'active
  * For English (query with locale 'en') only stories that really have an English version are listed — no Hindi text
  * under an English menu. Untranslated stories show a "available in Hindi" note on their English URL.
  */
-export const publicArticleWhere = (lang?: 'hi' | 'en', opts: { withEpaperOnly?: boolean } = {}): Where => ({
+/**
+ * Stories readers may see. The English site lists every story: one without an English version shows its Hindi text
+ * (Payload's locale fallback) with a “हिन्दी” label; `englishOnly` (English sitemap) keeps only real English versions.
+ */
+export const publicArticleWhere = (lang?: 'hi' | 'en', opts: { withEpaperOnly?: boolean; englishOnly?: boolean } = {}): Where => ({
   and: [
     // “सिर्फ ई-पेपर” stories stay out of every website list (home, sections, search, sitemaps); the e-paper and the
     // story's own link (from the e-paper / QR) still open them.
@@ -36,7 +40,7 @@ export const publicArticleWhere = (lang?: 'hi' | 'en', opts: { withEpaperOnly?: 
     { _status: { equals: 'published' } },
     { publishedAt: { less_than_equal: new Date().toISOString() } },
     liveLifecycle(),
-    ...(lang === 'en' ? [{ title: { exists: true } }] : []),
+    ...(lang === 'en' && opts.englishOnly ? [{ title: { exists: true } }] : []),
   ],
 })
 

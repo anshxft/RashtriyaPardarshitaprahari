@@ -6,6 +6,8 @@ export type Lang = (typeof LANGS)[number]
 export const isLang = (x: string): x is Lang => (LANGS as readonly string[]).includes(x)
 export const assertLang = (x: string): Lang => (isLang(x) ? x : notFound())
 export const other = (l: Lang): Lang => (l === 'hi' ? 'en' : 'hi')
+/** Devanagari text — on the English site this means the story has no English version yet (Hindi shown instead). */
+export const looksHindi = (s?: string | null) => /[\u0900-\u097F]/.test(s || '')
 
 const dict = {
   hi: {

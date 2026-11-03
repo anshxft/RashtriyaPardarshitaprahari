@@ -40,14 +40,16 @@ export function FontSizer({ target, labels }: { target: string; labels: { smalle
       localStorage.setItem(KEY, String(SIZES[i]))
     } catch {}
   }, [i, target])
+  // the letter on the buttons follows the page language (अ on Hindi pages, A on English ones)
+  const glyph = /[a-z]/i.test(labels.smaller) ? 'A' : 'अ'
   const b = 'h-9 min-w-9 rounded-md border border-line bg-bg px-2 font-bold hover:bg-surface disabled:opacity-40'
   return (
     <span className="inline-flex items-center gap-1 print:hidden">
       <button type="button" className={`${b} text-sm`} aria-label={labels.smaller} title={labels.smaller} disabled={i === 0} onClick={() => setI((x) => Math.max(0, x - 1))}>
-        अ−
+        {glyph}−
       </button>
       <button type="button" className={`${b} text-base`} aria-label={labels.larger} title={labels.larger} disabled={i === SIZES.length - 1} onClick={() => setI((x) => Math.min(SIZES.length - 1, x + 1))}>
-        अ+
+        {glyph}+
       </button>
     </span>
   )

@@ -79,7 +79,7 @@ function whoosh(volume: number) {
 /** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
 const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
-export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null; tags?: VideoTags }) {
+export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
   const [nameShow, setNameShow] = useState(false)
   // Logo sting (intro): when the video starts and then once a minute.
   const [sting, setSting] = useState(0)
@@ -261,7 +261,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
           </div>
           <div className="tv-see flex w-16 shrink-0 flex-col items-center justify-center border-2 border-white/90 bg-[#c8102e] px-1 text-center text-white sm:w-28">
             <img src="/logo-watermark.png" alt="" className="w-10 sm:w-16" />
-            <span className="text-[9px] leading-tight font-bold sm:text-xs">देखें वेबसाइट</span>
+            <span className="text-[9px] leading-tight font-bold sm:text-xs">{lang === 'hi' ? 'देखें वेबसाइट' : 'Visit website'}</span>
           </div>
         </div>
       )}

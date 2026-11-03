@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { asAuthor, asCat, asMedia, cardImage, getArticles, getCategories, getCorrections, getSettings, type Card } from '@/lib/data'
-import { formatDate, readingMinutes, t, type Lang } from '@/lib/i18n'
+import { formatDate, looksHindi, readingMinutes, t, type Lang } from '@/lib/i18n'
 import { paragraphsToLexical, storyText } from '@/lib/lexical'
 import { FontSizer, ReadingProgress } from './ReadingTools'
 import { INK, resolveLayout, type Ink, type Size } from '@/lib/layout'
@@ -98,7 +98,15 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
   const ld = (o: object) => <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(o).replace(/</g, '\\u003c') }} />
 
   return (
-    <article id="story" className="mx-auto max-w-3xl">
+    <article id="story" className="mx-auto max-w-3xl" lang={lang === 'en' && looksHindi(a.title) ? 'hi' : undefined}>
+      {lang === 'en' && looksHindi(a.title) && (
+        <p lang="en" className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm">
+          This story is available in Hindi only.{' '}
+          <Link href={paths.article('hi', a.slug)} className="font-semibold text-link underline">
+            Open the Hindi page →
+          </Link>
+        </p>
+      )}
       {!preview && <ReadingProgress target="story" />}
       {ld(jsonLd)}
       {claim && ld(claim)}
@@ -190,6 +198,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
       {a.format === 'video' && a.video && typeof a.video === 'object' && (
         <div className="mt-6">
           <VideoPlayer
+            lang={lang}
             v={a.video as Video}
             aiNote={Boolean(settings.aiVoiceNote)}
             top={a.title}
@@ -267,7 +276,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
         const pics = (a.gallery || []).map((g) => ({ m: asMedia(g.image), caption: g.caption })).filter((g) => g.m?.url)
         if (!pics.length) return null
         return (
-          <section aria-label="फोटो गैलरी" className="mt-8 grid gap-4 sm:grid-cols-2">
+          <section aria-label={lang === 'hi' ? 'फोटो गैलरी' : 'Photo gallery'} className="mt-8 grid gap-4 sm:grid-cols-2">
             {pics.map(({ m, caption }, i) => (
               <figure key={i} className={pics.length % 2 === 1 && i === 0 ? 'sm:col-span-2' : ''}>
                 <a href={m!.url!} target="_blank" rel="noopener" className="block overflow-hidden rounded-lg bg-surface">

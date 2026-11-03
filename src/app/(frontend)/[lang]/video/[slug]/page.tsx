@@ -42,7 +42,7 @@ export default async function VideoPage({ params }: Props) {
       <h1 className="font-display text-3xl leading-tight font-extrabold text-navy-900 md:text-4xl dark:text-fg">{v.title}</h1>
       <p className="mt-2 text-sm text-muted">{[v.reporterName && `${d.reportBy}: ${v.reporterName}`, v.location && `${v.location}`, formatDate(v.publishedAt, lang, true)].filter(Boolean).join(' · ')}</p>
       <div className="mt-4">
-        <VideoPlayer v={v} aiNote={Boolean(settings.aiVoiceNote)} />
+        <VideoPlayer v={v} lang={lang} aiNote={Boolean(settings.aiVoiceNote)} />
       </div>
       {v.description && (
         <div className="mt-4">
