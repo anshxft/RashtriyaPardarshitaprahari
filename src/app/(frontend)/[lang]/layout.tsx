@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   return {
     metadataBase: new URL(siteUrl()),
     title: { default: `${d.siteName} — ${d.tagline}`, template: `%s | ${d.siteName}` },
-    description: d.submitIssueCta,
+    description: d.siteDescription,
     openGraph: { siteName: d.siteName, locale: lang === 'hi' ? 'hi_IN' : 'en_IN', type: 'website', images: ['/og-default.jpg'] },
     twitter: { card: 'summary_large_image' },
     alternates: { languages: { hi: '/hi', en: '/en' }, types: { 'application/rss+xml': `/${lang}/feed.xml` } },

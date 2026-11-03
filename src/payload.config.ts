@@ -34,6 +34,28 @@ import { SiteSettings } from './globals/SiteSettings'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const env = process.env
 
+/**
+ * Origins allowed to use the API with a logged-in browser (CSRF) or to read it from another site (CORS): the site
+ * itself (with and without www), its Vercel addresses, and localhost while developing.
+ */
+const trustedOrigins = () => {
+  const out = new Set<string>()
+  const add = (u?: string) => {
+    if (!u) return
+    try {
+      const url = new URL(u.startsWith('http') ? u : `https://${u}`)
+      out.add(url.origin)
+      out.add(url.origin.replace('://www.', '://').replace('://', url.hostname.startsWith('www.') ? '://' : '://www.'))
+    } catch {}
+  }
+  add(env.NEXT_PUBLIC_SITE_URL)
+  add(env.VERCEL_PROJECT_PRODUCTION_URL)
+  add(env.VERCEL_URL)
+  add(env.VERCEL_BRANCH_URL)
+  if (env.NODE_ENV !== 'production') ['http://localhost:3000', 'http://127.0.0.1:3000'].forEach((o) => out.add(o))
+  return [...out]
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -53,6 +75,8 @@ export default buildConfig({
   globals: [SiteSettings, Permissions],
   editor: lexicalEditor(),
   secret: env.PAYLOAD_SECRET || '',
+  cors: trustedOrigins(),
+  csrf: trustedOrigins(),
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   // postgres://… (Supabase, production) → Postgres; anything else → local SQLite file (development).
   // Postgres: schema changes ship as migrations (src/migrations), applied automatically in production.

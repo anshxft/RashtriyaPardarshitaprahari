@@ -38,7 +38,7 @@
     "cross-env": "10.1.0",
     "graphql": "^16.8.1",
     "html-to-image": "^1.11.13",
-    "next": "16.4.3",
+    "next": "16.4.4",
     "payload": "3.92.1",
     "qrcode": "^1.5.4",
     "react": "19.2.6",
@@ -63,5 +63,10 @@
     "esbuild@0.18.20": true,
     "esbuild@0.25.12": true,
     "esbuild@0.28.2": true
+  },
+  "overrides": {
+    "happy-dom": "21.0.4",
+    "zod": "^4.6.6",
+    "dompurify": "^3.4.17"
   }
 }
