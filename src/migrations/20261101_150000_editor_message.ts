@@ -2,7 +2,7 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 import { EDITOR_MESSAGE, EDITOR_MESSAGE_TITLE } from '../content/editorMessage'
 import { rt } from '../seed/helpers'
 
-// Client's new “प्रधान संपादक का संदेश” (both locales show the Hindi text, as before). Content only.
+// New “प्रधान संपादक का संदेश” (both locales show the Hindi text, as before). Content only.
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   const content = JSON.stringify(rt(EDITOR_MESSAGE))
   await db.execute(sql`

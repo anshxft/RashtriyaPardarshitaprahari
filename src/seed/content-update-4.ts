@@ -1,5 +1,5 @@
 /**
- * npm run seed:round4 — Round 4 content for an EXISTING database. Safe to run more than once.
+ * npm run seed:update-4 — content update 4 for an EXISTING database. Safe to run more than once.
  *  • descriptor line, official email, 3 offices with helplines, WhatsApp message, social links
  *    (each only filled when still empty, so later admin edits are never overwritten)
  *  • About page: the old motto is replaced by the registered tagline (only that sentence is touched)

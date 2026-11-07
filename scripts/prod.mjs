@@ -1,6 +1,6 @@
 // Run any command against the PRODUCTION database without pasting secrets:
 //   node scripts/prod.mjs npx payload migrate
-//   node scripts/prod.mjs npx payload run src/seed/round3.ts
+//   node scripts/prod.mjs npx payload run src/seed/content-update-3.ts
 // Reads DATABASE_URL / PAYLOAD_SECRET (and BLOB token if present) from the git-ignored .env.vercel.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'

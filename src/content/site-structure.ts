@@ -1,10 +1,6 @@
 /**
- * Sections / menu (seeded into the Categories collection; after seeding, edit them in Admin → Categories).
- *
- * ⚠ PLACEHOLDER: content.md was not supplied yet. The 24 main items below are a draft built from the brief
- * and the logo's values (तथ्य | पारदर्शिता | जवाबदेही | जनहित). Replace titles/descriptions with the exact
- * wording from content.md, then re-run `npm run seed` (it only adds missing slugs) or edit in the admin.
- * The 9 named sub-sections from the brief are placed under their most relevant parent.
+ * Initial sections / menu for a fresh database (seeded into the Categories collection). The live list is managed
+ * in Admin → Categories; `npm run seed` only adds slugs that are missing and never overwrites edited sections.
  */
 import type { L } from './forms'
 

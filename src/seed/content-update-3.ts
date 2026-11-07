@@ -1,5 +1,5 @@
 /**
- * npm run seed:round3 — one-time content migration for an EXISTING database (Round 3 text corrections).
+ * npm run seed:update-3 — one-time content migration for an EXISTING database (section and text corrections).
  *  • "जन मंच" → "जनता का मंच"; adds संपादकीय, समाज का आइना, संबंधित न्यूज़ पोर्टल
  *  • Editor → प्रधान संपादक in About / Editorial policy / Correction policy (overwrites those 3 pages' text)
  *  • creates the "प्रधान संपादक का संदेश" page (never overwritten) and sample team profiles
@@ -13,7 +13,7 @@ import { seedTeam } from './team'
 import { istDate } from '../lib/articleHooks'
 import { NEWS_ID_PREFIX } from '../content/brand'
 
-// ── Sections: only the ones Round 3 touched
+// ── Sections: only the ones this update touches
 const TOUCHED = ['jan-manch', 'sampadkiya', 'samaj-ka-aina', 'sambandhit-portal']
 for (const parent of SECTIONS) {
   const parentDoc = await findSlug('categories', parent.slug)

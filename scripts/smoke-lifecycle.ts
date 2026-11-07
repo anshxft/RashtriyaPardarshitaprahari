@@ -1,5 +1,5 @@
-// Local end-to-end check of the Round 4 news lifecycle through Payload (same hooks the Desk uses):
-//   npx payload run scripts/try-lifecycle.ts
+// Local end-to-end check of the news lifecycle through Payload (same hooks the Desk uses):
+//   npx payload run scripts/smoke-lifecycle.ts
 // Creates a throwaway story, publishes, edits (version 1.1), archives, re-publishes (B), trashes, restores, purges,
 // and prints the audit trail. Run against the LOCAL database only.
 import config from '@payload-config'

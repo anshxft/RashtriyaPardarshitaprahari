@@ -8,7 +8,7 @@ type Labels = { print: string; image: string; share: string; busy: string; fail:
 const btn = 'rounded-md border border-line bg-bg px-3 py-1.5 text-sm font-semibold hover:bg-surface disabled:opacity-60'
 
 /**
- * Per-story actions for everyone (Round 5: readers may download news): share link, Print/PDF and the news-card image
+ * Per-story actions for everyone (readers may download news): share link, Print/PDF and the news-card image
  * (rendered in the browser from the hidden `children` card, which carries the QR + News ID). Video files stay staff-only.
  */
 export function StoryTools({

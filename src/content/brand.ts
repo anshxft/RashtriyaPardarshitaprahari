@@ -16,7 +16,7 @@ export const NEWS_ID_PREFIX = 'NTP'
 export const SPECIAL_COLUMNS = ['samaj-ka-aina', 'jan-manch', 'sampadkiya'] as const
 
 /**
- * Video news: the white scrolling ticker's standing text (client's wording, unchanged). Lines from Desk for one video
+ * Video news: the white scrolling ticker's standing text (editorial wording, unchanged). Lines from Desk for one video
  * run before it. Shown in this order, separated by ✦.
  */
 export const VIDEO_TICKER_DEFAULT = [

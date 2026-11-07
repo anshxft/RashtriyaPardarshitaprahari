@@ -116,7 +116,7 @@ export type VideoNewsInput = {
 }
 
 /**
- * One master news record (Part 1.12): the video news IS an article (format "video") linked to the uploaded video.
+ * One master news record: the video news IS an article (format "video") linked to the uploaded video.
  * News ID, QR, URL, publish state, versions and audit all live on that article; the video holds the files.
  */
 export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ status: string; articleId: number; newsId?: string | null; url?: string }>> {
@@ -175,7 +175,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
         pauseMs: input.pauseMs ?? 400,
         audioUrl: scriptChanged ? null : prev?.flash?.audioUrl,
         audioKey: scriptChanged ? null : prev?.flash?.audioKey,
-        // Publishing by an authorised editor = approving the script (Part 3.1/3.6).
+        // Publishing by an authorised editor = approving the script.
         approvedBy: publishing ? u.name : scriptChanged ? null : prev?.flash?.approvedBy,
         approvedAt: publishing ? new Date().toISOString() : scriptChanged ? null : prev?.flash?.approvedAt,
       },

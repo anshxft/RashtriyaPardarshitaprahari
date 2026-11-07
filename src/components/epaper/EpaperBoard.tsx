@@ -72,7 +72,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
       ? [...manualPages, ...(leftover.length ? packed.pages : []).map((p, i) => ({ ...p, number: manualPages.length + i + 1 }))]
       : packed.pages
   const [zoom, setZoom] = useState(1)
-  // Phones open the readable card view (client's layout); the A3 pages are one tap away.
+  // Phones open the readable card view (editorial layout); the A3 pages are one tap away.
   const [reading, setReading] = useState(false)
   useEffect(() => setReading(!canEdit && window.innerWidth < 768), [canEdit])
 
@@ -275,7 +275,7 @@ export function EpaperBoard({ lang, date, dateLabel, siteName, trustName, regNo,
               <div id={`ep-page-${pg.number}`} className="ep-page" style={{ position: 'relative', width: GEO.pageW, height: GEO.pageH, transform: `scale(${scale})`, transformOrigin: 'top left', background: '#fff', color: '#111', boxShadow: '0 1px 2px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.22)', outline: '1px solid rgba(0,0,0,.12)', overflow: 'hidden' }}>
                 {/* same masthead on every page */ pg.number > 0 && (
                   <header style={{ position: 'absolute', left: GEO.margin, top: GEO.margin - 8, width: GEO.pageW - GEO.margin * 2, height: GEO.mastheadH - 20, display: 'flex', flexDirection: 'column', background: '#e9eef5' }}>
-                    {/* Client's banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
+                    {/* The masthead banner (map · name · तुला); its own small text rows were cleaned off, so the trust line and the
                         correctly spelt tagline are live text here, and the date strip below is always today's. */}
                     <div style={{ position: 'relative', flex: 1 }} role="img" aria-label={siteName}>
                       {/* a real <img>, not a CSS background: PDF / print tools drop backgrounds, so the name went missing */}

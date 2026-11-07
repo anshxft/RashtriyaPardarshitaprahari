@@ -39,7 +39,7 @@ export const emptyForm = (epaperOnly = false): NewsForm => ({
   photo: { id: null, url: null },
   gallery: [],
   credit: '',
-  // Client: each section is separate — “नई खबर” goes to the website only, “ई-पेपर खबर” to the e-paper only.
+  // Each section is separate — “नई खबर” goes to the website only, “ई-पेपर खबर” to the e-paper only.
   layout: { template: '1', autoFit: true, bodyScale: 100, inEpaper: epaperOnly, epaperOnly },
   scheduleAt: '',
   editNote: '',

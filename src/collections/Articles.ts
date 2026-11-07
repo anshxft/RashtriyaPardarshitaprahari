@@ -20,7 +20,7 @@ export const FORMATS = [
 
 const is = (...formats: string[]) => (data: Record<string, unknown>) => formats.includes(data?.format as string)
 
-/** Not archived / not in the trash (rows from before Round 4 have no lifecycle value = active). */
+/** Not archived / not in the trash (rows created before the lifecycle field have no value = active). */
 export const liveLifecycle = (): Where => ({ or: [{ lifecycle: { equals: 'active' } }, { lifecycle: { exists: false } }] })
 
 /**
@@ -375,7 +375,7 @@ export const Articles: CollectionConfig = {
     { name: 'sample', type: 'checkbox', label: 'Show "Sample" label', admin: { position: 'sidebar' } },
     { name: 'demoContent', type: 'checkbox', index: true, admin: { position: 'sidebar', description: 'Temporary demo item. Bulk delete: npm run demo:remove' } },
     { name: 'createdBy', type: 'relationship', relationTo: 'users', admin: { position: 'sidebar', readOnly: true } },
-    // Round 4 lifecycle — changed only through the Desk's Archive / Delete / Restore actions (server-checked + audited).
+    // News lifecycle — changed only through the Desk's Archive / Delete / Restore actions (server-checked + audited).
     {
       name: 'lifecycle',
       type: 'select',

@@ -6,7 +6,7 @@ import type { Lang } from '@/lib/i18n'
 import { TricolorName } from '../TricolorName'
 
 /**
- * Phone reading view of the day's edition (client's sketch): info strip → lead story (2 of 3 columns) with the next
+ * Phone reading view of the day's edition (editorial design): info strip → lead story (2 of 3 columns) with the next
  * two stories stacked beside it → the rest three to a row → footer strip. Real text at readable sizes, scrolls down;
  * the A3 pages stay one tap away for print / download.
  */

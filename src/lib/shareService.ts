@@ -33,7 +33,7 @@ async function storyTags(a: Article): Promise<string[]> {
   return [cat?.title, parent, ...titles, ...places].filter((x): x is string => !!x)
 }
 
-/** Part 1.13: the social version made from the ONE master record — short headline, short description, hashtags. */
+/** the social version made from the ONE master record — short headline, short description, hashtags. */
 export async function socialVersion(a: Article) {
   const c = await cfg()
   const words = [...(c.hashtags || '').split(/\s+/), ...(await storyTags(a)).map(tag), ...STANDARD_TAGS.map(tag)]

@@ -248,7 +248,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         <PhotoField photo={f.thumb} onChange={(p) => set('thumb', p)} alt={f.title} credit="" onCredit={() => {}} />
       </section>
 
-      {/* 2 · fields (only the ones the spec asks for) */}
+      {/* 2 · fields */}
       <section className={`${card} space-y-3`}>
         <label className="block text-sm font-semibold">
           खबर का शीर्षक * <span className="font-normal text-muted">— वीडियो के ऊपर लाल पट्टी में दिखेगा</span>

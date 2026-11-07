@@ -1,5 +1,5 @@
 /**
- * npm run seed:round5 — Round 5 client changes for an EXISTING database. Safe to run more than once.
+ * npm run seed:update-5 — content update 5 for an EXISTING database. Safe to run more than once.
  *  • descriptor without “आधिकारिक / Official”
  *  • section renames + 2 new sections
  *  • phone numbers removed from the two administrative offices (addresses kept)
@@ -61,8 +61,8 @@ const perms = (await payload.findGlobal({ slug: 'permissions', depth: 0 })) as u
 await payload.updateGlobal({ slug: 'permissions', data: { republish: { ...(perms.republish || {}), editor: true, senior: true } } as never })
 log('permissions: editor can re-publish')
 
-// ── संपादक का संदेश (client's text, verbatim). No English version was supplied, so English shows the same Hindi text.
-const MESSAGE = EDITOR_MESSAGE // client's current text lives in src/content/editorMessage.ts
+// ── संपादक का संदेश (editorial text, verbatim). No English version was supplied, so English shows the same Hindi text.
+const MESSAGE = EDITOR_MESSAGE // current text lives in src/content/editorMessage.ts
 
 const page = await findSlug('pages', 'editor-in-chief-message')
 if (page) {

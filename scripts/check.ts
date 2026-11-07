@@ -120,7 +120,7 @@ assert.equal(newsStatus({ _status: 'published', publishedAt: past }), 'published
 assert.equal(newsStatus({ _status: 'published', publishedAt: past, versionMinor: 2 }), 'updated')
 assert.equal(newsStatus({ _status: 'published', lifecycle: 'archived' }), 'archived')
 assert.equal(newsStatus({ _status: 'published', lifecycle: 'trashed' }), 'trashed')
-// buttons by status × role (Part 1.1 / 1.8)
+// buttons by status × role
 const b = (s: Parameters<typeof buttonsFor>[0], u: Parameters<typeof buttonsFor>[1], owner: number) => buttonsFor(s, u, owner, {}, DEFAULTS)
 assert.deepEqual(b('draft', rep, 3).main, ['edit', 'preview', 'delete'], 'reporter: own draft, no publish')
 assert.deepEqual(b('draft', ed, 3).main, ['edit', 'preview', 'publish'], 'editor cannot trash someone else’s draft by default')
@@ -161,7 +161,7 @@ assert.ok(ssml.includes('<break time="500ms"/>') && ssml.includes('rate="110%"')
 assert.equal(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1 }, [], 'google'))
 assert.notEqual(ttsKey('क', { rate: 1 }, [], 'google'), ttsKey('क', { rate: 1.2 }, [], 'google'), 'new settings = new audio')
 
-// e-paper Round 4: readable floor, “समाज का आइना” + ad columns on page 1 (right), nothing reserved when there is nothing
+// e-paper: readable floor, “समाज का आइना” + ad columns on page 1 (right), nothing reserved when there is nothing
 assert.ok(pages.flatMap((p) => p.placed).every((a) => a.variant.scale * BODY_PX >= MIN_BODY_PX - 1e-9), 'body never below the readable size')
 assert.ok(variantsFor(story('v', 100, { bodyScale: 75 })).every((v) => v.scale * BODY_PX >= MIN_BODY_PX - 1e-9), 'editor cannot go below the floor either')
 assert.ok(variantsFor(story('v', 100, { autoFit: true })).every((v, _, a) => v.scale === a[0].scale), 'Auto Fit widens, never shrinks text')

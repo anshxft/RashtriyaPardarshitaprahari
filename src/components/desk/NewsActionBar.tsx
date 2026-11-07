@@ -36,7 +36,7 @@ const REASON_HI: Record<(typeof DELETE_REASONS)[number], string> = {
   Other: 'अन्य',
 }
 
-/** Per-story buttons (status × role, decided on the server) with the confirmations the spec asks for. Big touch targets. */
+/** Per-story buttons (status × role, decided on the server) with the required confirmations. Big touch targets. */
 export function NewsActionBar({ id, slug, title, buttons, info }: { id: number; slug?: string | null; title: string; buttons: { main: Btn[]; more: Btn[] }; info: Info }) {
   const router = useRouter()
   const [dialog, setDialog] = useState<null | 'archive' | 'delete' | 'delete2' | 'republish' | 'purge' | 'restoreTrash'>(null)

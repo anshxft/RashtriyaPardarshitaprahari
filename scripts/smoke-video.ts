@@ -1,5 +1,5 @@
 // Manual end-to-end test of the video pipeline on this machine (LOCAL database only):
-//   VIDEO_FONT="Nirmala UI" npx payload run scripts/try-video.ts      (Windows; the worker image uses Noto Sans Devanagari)
+//   VIDEO_FONT="Nirmala UI" npx payload run scripts/smoke-video.ts      (Windows; the worker image uses Noto Sans Devanagari)
 // Uses ./.local-storage/videos/original/test-clip.mp4 (make one with ffmpeg testsrc), creates a fictional video news,
 // runs web → publish → social → vertical → flash (strip only unless a TTS provider is set) and prints what came out.
 import config from '@payload-config'

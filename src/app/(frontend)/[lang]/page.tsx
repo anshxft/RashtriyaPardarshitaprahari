@@ -58,10 +58,10 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
     <div className="space-y-12">
       {flash.length > 0 && <FlashBox initial={flash} lang={lang} />}
 
-      {/* Phones: newspaper-style front (client's layout) — lead 2/3 + two stories beside it, then three to a row */}
+      {/* Phones: newspaper-style front (editorial layout) — lead 2/3 + two stories beside it, then three to a row */}
       <PhoneFront items={[lead, ...rest.slice(0, 11)]} lang={lang} />
 
-      {/* Computers: newspaper front (client's reference) — story list | lead + two columns | ad + latest */}
+      {/* Computers: newspaper front (editorial reference) — story list | lead + two columns | ad + latest */}
       <DeskFront lead={lead} rest={rest} lang={lang} ad={<Slot name="ad-home-top" lang={lang} />} />
 
       {/* Tablets: lead + latest list */}

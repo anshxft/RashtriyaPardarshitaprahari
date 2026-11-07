@@ -71,7 +71,7 @@ export function NewsEditor({ initial, locale, categories, team, edition, mayPubl
   const busy = saving || (f.gallery || []).some((g) => g.busy)
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [result, setResult] = useState<Extract<SaveResult, { ok: true }> | null>(null)
-  // Client: each section is separate. A story opened from “ई-पेपर खबर” is e-paper only; every other story is website only
+  // Each section is separate. A story opened from “ई-पेपर खबर” is e-paper only; every other story is website only
   // and shows no e-paper options or preview at all.
   const ep = Boolean(initial.layout.epaperOnly)
   const [webKey, setWebKey] = useState(0)
@@ -637,7 +637,7 @@ function PublishedCard({ r, locale, onClose }: { r: Extract<SaveResult, { ok: tr
   )
 }
 
-/** Part 1.3: checklist first, then the official confirmation. Required items missing = Publish stays disabled. */
+/** checklist first, then the official confirmation. Required items missing = Publish stays disabled. */
 function PublishConfirm({ items, republish, schedule, onCancel, onOk }: { items: ReturnType<typeof publishChecklist>; republish: boolean; schedule: boolean; onCancel: () => void; onOk: () => void }) {
   const blocked = items.some((i) => i.required && !i.ok)
   return (

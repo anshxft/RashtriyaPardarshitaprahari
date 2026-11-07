@@ -1,6 +1,6 @@
 /**
  * Role → action permission matrix. Admin (प्रधान संपादक / Super Admin) can always do everything, so nobody can lock
- * themselves out. The other roles follow the "Permissions" global, editable by an Admin (defaults below = the client's spec).
+ * themselves out. The other roles follow the "Permissions" global, editable by an Admin (defaults below = the agreed role matrix).
  * Pure + a tiny per-instance cache, so sync checks (canPublish) and async server actions read the same rules.
  */
 export const ROLES = ['reporter', 'editor', 'senior', 'admin'] as const

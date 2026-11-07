@@ -1,8 +1,8 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 /**
- * Client's new sections (Nov 2026): 3 new top-level groups with their sub-sections (जनहित प्रकोष्ठ, खोजी पत्रकारिता,
- * विस्थापित अधिकार प्रहरी) and 3 single sections (ऑपरेशन सुरक्षित सफ़र, मौसम, अन्य). Titles / descriptions are the client's
+ * New sections (Nov 2026): 3 new top-level groups with their sub-sections (जनहित प्रकोष्ठ, खोजी पत्रकारिता,
+ * विस्थापित अधिकार प्रहरी) and 3 single sections (ऑपरेशन सुरक्षित सफ़र, मौसम, अन्य). Titles / descriptions are the editorial
  * wording; English titles are translations. Idempotent: a slug that already exists is left untouched.
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {

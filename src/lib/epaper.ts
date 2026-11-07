@@ -57,7 +57,7 @@ export const headlinePx = (size: Size, span: number) => HEAD[Math.min(4, Math.ma
 export const subPx = (size: Size, span: number) => Math.round(headlinePx(size, span) * (span === 1 ? 0.62 : 0.5) + 2)
 export const bylinePx = (size: Size) => ({ sm: 14, md: 16, lg: 18, xl: 20 })[size]
 export const BODY_PX = 20
-/** Readable floor: body text is never drawn smaller than this (Round 4: never shrink text just to fit more). */
+/** Readable floor: body text is never drawn smaller than this (text is never shrunk just to fit more). */
 export const MIN_BODY_PX = 19.5
 export const bodyScaleOf = (s: EpStory) => Math.max(MIN_BODY_PX / BODY_PX, s.layout.bodyScale / 100)
 
@@ -202,7 +202,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
     }
     return best
   }
-  // Client grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
+  // Editorial grid (6 columns): lead story 4 columns, every other story 2 columns (2 + 2 + 2); wider only if it can't fit.
   let lead = true
   while (queue.length) {
     const { s, pin, cont } = queue.shift()!
@@ -237,7 +237,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
         }
       }
       if (done) break
-      // Client: many stories on a page is fine, empty space is not. Before moving on, fill this page's free space with
+      // Many stories on a page is fine, empty space is not. Before moving on, fill this page's free space with
       // a later story that fits there whole (best fit, any width 1–4 columns), then try the current story again.
       const fill = bestFit(pg, p)
       if (fill) {
@@ -307,7 +307,7 @@ export function pack(stories: EpStory[], measure: Measure, extra: { ad?: EpStory
       if (done) break
     }
   }
-  // Client: no empty space at the foot of a page. Whatever is left under each column gets the paper's own box
+  // No empty space at the foot of a page. Whatever is left under each column gets the paper's own box
   // (helpline · website · QR · “send your news”), sized to exactly that gap.
   const tpl = (extra.fillers || []).find((f) => f.id === 'filler-submit')
   if (tpl) {
@@ -406,7 +406,7 @@ export function fromManual(layout: ManualLayout, pool: EpStory[]): PackedPage[] 
       if (!story) return []
       return [{ story, id: `${it.ref}@${i + 1}`, page: i + 1, x: colX(it.col), y: it.y, w: spanW(it.span), h: it.h, variant: { cols: it.span, scale: it.scale ?? 1 } }]
     })
-    // Client: no empty space — whatever is left under each column gets the helpline / send-your-news box.
+    // No empty space — whatever is left under each column gets the helpline / send-your-news box.
     if (tpl && placed.length) {
       const top = Array.from({ length: GEO.cols }, (_, c) => Math.max(contentTop, ...placed.filter((p) => p.x <= colX(c) + 1 && p.x + p.w >= colX(c) + colW - 1).map((p) => p.y + p.h + GEO.blockGap)))
       let c = 0

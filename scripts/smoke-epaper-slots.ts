@@ -1,5 +1,5 @@
 // LOCAL ONLY: creates a fictional test ad (e-paper column) + a fictional “समाज का आइना” column for today, and switches
-// ads on, so the e-paper slots can be seen:  npx payload run scripts/try-epaper-slots.ts
+// ads on, so the e-paper slots can be seen:  npx payload run scripts/smoke-epaper-slots.ts
 import path from 'node:path'
 import config from '@payload-config'
 import { getPayload } from 'payload'

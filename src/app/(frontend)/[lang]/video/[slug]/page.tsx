@@ -25,7 +25,7 @@ export default async function VideoPage({ params }: Props) {
   const d = t(lang)
   const v = await getVideo(lang, decodeSlug(p.slug))
   if (!v) notFound()
-  // Round 4: a video news lives on ONE master page (its article: News ID, QR, versions). Old video links go there.
+  // A video news lives on ONE master page (its article: News ID, QR, versions). Old video links go there.
   if (typeof v.article === 'object' && v.article?.slug && v.article._status === 'published') permanentRedirect(paths.article(lang, v.article.slug))
   const [settings, more] = await Promise.all([getSettings(lang), getVideos(lang, { limit: 4 })])
   const url = `${siteUrl()}${paths.video(lang, v.slug)}`

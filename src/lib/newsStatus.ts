@@ -113,7 +113,7 @@ export function buttonsFor(status: NewsStatus, user: U, ownerId: number | string
   return { main, more }
 }
 
-/** Publish checklist (Part 1.3). `required` items block publishing; the rest are warnings. */
+/** Publish checklist. `required` items block publishing; the rest are warnings. */
 export type ChecklistInput = { title?: string; subheadline?: string; reporterName?: string; location?: string; categoryId?: unknown; hasMedia?: boolean; body?: string; isLink?: boolean; hasVideo?: boolean; flashScript?: string }
 export function publishChecklist(f: ChecklistInput): { key: string; label: string; ok: boolean; required: boolean; note?: string }[] {
   const t = (s?: string) => Boolean(s && s.trim())

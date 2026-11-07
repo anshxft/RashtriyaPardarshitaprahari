@@ -1,6 +1,5 @@
 /**
  * Public form definitions (fields, labels, options). Drives both the public forms and the admin inbox collections.
- * PLACEHOLDER wording — replace labels/options with the exact text from content.md.
  */
 export type L = { hi: string; en: string }
 export type FormField = {

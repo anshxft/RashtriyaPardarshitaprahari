@@ -1,5 +1,5 @@
 /**
- * “प्रधान संपादक का संदेश” — the client's exact text (Pages → editor-in-chief-message). Markup: "## " h2, "### " h3,
+ * “प्रधान संपादक का संदेश” — the exact text supplied by the editorial team (Pages → editor-in-chief-message). Markup: "## " h2, "### " h3,
  * blank line = new paragraph, **bold**. Used by the seed and by migration 20261101_150000_editor_message.
  */
 export const EDITOR_MESSAGE_TITLE = { hi: 'प्रधान संपादक का संदेश', en: 'Editor-in-Chief’s Message' }

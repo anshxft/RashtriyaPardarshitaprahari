@@ -1,5 +1,5 @@
 /**
- * "Final video with Flash + Voice" (Part 3.7): the website version with the red FLASH strip burned in at the chosen
+ * "Final video with Flash + Voice": the website version with the red FLASH strip burned in at the chosen
  * interval and the female voice reading the SAME approved script; the original sound is lowered under the voice.
  */
 import { rm, writeFile } from 'node:fs/promises'

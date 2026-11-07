@@ -1,7 +1,6 @@
 /**
- * Static page DRAFTS. ⚠ Replace with the exact policy wording from content.md, and have the legal pages
- * reviewed by a lawyer. Text in [square brackets] is a placeholder to fill in.
- * After seeding, edit these in Admin → Pages (the seed never overwrites an existing page).
+ * Starting text for the static pages (About, policies) on a fresh database. The published wording is managed in
+ * Admin → Pages; the seed never overwrites an existing page. Text in [square brackets] is filled in per deployment.
  */
 type P = { slug: string; title: { hi: string; en: string }; hi: string; en: string; legal?: boolean }
 

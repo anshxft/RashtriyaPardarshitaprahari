@@ -18,7 +18,7 @@ export default async function PrintStory({ params, searchParams }: { params: Pro
   const d = t(lang)
   const a = await getArticle(lang, decodeSlug(p.slug))
   if (!a) notFound()
-  // Round 5: readers may print / save as PDF too.
+  // Readers may print / save as PDF too.
   const settings = await getSettings(lang)
   const img = cardImage(a, 'hero')
   const byline = a.reporterName || (typeof a.reporter === 'object' && a.reporter ? a.reporter.name : undefined) || asAuthor(a.author)?.name

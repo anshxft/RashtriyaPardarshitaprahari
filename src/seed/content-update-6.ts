@@ -1,8 +1,8 @@
 /**
- * npm run seed:round6 — Round 6 client content for an EXISTING database. Safe to run more than once.
+ * npm run seed:update-6 — content update 6 for an EXISTING database. Safe to run more than once.
  *  • new digital-news column “सवाल सार्वजनिक हित का”
  *  • two team profiles (legal advisor, national sports bureau chief) — ID numbers left empty until the client sends them
- *  • “सुधार एवं स्पष्टीकरण नीति” (client's text, verbatim) on the correction-policy page
+ *  • “सुधार एवं स्पष्टीकरण नीति” (editorial text, verbatim) on the correction-policy page
  */
 import { bilingual, findSlug, log, payload } from './lib'
 import { rt } from './helpers'
@@ -53,7 +53,7 @@ for (const m of TEAM) {
   log('team: added —', m.hi.name)
 }
 
-// ── Correction & clarification policy (client's text). English keeps its current text under the new title.
+// ── Correction & clarification policy (editorial text). English keeps its current text under the new title.
 const POLICY = `## सत्य सर्वोपरि, जवाबदेही अनिवार्य
 
 राष्ट्रीय पारदर्शिता प्रहरी सत्य, निष्पक्षता और जनहित आधारित पत्रकारिता के लिए प्रतिबद्ध है। हमारी प्रकाशित सामग्री में कोई तथ्यात्मक त्रुटि पाए जाने पर प्रमाणों की निष्पक्ष जाँच कर आवश्यक सुधार यथाशीघ्र किया जाएगा। महत्त्वपूर्ण सुधारों को पारदर्शिता के साथ सार्वजनिक किया जाएगा।

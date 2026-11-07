@@ -109,7 +109,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   const banded = Boolean(top || bottom)
   // Bands stay 1–2 lines: longer text gets smaller letters (the full headline is written above the player anyway).
   const fit = (t: string) => (t.length <= 55 ? 'text-xl sm:text-3xl' : t.length <= 100 ? 'text-lg sm:text-2xl' : 'text-base sm:text-xl')
-  // Desk lines for this video (one per line) run first, then the paper's standing appeal (client's text).
+  // Desk lines for this video (one per line) run first, then the paper's standing appeal (editorial text).
   const own = (tags?.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
   const ticker = [...own, ...VIDEO_TICKER_DEFAULT].join('   ✦   ') + '   ✦   '
   // Fixed speed whatever the text length: the real width is measured and the run takes width ÷ speed seconds.

@@ -1,6 +1,6 @@
 /**
- * TEMPORARY DEMO NEWS (demoContent = true). Real headlines from 4–28 Sep 2026, summarised in our own words.
- * Only facts checked against the linked source. Remove all with: npm run demo:remove
+ * Demo news for local development and staging (demoContent = true; never shown in sitemaps or feeds).
+ * Short summaries that link to the original source. Remove all with: npm run demo:remove
  */
 type Lang = { title: string; excerpt: string; body: string }
 export type Demo = {

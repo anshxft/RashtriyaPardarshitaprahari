@@ -31,14 +31,14 @@ export function StoryBlock({ s, cols, scale, take, lang, height }: { s: EpStory;
   const width = spanW(cols)
   const paras = s.paragraphs.slice(0, take ?? s.paragraphs.length)
   const showPhoto = Boolean(s.photo) && L.showPhoto
-  // Client: a photo sits at the side with the text running beside it (no empty margins around a centred photo);
+  // A photo sits at the side with the text running beside it (no empty margins around a centred photo);
   // only a full-width photo stays on top.
   const side = showPhoto && !s.link && (L.photoPos !== 'top' || L.photoSize !== 'full')
-  // Client: no empty space under a side photo — the photo sits at the top of the first text column and the text runs
+  // No empty space under a side photo — the photo sits at the top of the first text column and the text runs
   // on underneath it, then through the other columns (newspaper wrap). One column wide, so the columns stay level.
   const photoW = side ? '100%' : Math.round(width * FRAC[L.photoSize])
   const bodyCols = cols
-  // Client: text edges even on both sides (newspaper style)
+  // Text edges even on both sides (newspaper style)
   const align = 'justify'
   // Editor-in-Chief's pieces already say “प्रधान संपादक के कलम से” — no “रिपोर्ट: प्रधान संपादक…” line under them
   const reporter = s.reporter && !/^प्रधान संपादक|^Editor-in-Chief/.test(s.reporter) ? s.reporter : null
