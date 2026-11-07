@@ -18,6 +18,7 @@ import * as migration_20261101_150000_editor_message from './20261101_150000_edi
 import * as migration_20261101_180000_video_tags from './20261101_180000_video_tags';
 import * as migration_20261101_200000_video_ticker from './20261101_200000_video_ticker';
 import * as migration_20261103_120000_new_sections from './20261103_120000_new_sections';
+import * as migration_20261107_120000_ad_lakwa_center from './20261107_120000_ad_lakwa_center';
 
 export const migrations = [
   {
@@ -119,5 +120,10 @@ export const migrations = [
     up: migration_20261103_120000_new_sections.up,
     down: migration_20261103_120000_new_sections.down,
     name: '20261103_120000_new_sections'
+  },
+  {
+    up: migration_20261107_120000_ad_lakwa_center.up,
+    down: migration_20261107_120000_ad_lakwa_center.down,
+    name: '20261107_120000_ad_lakwa_center'
   },
 ];
