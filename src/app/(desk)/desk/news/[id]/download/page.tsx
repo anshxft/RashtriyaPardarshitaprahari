@@ -52,6 +52,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
               name: a.videoTag?.name,
               role: a.videoTag?.role,
               ticker: a.videoTag?.ticker,
+              voice: a.flash?.voice && a.flash.audioUrl ? `/api/v/${vid}/voice` : null,
               ads: ads.map(({ title, image, win }) => ({ title, image, win })),
             }}
           />

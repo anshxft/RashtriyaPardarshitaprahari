@@ -23,6 +23,8 @@ export type VideoForm = {
   tagRole: string
   ticker: string
   flashScript: string
+  voiceScript: string
+  voiceGender: 'female' | 'male'
   description: string
   location: string
   reporterName: string
@@ -128,6 +130,8 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         tagRole: f.tagRole,
         ticker: f.ticker,
         flashScript: f.flashScript,
+        voiceScript: f.voiceScript,
+        voiceGender: f.voiceGender,
         description: f.description,
         reporterName: f.reporterName,
         reporterId: f.reporterId,
@@ -148,7 +152,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       if (!r.ok) return setNote({ kind: 'err', text: r.error })
       const live = r.status === 'published' || r.status === 'scheduled'
       setF((x) => ({ ...x, articleId: r.articleId, newsId: r.newsId, slug: r.url, published: x.published || live, jobs: live ? { ...x.jobs, social: { status: 'queued' }, ...(x.flash || x.voice ? { flash: { status: 'queued' } } : {}) } : x.jobs }))
-      setNote({ kind: 'ok', text: { draft: 'ड्राफ्ट सेव ✔', submitted: 'समीक्षा के लिए भेजी गई ✔', scheduled: 'शेड्यूल हो गई ', published: `प्रकाशित हो गई ${r.newsId ? `News ID: ${r.newsId}` : ''} — सोशल वीडियो बन रहा है` }[r.status] || 'सेव ✔' })
+      setNote({ kind: 'ok', text: ({ draft: 'ड्राफ्ट सेव ✔', submitted: 'समीक्षा के लिए भेजी गई ✔', scheduled: 'शेड्यूल हो गई ', published: `प्रकाशित हो गई ${r.newsId ? `News ID: ${r.newsId}` : ''}` }[r.status] || 'सेव ✔') + (r.note || '') })
     })
   }
 
@@ -160,7 +164,10 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
     })
 
   const st = STATUS[f.processing]
-  const items = publishChecklist({ title: f.title, reporterName: f.reporterName, location: f.location, categoryId: f.categoryId, hasMedia: true, hasVideo: true, body: f.description, flashScript: f.flashScript })
+  // Video news goes out with just a headline: everything else is optional (no section = “अन्य”)
+  const items = publishChecklist({ title: f.title, reporterName: f.reporterName, location: f.location, categoryId: f.categoryId, hasMedia: true, hasVideo: true, body: f.description, flashScript: f.flashScript }).map((i) => (i.key === 'title' ? i : { ...i, required: false }))
+  const spoken = f.voiceScript.trim() || f.flashScript.trim()
+  const textMissing = (f.flash && !f.flashScript.trim()) || (f.voice && !spoken)
   const ready = f.processing === 'ready'
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-28">
@@ -239,9 +246,10 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <summary className="cursor-pointer font-bold text-navy-900">📷 वीडियो नहीं है? फोटो से वीडियो खबर बनाएं (आवाज़ के साथ)</summary>
             <p className="my-2 text-sm text-muted">फोटो चुनें और खबर का छोटा विवरण लिखें। फोटो फ्लैश के साथ एक-एक कर आएंगी और चुनी हुई आवाज़ (महिला / पुरुष) वही विवरण पढ़ेगी। बना हुआ वीडियो अपने-आप अपलोड होगा, फिर बाकी जानकारी भरकर प्रकाशित करें।</p>
             <PhotoVideoMaker
-              defaultScript={f.flashScript}
+              defaultScript={f.voiceScript}
               onMade={(file, text) => {
-                if (text) setF((x) => ({ ...x, flash: true, flashScript: x.flashScript.trim() ? x.flashScript : text }))
+                // the voice is already inside the made video; the text is kept as its spoken matter
+                if (text) setF((x) => ({ ...x, voiceScript: text }))
                 void onFile(file)
               }}
             />
@@ -297,13 +305,18 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           <span className="text-xs text-muted">{f.description.trim() ? f.description.trim().split(/\s+/).length : 0} शब्द</span>
         </label>
         <label className="block text-sm font-semibold">
-          फ्लैश न्यूज़ (स्वीकृत स्क्रिप्ट) — यही पट्टी पर दिखेगी और यही आवाज़ पढ़ेगी
-          <textarea value={f.flashScript} onChange={(e) => set('flashScript', e.target.value)} rows={3} maxLength={600} className={`${input} mt-1`} placeholder="छोटा, तथ्यात्मक वाक्य। सिस्टम इसमें कुछ नहीं जोड़ता।" />
+          ⚡ ब्रेकिंग / फ्लैश संक्षेप <span className="font-normal text-muted">— वीडियो के नीचे लाल पट्टी में फ्लैश होगा (“फ्लैश पट्टी” ON करें)</span>
+          <textarea value={f.flashScript} onChange={(e) => set('flashScript', e.target.value)} rows={3} maxLength={600} className={`${input} mt-1`} placeholder="ब्रेकिंग न्यूज़ का छोटा, तथ्यात्मक विवरण। सिस्टम इसमें कुछ नहीं जोड़ता।" />
           <span className="text-xs text-muted">{f.flashScript.length}/600</span>
+        </label>
+        <label className="block text-sm font-semibold">
+          🔊 बोलने वाला मैटर <span className="font-normal text-muted">— बिना बयान वाले वीडियो / फोटो के लिए; “आवाज़” ON करने पर यही पढ़ा जाएगा (खाली छोड़ें तो ऊपर का फ्लैश संक्षेप)</span>
+          <textarea value={f.voiceScript} onChange={(e) => set('voiceScript', e.target.value)} rows={4} maxLength={1200} className={`${input} mt-1`} placeholder="जो आवाज़ में बोलना है, वही लिखें। किसी का बयान न लिखें।" />
+          <span className="text-xs text-muted">{f.voiceScript.length}/1200</span>
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm font-semibold">
-            रिपोर्टर / संवाददाता *
+            रिपोर्टर / संवाददाता <span className="font-normal text-muted">(वैकल्पिक)</span>
             <input
               list="vteam"
               value={f.reporterName}
@@ -320,10 +333,11 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             </datalist>
           </label>
           <label className="block text-sm font-semibold">
-            स्थान (जिला / राज्य) *<input value={f.location} onChange={(e) => set('location', e.target.value)} className={`${input} mt-1`} />
+            स्थान (जिला / राज्य) <span className="font-normal text-muted">(वैकल्पिक)</span>
+            <input value={f.location} onChange={(e) => set('location', e.target.value)} className={`${input} mt-1`} />
           </label>
           <label className="block text-sm font-semibold">
-            श्रेणी *
+            श्रेणी <span className="font-normal text-muted">(न चुनें तो “अन्य”)</span>
             <select value={f.categoryId ?? ''} onChange={(e) => set('categoryId', e.target.value ? Number(e.target.value) : null)} className={`${input} mt-1`}>
               <option value="">—</option>
               {categories.map((c) => (
@@ -347,7 +361,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             [
               ['breaking', 'ब्रेकिंग न्यूज़'],
               ['flash', 'फ्लैश पट्टी'],
-              ['voice', 'महिला आवाज़'],
+              ['voice', 'आवाज़'],
             ] as const
           ).map(([k, l]) => (
             <label key={k} className={`flex min-h-12 items-center gap-3 rounded-lg border px-3 ${f[k] ? 'border-alert-600 bg-alert-600/5' : 'border-line'}`}>
@@ -372,6 +386,18 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         )}
         {f.voice && (
           <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
+            <div className="flex flex-wrap gap-2 sm:col-span-3">
+              {(
+                [
+                  ['female', 'महिला आवाज़'],
+                  ['male', 'पुरुष आवाज़'],
+                ] as const
+              ).map(([k, l]) => (
+                <button key={k} type="button" onClick={() => set('voiceGender', k)} className={`${chip} ${f.voiceGender === k ? 'border-navy-900 bg-navy-900 text-white hover:bg-navy-900' : ''}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
             <label className="text-sm font-semibold">
               गति {f.voiceRate.toFixed(2)}×
               <input type="range" min={0.7} max={1.4} step={0.05} value={f.voiceRate} onChange={(e) => set('voiceRate', Number(e.target.value))} className="w-full" />
@@ -400,7 +426,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         <section className={card}>
           <h2 className="mb-2 font-display text-lg font-bold">प्रीव्यू: वीडियो → फ्लैश → आवाज़</h2>
           {f.previewUrl ? (
-            <FlashPreview src={f.previewUrl} poster={f.posterUrl} script={f.flashScript} on={f.flash || f.breaking} breaking={f.breaking} voice={f.voice} repeat={f.repeat} intervalSec={f.intervalSec} rate={f.voiceRate} volume={f.voiceVolume} pauseMs={f.pauseMs} articleId={f.articleId} />
+            <FlashPreview src={f.previewUrl} poster={f.posterUrl} script={f.flashScript} spoken={spoken} gender={f.voiceGender} on={f.flash || f.breaking} breaking={f.breaking} voice={f.voice} repeat={f.repeat} intervalSec={f.intervalSec} rate={f.voiceRate} volume={f.voiceVolume} pauseMs={f.pauseMs} articleId={f.articleId} />
           ) : (
             <p className="py-6 text-center text-sm text-muted">प्रोसेसिंग पूरी होते ही यहां प्रीव्यू दिखेगा।</p>
           )}
@@ -490,7 +516,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           <div className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="mb-3 font-display text-lg font-bold">प्रकाशन से पहले जांच</p>
             <ul className="space-y-1.5 text-sm">
-              {[...items, { key: 'ready', label: 'वीडियो प्रोसेसिंग पूरी', ok: ready, required: true, note: undefined }, ...((f.flash || f.voice) ? [{ key: 'script', label: 'फ्लैश स्क्रिप्ट', ok: Boolean(f.flashScript.trim()), required: true, note: undefined }] : [])].map((i) => (
+              {[...items, { key: 'ready', label: 'वीडियो प्रोसेसिंग पूरी', ok: ready, required: true, note: undefined }, ...(f.flash ? [{ key: 'script', label: 'फ्लैश संक्षेप', ok: Boolean(f.flashScript.trim()), required: true, note: undefined }] : []), ...(f.voice ? [{ key: 'spoken', label: 'बोलने वाला मैटर', ok: Boolean(spoken), required: true, note: undefined }] : [])].map((i) => (
                 <li key={i.key} className="flex gap-2">
                   <span className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>{i.ok ? '✔' : i.required ? '✘' : ''}</span>
                   <span>{i.label}</span>
@@ -504,7 +530,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
               </button>
               <button
                 type="button"
-                disabled={!ready || items.some((i) => i.required && !i.ok) || ((f.flash || f.voice) && !f.flashScript.trim())}
+                disabled={!ready || items.some((i) => i.required && !i.ok) || textMissing}
                 onClick={() => {
                   const m = confirm
                   setConfirm(null)
@@ -523,7 +549,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
 }
 
 /** One screen: the video plays, the red strip appears at the chosen times, and the voice reads the same script. */
-function FlashPreview(p: { src: string; poster?: string; script: string; on: boolean; breaking: boolean; voice: boolean; repeat: boolean; intervalSec: number; rate: number; volume: number; pauseMs: number; articleId?: number | null }) {
+function FlashPreview(p: { src: string; poster?: string; script: string; spoken: string; gender: 'female' | 'male'; on: boolean; breaking: boolean; voice: boolean; repeat: boolean; intervalSec: number; rate: number; volume: number; pauseMs: number; articleId?: number | null }) {
   const video = useRef<HTMLVideoElement>(null)
   const audio = useRef<HTMLAudioElement>(null)
   const [show, setShow] = useState(false)
@@ -535,7 +561,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
 
   async function loadVoice() {
     setVoiceNote('आवाज़ बन रही है…')
-    const r = await fetch('/api/desk/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ articleId: p.articleId, script: p.script, rate: p.rate, volume: p.volume, pauseMs: p.pauseMs }) })
+    const r = await fetch('/api/desk/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ articleId: p.articleId, script: p.spoken, gender: p.gender, rate: p.rate, volume: p.volume, pauseMs: p.pauseMs }) })
     const j = await r.json().catch(() => ({}))
     if (r.ok && j.url) {
       setVoiceUrl(j.url)
@@ -554,7 +580,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
       return
     }
     if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(p.script)
+      const u = new SpeechSynthesisUtterance(p.spoken)
       u.lang = 'hi-IN'
       u.rate = p.rate
       u.volume = p.volume / 100
@@ -581,7 +607,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
             setShow(p.on && i >= 0)
             if (i >= 0 && i !== shown.current) {
               shown.current = i
-              if (p.voice && p.script.trim()) speak()
+              if (p.voice && p.spoken.trim()) speak()
             }
             if (i < 0) shown.current = -1
           }}
@@ -597,7 +623,7 @@ function FlashPreview(p: { src: string; poster?: string; script: string; on: boo
       </div>
       {p.voice && (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" className={chip} disabled={!p.script.trim()} onClick={async () => speak(await loadVoice())}>
+          <button type="button" className={chip} disabled={!p.spoken.trim()} onClick={async () => speak(await loadVoice())}>
             आवाज़ सुनें
           </button>
           {voiceNote && <span className="text-xs text-muted">{voiceNote}</span>}

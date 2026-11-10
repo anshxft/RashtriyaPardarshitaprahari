@@ -7,9 +7,10 @@ import { currentUser } from '@/lib/auth'
 import { audit } from '@/lib/audit'
 import { db } from '@/lib/data'
 import { paragraphsToLexical } from '@/lib/lexical'
-import { publishChecklist } from '@/lib/newsStatus'
 import { allowed } from '@/lib/permissions'
 import { paths } from '@/lib/paths'
+import { ttsProvider } from '@/lib/tts'
+import { voiceAudio } from '@/lib/voice'
 import { enqueue, kick, type JobKind } from '@/lib/videoProcess'
 import type { Article, User, Video } from '@/payload-types'
 
@@ -111,6 +112,9 @@ export type VideoNewsInput = {
   intervalSec?: number
   voiceRate?: number
   voiceVolume?: number
+  /** spoken text (बोलने वाला मैटर); empty = the flash text */
+  voiceScript?: string
+  voiceGender?: 'female' | 'male'
   pauseMs?: number
   vertical?: boolean
 }
@@ -119,7 +123,7 @@ export type VideoNewsInput = {
  * One master news record: the video news IS an article (format "video") linked to the uploaded video.
  * News ID, QR, URL, publish state, versions and audit all live on that article; the video holds the files.
  */
-export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ status: string; articleId: number; newsId?: string | null; url?: string }>> {
+export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ status: string; articleId: number; newsId?: string | null; url?: string; note?: string }>> {
   try {
     const u = await user()
     const payload = await db()
@@ -128,13 +132,18 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     const publishing = input.mode === 'publish' || input.mode === 'schedule'
     const clean = (s?: string) => s?.trim() || null
     if (!input.title.trim()) return { ok: false, error: 'शीर्षक ज़रूरी है' }
-    if (!input.categoryId) return { ok: false, error: 'श्रेणी चुनें' }
+    // Video news can go out with just a headline: no section chosen = “अन्य” (reporter, place and text are optional)
+    if (!input.categoryId) {
+      const other = await payload.find({ collection: 'categories', where: { slug: { equals: 'anya' } }, limit: 1, depth: 0, overrideAccess: true })
+      input.categoryId = other.docs[0]?.id ?? null
+      if (!input.categoryId) return { ok: false, error: 'श्रेणी चुनें' }
+    }
+    const spoken = (input.voiceScript || '').trim() || input.flashScript.trim()
     if (publishing) {
       if (!canPublish({ user: u } as never)) return { ok: false, error: 'प्रकाशित करने का अधिकार आपकी भूमिका में नहीं है। “समीक्षा के लिए भेजें” दबाएं।' }
       if (v.processing !== 'ready') return { ok: false, error: 'वीडियो की प्रोसेसिंग पूरी होने (✔ तैयार) के बाद ही प्रकाशित कर सकते हैं' }
-      const missing = publishChecklist({ title: input.title, reporterName: input.reporterName, location: input.location, categoryId: input.categoryId, hasMedia: true, hasVideo: true, body: input.description, flashScript: input.flashScript }).filter((i) => i.required && !i.ok)
-      if (missing.length) return { ok: false, error: `ज़रूरी: ${missing.map((i) => i.label).join(', ')}` }
-      if ((input.flash || input.voice) && !input.flashScript.trim()) return { ok: false, error: 'Flash / आवाज़ के लिए फ्लैश स्क्रिप्ट लिखें' }
+      if (input.flash && !input.flashScript.trim()) return { ok: false, error: 'फ्लैश पट्टी के लिए फ्लैश संक्षेप लिखें (या फ्लैश पट्टी OFF करें)' }
+      if (input.voice && !spoken) return { ok: false, error: 'आवाज़ के लिए बोलने वाला मैटर लिखें (या आवाज़ OFF करें)' }
     }
 
     await payload.update({
@@ -148,13 +157,14 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
 
     const aId = articleOf(v)
     const prev = aId ? ((await payload.findByID({ collection: 'articles', id: aId, depth: 0, draft: true }).catch(() => null)) as Article | null) : null
-    const scriptChanged = (prev?.flash?.script || '') !== input.flashScript.trim()
-    const text = (input.description || input.flashScript || '').split(/\n{2,}|\r?\n/).map((p) => p.trim()).filter(Boolean)
+    const gender = input.voiceGender === 'male' ? 'male' : 'female'
+    const scriptChanged = ((prev?.flash?.voiceScript || '').trim() || (prev?.flash?.script || '').trim()) !== spoken || (prev?.flash?.voiceGender || 'female') !== gender
+    const text = (input.description || input.flashScript || input.voiceScript || '').split(/\n{2,}|\r?\n/).map((p) => p.trim()).filter(Boolean)
     const data: Record<string, unknown> = {
       title: input.title.trim(),
       subheadline: clean(input.bottomLine),
       videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole), ticker: clean(input.ticker?.slice(0, 1500)) },
-      excerpt: clean(input.flashScript) || clean(input.description),
+      excerpt: clean(input.flashScript) || clean(input.description) || clean(input.voiceScript),
       content: paragraphsToLexical(text),
       format: 'video',
       video: v.id,
@@ -170,6 +180,8 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
         repeat: input.repeat !== false,
         intervalSec: input.intervalSec || 20,
         voice: Boolean(input.voice),
+        voiceScript: (input.voiceScript || '').trim() || null,
+        voiceGender: gender,
         voiceRate: input.voiceRate || 1,
         voiceVolume: input.voiceVolume ?? 100,
         pauseMs: input.pauseMs ?? 400,
@@ -197,6 +209,15 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
       draft: a._status !== 'published',
       overrideAccess: true,
     })
+    // The voice (from the written text only) is made once now and played over the video on the website / in downloads
+    let voiceNote = ''
+    if (a.flash?.voice && spoken) {
+      if (!ttsProvider()) voiceNote = ' · आवाज़ सेवा (TTS) अभी चालू नहीं है, इसलिए आवाज़ नहीं बनी'
+      else
+        await voiceAudio(spoken, { rate: input.voiceRate, volume: input.voiceVolume, pauseMs: input.pauseMs, gender }, a).catch((e) => {
+          voiceNote = ` · आवाज़ नहीं बनी: ${(e as Error).message}`
+        })
+    }
     if (a._status === 'published') {
       await enqueue('social', v.id)
       if (input.vertical) await enqueue('vertical', v.id)
@@ -205,7 +226,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     }
     revalidatePath('/', 'layout')
     const scheduled = a._status === 'published' && a.publishedAt && new Date(a.publishedAt).getTime() > Date.now() + 60_000
-    return { ok: true, status: scheduled ? 'scheduled' : a._status === 'published' ? 'published' : input.mode === 'submit' ? 'submitted' : 'draft', articleId: a.id, newsId: a.newsId, url: a.slug ? paths.article('hi', a.slug) : undefined }
+    return { ok: true, status: scheduled ? 'scheduled' : a._status === 'published' ? 'published' : input.mode === 'submit' ? 'submitted' : 'draft', articleId: a.id, newsId: a.newsId, url: a.slug ? paths.article('hi', a.slug) : undefined, note: voiceNote }
   } catch (e) {
     return { ok: false, error: msg(e) }
   }

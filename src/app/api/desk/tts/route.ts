@@ -33,7 +33,8 @@ export async function POST(req: Request) {
   }
   const article = b.articleId ? ((await (await db()).findByID({ collection: 'articles', id: b.articleId, depth: 0, draft: true, overrideAccess: false, user }).catch(() => null)) as Article | null) : null
   try {
-    const { key, stored } = await voiceAudio(script, { rate: b.rate, volume: b.volume, pauseMs: b.pauseMs }, article && article.flash?.script?.trim() === script ? article : null)
+    const spokenOf = (x: Article) => (x.flash?.voiceScript || '').trim() || (x.flash?.script || '').trim()
+    const { key, stored } = await voiceAudio(script, { rate: b.rate, volume: b.volume, pauseMs: b.pauseMs, gender }, article && spokenOf(article) === script ? article : null)
     return Response.json({ key, url: await resolveUrl(stored, 3600) })
   } catch (e) {
     return Response.json({ error: (e as Error).message }, { status: 502 })

@@ -29,6 +29,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
   let stored: string | null | undefined
   if (kind === 'play') stored = (a?.flash?.enabled || a?.flash?.voice) && v.flashUrl ? v.flashUrl : v.processedUrl
+  else if (kind === 'voice') stored = a?.flash?.voice ? a.flash.audioUrl : null // the spoken text, played over the video
   else if (kind === 'poster') stored = asMedia(v.thumbnail)?.sizes?.card?.url || asMedia(v.thumbnail)?.url || v.posterUrl
   else return new Response('Not found', { status: 404 })
   const url = await resolveUrl(stored, 2 * 3600)

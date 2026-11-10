@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
 import { flashTimes } from '@/lib/videoArgs'
 
-export type FlashProps = { on: boolean; voice?: boolean; script: string; breaking?: boolean; repeat?: boolean; intervalSec?: number }
+export type FlashProps = { on: boolean; voice?: boolean; audio?: boolean; script: string; breaking?: boolean; repeat?: boolean; intervalSec?: number }
 
 type Ad = { title: string; image: string; link?: string | null; win: { x: number; y: number; w: number; h: number } } | null
 
@@ -76,13 +76,16 @@ function whoosh(volume: number) {
   }
 }
 
+/** The spoken text starts this many seconds into the video (website player and downloaded video alike). */
+export const VOICE_AT = 1
+
 /** Name-logo in the top-right corner: 0.3–6 s, then 5 s every 30 s. */
 export const wordmarkOn = (t: number) => (t >= 0.3 && t < 6) || (t >= 30 && t % 30 < 5)
 
 /** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
 const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
-export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ads?: NonNullable<Ad>[]; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
+export function VideoStage({ src, poster, flash, breaking, ads, voice, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ads?: NonNullable<Ad>[]; voice?: string; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
   const [nameShow, setNameShow] = useState(false)
   // Full screen keeps the whole package (bands, name-logo, ads, ticker), not just the bare video. Browsers that cannot
   // put a page element full screen (iPhone) get a fixed black layer over the page instead.
@@ -142,6 +145,24 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
     v.addEventListener('webkitbeginfullscreen', swap)
     return () => v.removeEventListener('webkitbeginfullscreen', swap)
   }, [])
+  // The written text read out (TTS) over the video: starts 1 s in, follows play / pause / seek, and the video's own
+  // sound is lowered while it speaks.
+  const voiceEl = useRef<HTMLAudioElement>(null)
+  function syncVoice(v: HTMLVideoElement) {
+    const a = voiceEl.current
+    if (!a) return
+    const at = v.currentTime - VOICE_AT
+    const on = at >= 0 && (!a.duration || at < a.duration) && !v.paused
+    a.muted = v.muted
+    if (on) {
+      if (Math.abs(a.currentTime - at) > 0.4) a.currentTime = at
+      if (a.paused) void a.play().catch(() => {})
+      v.volume = 0.3
+    } else {
+      if (!a.paused) a.pause()
+      if (v.volume === 0.3) v.volume = 1
+    }
+  }
   function toggleFs() {
     if (fs === 'real') return void document.exitFullscreen().catch(() => {})
     if (fs === 'fake') return setFs('off')
@@ -219,11 +240,14 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
           controlsList="nodownload noremoteplayback nofullscreen"
           disablePictureInPicture
           onDoubleClick={toggleFs}
+          onPause={() => voiceEl.current?.pause()}
+          onSeeked={(e) => syncVoice(e.currentTarget)}
           onContextMenu={(e) => e.preventDefault()}
           onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, flash?.repeat !== false, flash?.intervalSec || 20))}
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
             if (tags?.name) setNameShow(nameOn(t))
+            syncVoice(e.currentTarget)
             setWmShow(wordmarkOn(t))
             const minute = Math.floor(t / 60)
             if (banded && t % 60 < 0.8 && lastSting.current !== minute && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -287,6 +311,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
             </span>
           </div>
         )}
+        {voice && <audio ref={voiceEl} src={voice} preload="auto" className="hidden" />}
         {wmShow && <img src="/wordmark.png" alt="" aria-hidden className="tv-wm pointer-events-none absolute top-2 right-2 z-10 w-[26%] max-w-64 sm:top-3 sm:right-3" />}
         {/* logo sting */}
         {sting > 0 && (

@@ -204,7 +204,7 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
             top={a.title}
             bottom={a.subheadline}
             tags={a.videoTag}
-            flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
+            flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), audio: Boolean(a.flash.voice && a.flash.audioUrl), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
           />
           {text.paragraphs.length > 0 && (
             <div className="mt-3">

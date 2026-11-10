@@ -22,7 +22,7 @@ export async function VideoPlayer({ v, flash, aiNote, top, bottom, tags, lang = 
   const burned = Boolean(v.flashUrl && flash && (flash.on || flash.voice))
   return (
     <div>
-      <VideoStage src={`/api/v/${v.id}/play`} poster={videoPoster(v)} flash={burned ? null : flash} breaking={Boolean(flash?.breaking)} ads={ads} top={top} bottom={bottom} tags={tags} lang={lang} />
+      <VideoStage src={`/api/v/${v.id}/play`} poster={videoPoster(v)} flash={burned ? null : flash} breaking={Boolean(flash?.breaking)} ads={ads} voice={!burned && flash?.audio ? `/api/v/${v.id}/voice` : undefined} top={top} bottom={bottom} tags={tags} lang={lang} />
       {aiNote && flash?.voice && <p className="mt-1 text-xs text-muted">{lang === 'hi' ? 'इस वीडियो में कृत्रिम (AI) आवाज़ का उपयोग किया गया है।' : 'This video uses an artificial (AI) voice.'}</p>}
     </div>
   )

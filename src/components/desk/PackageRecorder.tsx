@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
-import { adOn, wordmarkOn } from '@/components/VideoStage'
+import { adOn, VOICE_AT, wordmarkOn } from '@/components/VideoStage'
 
 export type PackageInput = {
   src: string // the website version (with logo), a URL the browser may read (CORS)
@@ -15,6 +15,7 @@ export type PackageInput = {
   name?: string | null
   role?: string | null
   ticker?: string | null // Desk lines for the white ticker (one per line)
+  voice?: string | null // the spoken text (TTS audio), played over the video from VOICE_AT s, as on the website
   ads?: { title: string; image: string; win: { x: number; y: number; w: number; h: number } }[] // L-frame ads (same as the website)
 }
 
@@ -141,7 +142,14 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       // audio: video sound + sting whoosh → the recording (not to the speakers)
       const ac = new AudioContext()
       const dest = ac.createMediaStreamDestination()
-      ac.createMediaElementSource(video).connect(dest)
+      const videoGain = ac.createGain()
+      ac.createMediaElementSource(video).connect(videoGain).connect(dest)
+      const voiceBuf = input.voice
+        ? await fetch(input.voice)
+            .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('voice'))))
+            .then((b) => ac.decodeAudioData(b))
+            .catch(() => null)
+        : null
 
       const stream = canvas.captureStream(30)
       dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t))
@@ -481,6 +489,16 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         setTimeout(res, 3000)
       })
       rec.start(1000)
+      if (voiceBuf) {
+        // same timing as the website: the voice starts VOICE_AT s into the video and the video's sound dips under it
+        const startAt = ac.currentTime + Math.max(0, VOICE_AT - video.currentTime)
+        const src = ac.createBufferSource()
+        src.buffer = voiceBuf
+        src.connect(dest)
+        src.start(startAt, Math.max(0, video.currentTime - VOICE_AT))
+        videoGain.gain.setValueAtTime(0.3, startAt)
+        videoGain.gain.setValueAtTime(1, startAt + voiceBuf.duration)
+      }
       setMsg('रिकॉर्डिंग चल रही है — यह टैब खुला रखें')
       frame() // draws now and keeps itself going every frame until the video ends
       await finished

@@ -39,6 +39,8 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
     tagRole: a?.videoTag?.role || '',
     ticker: a?.videoTag?.ticker || '',
     flashScript: fl?.script || '',
+    voiceScript: fl?.voiceScript || '',
+    voiceGender: fl?.voiceGender === 'male' ? 'male' : 'female',
     description: v.description || '',
     location: a?.location || v.location || '',
     reporterName: a?.reporterName || v.reporterName || '',

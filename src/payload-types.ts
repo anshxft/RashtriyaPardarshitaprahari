@@ -524,6 +524,8 @@ export interface Article {
      * Voice volume %
      */
     voiceVolume?: number | null;
+    voiceScript?: string | null;
+    voiceGender?: string | null;
     /**
      * Pause between sentences (ms)
      */
@@ -1595,6 +1597,8 @@ export interface ArticlesSelect<T extends boolean = true> {
         voice?: T;
         voiceRate?: T;
         voiceVolume?: T;
+        voiceScript?: T;
+        voiceGender?: T;
         pauseMs?: T;
         audioUrl?: T;
         audioKey?: T;
