@@ -101,7 +101,7 @@ export async function getAd(placement: string): Promise<{ title: string; image: 
  */
 // undefined = picture could not be read this time (tried again next request); null = not a frame
 const frameCache = new Map<string, Promise<import('./videoFrame').FrameWindow | null | undefined>>()
-export async function getVideoFrameAd(): Promise<{ title: string; image: string; link?: string | null; win: import('./videoFrame').FrameWindow } | null> {
+export async function getVideoFrameAds(): Promise<{ title: string; image: string; link?: string | null; win: import('./videoFrame').FrameWindow }[]> {
   const ads = await getAds('video')
   const found = await Promise.all(
     ads.map(async (ad) => {
@@ -125,8 +125,7 @@ export async function getVideoFrameAd(): Promise<{ title: string; image: string;
       return win ? { title: ad.title, image: ad.image, link: ad.link, win } : null
     }),
   )
-  const frames = found.filter((f) => f !== null)
-  return frames.length ? frames[Math.floor(Math.random() * frames.length)] : null
+  return found.filter((f) => f !== null)
 }
 
 /** An archived story keeps its URL / QR: visitors see a short notice with the News ID (content stays in the newsroom). */

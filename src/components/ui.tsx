@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { AdRotator } from './AdRotator'
 import type { ReactNode } from 'react'
 import type { Img } from '@/lib/data'
 import { t, type Lang } from '@/lib/i18n'
@@ -100,9 +101,9 @@ export const Credit = ({ img, lang }: { img?: Img; lang: Lang }) =>
 export async function Slot({ name, lang }: { name: `ad-${string}` | 'donate'; lang?: Lang }) {
   const placement = name === 'ad-home-top' ? 'home-top' : name.startsWith('ad-article') ? 'article' : null
   if (!placement) return null
-  const { getAd } = await import('@/lib/data')
-  const ad = await getAd(placement)
-  if (!ad && lang && placement === 'home-top')
+  const { getAds } = await import('@/lib/data')
+  const ads = await getAds(placement)
+  if (!ads.length && lang && placement === 'home-top')
     return (
       <aside aria-label="विज्ञापन / Advertisement" className="rounded-lg border-2 border-dashed border-line bg-surface px-4 py-6 text-center">
         <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">विज्ञापन / Advertisement</p>
@@ -112,21 +113,11 @@ export async function Slot({ name, lang }: { name: `ad-${string}` | 'donate'; la
         </Link>
       </aside>
     )
-  if (!ad) return null
-  const img = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={ad.image} alt={ad.title} loading="lazy" className="mx-auto max-h-64 w-auto max-w-full rounded" />
-  )
+  if (!ads.length) return null
   return (
     <aside aria-label="विज्ञापन / Advertisement" className="my-6 rounded-lg border border-dashed border-line p-2 text-center">
       <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">विज्ञापन / Advertisement</p>
-      {ad.link ? (
-        <a href={ad.link} target="_blank" rel="sponsored noopener noreferrer">
-          {img}
-        </a>
-      ) : (
-        img
-      )}
+      <AdRotator ads={ads.map((a) => ({ id: a.id, title: a.title, image: a.image, link: a.link }))} />
     </aside>
   )
 }

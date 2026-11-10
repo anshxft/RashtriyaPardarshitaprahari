@@ -79,7 +79,7 @@ function whoosh(volume: number) {
 /** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
 const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
-export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ad?: Ad; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
+export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ads?: NonNullable<Ad>[]; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
   const [nameShow, setNameShow] = useState(false)
   // Logo sting (intro): when the video starts and then once a minute.
   const [sting, setSting] = useState(0)
@@ -98,6 +98,9 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
   const times = useRef<number[]>([])
   const [show, setShow] = useState(false)
   const [adShow, setAdShow] = useState(false)
+  // L-frame ads take turns: each time the frame comes up, the next advertiser
+  const [adIdx, setAdIdx] = useState(0)
+  const ad = ads?.length ? ads[adIdx % ads.length] : null
   const [adClosed, setAdClosed] = useState(false)
   const strip = Boolean(flash?.on && flash.script.trim())
   // One-line TV-style ticker: long scripts scroll across instead of covering the whole picture (phones especially),
@@ -162,6 +165,7 @@ export function VideoStage({ src, poster, flash, breaking, ad, top, bottom, tags
             if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
             if (ad) {
               const on = adOn(t)
+              if (t >= 10) setAdIdx(Math.floor((t - 10) / 45))
               if (!on && adClosed) setAdClosed(false)
               setAdShow(on)
             }

@@ -115,10 +115,15 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       video.crossOrigin = 'anonymous'
       video.playsInline = true
       video.preload = 'auto'
+      // kept in the page (tiny, invisible): phones (iPhone especially) don't decode frames of a video outside the page
+      video.setAttribute('playsinline', '')
+      video.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none'
+      document.body.appendChild(video)
       video.src = input.src
       await new Promise<void>((res, rej) => {
-        video.onloadedmetadata = () => res()
+        video.oncanplay = () => res()
         video.onerror = () => rej(new Error('वीडियो फ़ाइल खुल नहीं पाई'))
+        video.load()
       })
       const dur = video.duration || 1
 
@@ -232,7 +237,7 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         let vw = VID.w
         let vh = vw / vr
         if (vh > VID.h) (vh = VID.h), (vw = vh * vr)
-        ctx.drawImage(video, VID.x + (VID.w - vw) / 2, VID.y + (VID.h - vh) / 2, vw, vh)
+        if (video.readyState >= 2) ctx.drawImage(video, VID.x + (VID.w - vw) / 2, VID.y + (VID.h - vh) / 2, vw, vh)
         // BREAKING label (flips over every 6 s)
         let ly = VID.y + 18
         if (input.breaking) {
@@ -415,11 +420,19 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       const finished = new Promise<void>((res) => (rec.onstop = () => res()))
       video.onended = () => rec.state !== 'inactive' && rec.stop()
       await ac.resume()
+      // start the recording only once the video really shows a picture (no black opening frame / thumbnail)
+      await video.play()
+      await new Promise<void>((res) => {
+        const v = video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number }
+        if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => res())
+        else video.addEventListener('timeupdate', () => res(), { once: true })
+        setTimeout(res, 3000)
+      })
       rec.start(1000)
       setMsg('रिकॉर्डिंग चल रही है — यह टैब खुला रखें')
-      await video.play()
-      raf = requestAnimationFrame(frame)
+      frame() // draws now and keeps itself going every frame until the video ends
       await finished
+      video.remove()
       cancelAnimationFrame(raf)
       ac.close().catch(() => {})
       if (cancelled) return setState('idle')
