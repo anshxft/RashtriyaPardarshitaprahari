@@ -84,6 +84,30 @@ const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
 export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ads?: NonNullable<Ad>[]; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
   const [nameShow, setNameShow] = useState(false)
+  // Full screen keeps the whole package (bands, name-logo, ads, ticker), not just the bare video. Browsers that cannot
+  // put a page element full screen (iPhone) get a fixed black layer over the page instead.
+  const box = useRef<HTMLDivElement>(null)
+  const [fs, setFs] = useState<'off' | 'real' | 'fake'>('off')
+  useEffect(() => {
+    const on = () => setFs(document.fullscreenElement === box.current ? 'real' : (x) => (x === 'real' ? 'off' : x))
+    document.addEventListener('fullscreenchange', on)
+    return () => document.removeEventListener('fullscreenchange', on)
+  }, [])
+  useEffect(() => {
+    if (fs !== 'fake') return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setFs('off')
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', esc)
+    return () => ((document.body.style.overflow = prev), window.removeEventListener('keydown', esc))
+  }, [fs])
+  function toggleFs() {
+    if (fs === 'real') return void document.exitFullscreen().catch(() => {})
+    if (fs === 'fake') return setFs('off')
+    const el = box.current
+    if (el?.requestFullscreen) el.requestFullscreen().catch(() => setFs('fake'))
+    else setFs('fake')
+  }
   // tricolour name-logo: flashes in top-right as the video starts, then every 30 s
   const [wmShow, setWmShow] = useState(false)
   // Logo sting (intro): when the video starts and then once a minute.
@@ -150,8 +174,9 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
           poster={poster}
           className="h-full w-full object-contain"
           src={src}
-          controlsList="nodownload noremoteplayback"
+          controlsList="nodownload noremoteplayback nofullscreen"
           disablePictureInPicture
+          onDoubleClick={toggleFs}
           onContextMenu={(e) => e.preventDefault()}
           onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, flash?.repeat !== false, flash?.intervalSec || 20))}
           onTimeUpdate={(e) => {
@@ -228,6 +253,16 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
           </div>
         )}
       </div>
+      <button
+        type="button"
+        onClick={toggleFs}
+        aria-label={fs === 'off' ? (lang === 'hi' ? 'फुल स्क्रीन' : 'Full screen') : lang === 'hi' ? 'फुल स्क्रीन बंद' : 'Exit full screen'}
+        className="absolute right-2 bottom-12 z-30 flex h-9 w-9 items-center justify-center rounded-md bg-black/55 text-white opacity-80 hover:opacity-100 sm:bottom-14"
+      >
+        <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-white stroke-[2.5]">
+          {fs === 'off' ? <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /> : <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />}
+        </svg>
+      </button>
       {framed && (
         <div className="absolute top-1 right-1 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 text-[10px] font-bold text-white">
           विज्ञापन / AD
@@ -238,11 +273,19 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
       )}
     </div>
   )
-  if (!banded) return stage
+  // full screen: the package is scaled to fit the screen (bands ≈ 230 px tall at large sizes), centred on black
+  const fsWrap = (inner: React.ReactNode, bandPx: number) => (
+    <div ref={box} className={fs === 'off' ? '' : `flex items-center justify-center overflow-auto bg-black ${fs === 'fake' ? 'fixed inset-0 z-[100]' : 'h-full w-full'}`}>
+      <div className={fs === 'off' ? '' : 'mx-auto'} style={fs === 'off' ? undefined : { width: `min(100vw, calc((100dvh - ${bandPx}px) * 16 / 9))` }}>
+        {inner}
+      </div>
+    </div>
+  )
+  if (!banded) return fsWrap(stage, 0)
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
   // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
   const cur = lines[li % Math.max(1, nLines)]
-  return (
+  return fsWrap(
     <div className="tv-frame tv-redframe overflow-hidden rounded-lg p-1 sm:p-1.5">
       {top && (
         <>
@@ -285,6 +328,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
           {ticker.repeat(2)}
         </span>
       </div>
-    </div>
+    </div>,
+    230,
   )
 }
