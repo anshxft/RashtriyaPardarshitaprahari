@@ -114,8 +114,8 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
     try {
       await document.fonts.ready
       const family = getComputedStyle(document.body).fontFamily || 'sans-serif'
-      const logo = await load('/logo-watermark.png')
       const wordmark = await load('/wordmark.png')
+      const logo = wordmark // sting and the “देखें वेबसाइट” box use the tricolour name-logo too
       // L-frame ads: same frames, timing and turn order as the website player (one that fails to load is skipped)
       const ads = (await Promise.all((input.ads || []).map(async (a) => ({ ...a, img: await load(a.image).catch(() => null) })))).filter((a) => a.img)
       const video = document.createElement('video')
@@ -376,11 +376,11 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.fillRect(S.x, S.y, S.w, S.h)
           const sc = k < 0.28 ? 0.15 + (k / 0.28) * 0.95 : k < 0.38 ? 1.1 - ((k - 0.28) / 0.1) * 0.13 : k < 0.78 ? 1 : 1 + ((k - 0.78) / 0.22) * 0.5
           const op = k < 0.28 ? k / 0.28 : k > 0.78 ? 1 - (k - 0.78) / 0.22 : 1
-          const lw2 = S.w * 0.46 * sc
+          const lw2 = S.w * 0.52 * sc
           const lh2 = (lw2 * logo.height) / logo.width
           ctx.save()
           ctx.globalAlpha = Math.max(0, Math.min(1, op))
-          ctx.shadowColor = 'rgba(255,210,63,0.9)'
+          ctx.shadowColor = 'rgba(255,255,255,0.9)'
           ctx.shadowBlur = 30
           ctx.drawImage(logo, S.x + S.w / 2 - lw2 / 2, S.y + S.h / 2 - lh2 / 2, lw2, lh2)
           ctx.restore()
@@ -446,8 +446,8 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'
         ctx.lineWidth = 3
         ctx.strokeRect(bx + 1.5, LOW_Y + 1.5, boxW - 3, LOW_H - 3)
-        const lgw = 110
-        ctx.drawImage(logo, bx + (boxW - lgw) / 2, LOW_Y + 10, lgw, (lgw * logo.height) / logo.width)
+        const lgw = 140
+        ctx.drawImage(logo, bx + (boxW - lgw) / 2, LOW_Y + 8, lgw, (lgw * logo.height) / logo.width)
         ctx.font = `700 18px ${family}`
         ctx.fillStyle = '#fff'
         ctx.textAlign = 'center'

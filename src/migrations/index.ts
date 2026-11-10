@@ -21,6 +21,7 @@ import * as migration_20261103_120000_new_sections from './20261103_120000_new_s
 import * as migration_20261107_120000_ad_lakwa_center from './20261107_120000_ad_lakwa_center';
 import * as migration_20261110_120000_ad_jila_furniture from './20261110_120000_ad_jila_furniture';
 import * as migration_20261111_120000_voice_script from './20261111_120000_voice_script';
+import * as migration_20261111_130000_reprocess_videos_new_logo from './20261111_130000_reprocess_videos_new_logo';
 
 export const migrations = [
   {
@@ -137,5 +138,10 @@ export const migrations = [
     up: migration_20261111_120000_voice_script.up,
     down: migration_20261111_120000_voice_script.down,
     name: '20261111_120000_voice_script'
+  },
+  {
+    up: migration_20261111_130000_reprocess_videos_new_logo.up,
+    down: migration_20261111_130000_reprocess_videos_new_logo.down,
+    name: '20261111_130000_reprocess_videos_new_logo'
   },
 ];

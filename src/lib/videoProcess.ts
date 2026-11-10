@@ -58,6 +58,13 @@ export async function enqueue(kind: JobKind, videoId: number, params?: Record<st
   return payload.create({ collection: 'media-jobs', data: { kind, video: videoId, status: 'queued', attempts: 0, params }, overrideAccess: true })
 }
 
+/** Desk opened: if video jobs are waiting (e.g. queued by a migration), start them in the background. */
+export async function kickIfPending() {
+  if (process.env.VIDEO_WORKER === 'external') return
+  const waiting = await (await db()).count({ collection: 'media-jobs', where: { status: { equals: 'queued' } }, overrideAccess: true }).catch(() => ({ totalDocs: 0 }))
+  if (waiting.totalDocs) kick()
+}
+
 /** Without the external worker, process right after the response (Vercel: up to ~270 s). */
 export function kick() {
   if (process.env.VIDEO_WORKER === 'external') return
@@ -139,7 +146,7 @@ export async function logoFile(dir: string, wm: { logo?: { url?: string | null }
   const out = path.join(dir, 'logo.png')
   const logo = wm.logo && typeof wm.logo === 'object' && wm.logo.url
   if (logo) await downloadTo(logo.startsWith('http') || logo.startsWith('/api/') ? logo : `${process.env.NEXT_PUBLIC_SITE_URL}${logo}`, out)
-  else await copyFile(path.join(process.cwd(), 'public', 'logo-watermark.png'), out)
+  else await copyFile(path.join(process.cwd(), 'public', 'wordmark.png'), out) // the tricolour name-logo
   return out
 }
 

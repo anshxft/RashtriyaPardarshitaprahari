@@ -4,14 +4,17 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { DeskNav, LogoutButton } from '@/components/desk/DeskNav'
 import { currentUser } from '@/lib/auth'
+import { kickIfPending } from '@/lib/videoProcess'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300 // waiting video jobs may run in the background after the page is sent
 
 const ROLE = { admin: 'प्रधान संपादक / एडमिन', senior: 'वरिष्ठ संपादक', editor: 'संपादक', reporter: 'रिपोर्टर' } as const
 
 export default async function DeskLayout({ children }: { children: ReactNode }) {
   const user = await currentUser()
   if (!user) redirect('/login?next=/desk')
+  await kickIfPending()
   const role = (user as { role?: keyof typeof ROLE }).role || 'reporter'
   return (
     <div className="pb-24 md:pb-8">

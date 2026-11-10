@@ -316,7 +316,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, voice, top, bott
         {/* logo sting */}
         {sting > 0 && (
           <div key={sting} className="tv-sting pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <img src="/logo-watermark.png" alt="" className="tv-sting-logo w-[46%] max-w-md drop-shadow-[0_0_30px_rgba(255,210,63,0.9)]" />
+            <img src="/wordmark.png" alt="" className="tv-sting-logo w-[52%] max-w-lg drop-shadow-[0_0_30px_rgba(255,255,255,0.9)]" />
           </div>
         )}
       </div>
@@ -390,7 +390,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, voice, top, bott
             )}
           </div>
           <div className="tv-see flex w-16 shrink-0 flex-col items-center justify-center border-2 border-white/90 bg-[#c8102e] px-1 text-center text-white sm:w-28">
-            <img src="/logo-watermark.png" alt="" className="w-10 sm:w-16" />
+            <img src="/wordmark.png" alt="" className="w-14 sm:w-24" />
             <span className="text-[9px] leading-tight font-bold sm:text-xs">{lang === 'hi' ? 'देखें वेबसाइट' : 'Visit website'}</span>
           </div>
         </div>
