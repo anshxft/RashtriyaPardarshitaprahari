@@ -4,6 +4,11 @@ import { currentUser } from '@/lib/auth'
 import { asMedia, db } from '@/lib/data'
 import { emptyVideo, categoryOptions, mayPublish, teamOptions } from '@/lib/deskData'
 import { paths } from '@/lib/paths'
+import { DeleteVideoButton } from '@/components/desk/DeleteVideoButton'
+import { NewsActionBar } from '@/components/desk/NewsActionBar'
+import { formatDate } from '@/lib/i18n'
+import { buttonsFor, newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
+import { loadPermissions } from '@/lib/permissions'
 import { QUOTA_NOTE } from '@/lib/tts'
 import { uploadMode, videoState } from '@/lib/videoState'
 import type { Article, Video } from '@/payload-types'
@@ -59,5 +64,26 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
     slug: a?._status === 'published' && a.slug ? paths.article('hi', a.slug) : null,
   }
   const [categories, team] = await Promise.all([categoryOptions(), teamOptions()])
-  return <VideoEditor initial={form} uploadMode={uploadMode()} categories={categories} team={team} mayPublish={mayPublish(user)} ttsNote={QUOTA_NOTE} />
+  // the same action buttons as the news lists (preview, download, delete …), so a video can be removed from here too
+  const m = await loadPermissions(payload)
+  const status = a ? newsStatus(a) : null
+  const owner = a ? (typeof a.createdBy === 'object' ? a.createdBy?.id : a.createdBy) : null
+  return (
+    <>
+      <div className="mx-auto mb-4 max-w-3xl">
+        {a && status ? (
+          <NewsActionBar
+            id={a.id}
+            slug={a.slug}
+            title={a.title}
+            buttons={buttonsFor(status, user, owner, { video: true }, m)}
+            info={{ status: STATUS_LABEL[status].hi, firstPublishedAt: a.firstPublishedAt ? formatDate(a.firstPublishedAt, 'hi', true) : '—', lastEditor: a.lastEditedBy || '—', lastUpdate: formatDate(a.updatedAt, 'hi', true), newsId: a.newsId || '', live: status !== 'draft' && status !== 'pending' }}
+          />
+        ) : (
+          <DeleteVideoButton id={v.id} title={v.title} after="/desk/video" />
+        )}
+      </div>
+      <VideoEditor initial={form} uploadMode={uploadMode()} categories={categories} team={team} mayPublish={mayPublish(user)} ttsNote={QUOTA_NOTE} />
+    </>
+  )
 }

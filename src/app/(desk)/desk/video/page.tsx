@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { currentUser } from '@/lib/auth'
 import { db } from '@/lib/data'
+import { DeleteVideoButton } from '@/components/desk/DeleteVideoButton'
 import { NewsActionBar } from '@/components/desk/NewsActionBar'
 import { formatDate } from '@/lib/i18n'
 import { buttonsFor, newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
@@ -41,7 +42,7 @@ export default async function DeskVideos() {
               <Link href={`/desk/video/${v.id}`} className="rounded-full border border-line px-3 py-1 text-sm font-semibold hover:bg-surface">✎ खोलें</Link>
               {(() => {
                 const a = arts.find((x) => x.id === (typeof v.article === 'object' ? v.article?.id : v.article))
-                if (!a) return null
+                if (!a) return <DeleteVideoButton id={v.id} title={v.title} />
                 const status = newsStatus(a)
                 const owner = typeof a.createdBy === 'object' ? a.createdBy?.id : a.createdBy
                 return (

@@ -101,6 +101,38 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
     window.addEventListener('keydown', esc)
     return () => ((document.body.style.overflow = prev), window.removeEventListener('keydown', esc))
   }, [fs])
+  // in full screen the package keeps its own layout and is scaled as a whole to fit the screen
+  const inner = useRef<HTMLDivElement>(null)
+  const [fsFit, setFit] = useState<{ w: number; s: number } | null>(null)
+  useEffect(() => {
+    if (fs === 'off') return setFit(null)
+    const calc = () => {
+      const el = inner.current
+      if (!el) return
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const w = Math.min(vw, 1100)
+      if (el.offsetWidth !== w) el.style.width = `${w}px`
+      setFit({ w, s: Math.min(vw / w, vh / Math.max(1, el.offsetHeight)) })
+    }
+    calc()
+    const ro = new ResizeObserver(calc)
+    if (inner.current) ro.observe(inner.current)
+    window.addEventListener('resize', calc)
+    return () => (ro.disconnect(), window.removeEventListener('resize', calc))
+  }, [fs])
+  // iPhone: its own player full screen (bare video) is swapped for the package full screen
+  const vid = useRef<HTMLVideoElement>(null)
+  useEffect(() => {
+    const v = vid.current as (HTMLVideoElement & { webkitExitFullscreen?: () => void }) | null
+    if (!v) return
+    const swap = () => {
+      setTimeout(() => v.webkitExitFullscreen?.(), 0)
+      setFs('fake')
+    }
+    v.addEventListener('webkitbeginfullscreen', swap)
+    return () => v.removeEventListener('webkitbeginfullscreen', swap)
+  }, [])
   function toggleFs() {
     if (fs === 'real') return void document.exitFullscreen().catch(() => {})
     if (fs === 'fake') return setFs('off')
@@ -168,6 +200,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
       )}
       <div className="absolute overflow-hidden bg-black transition-all duration-500 ease-out" style={screen}>
         <video
+          ref={vid}
           controls
           playsInline
           preload="metadata"
@@ -274,14 +307,19 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
     </div>
   )
   // full screen: the package is scaled to fit the screen (bands ≈ 230 px tall at large sizes), centred on black
-  const fsWrap = (inner: React.ReactNode, bandPx: number) => (
-    <div ref={box} className={fs === 'off' ? '' : `flex items-center justify-center overflow-auto bg-black ${fs === 'fake' ? 'fixed inset-0 z-[100]' : 'h-full w-full'}`}>
-      <div className={fs === 'off' ? '' : 'mx-auto'} style={fs === 'off' ? undefined : { width: `min(100vw, calc((100dvh - ${bandPx}px) * 16 / 9))` }}>
-        {inner}
+  // same element tree on and off (only styles change), so the playing video is never re-created
+  const fsWrap = (content: React.ReactNode) => (
+    <div ref={box} className={fs === 'off' ? '' : `overflow-hidden bg-black ${fs === 'fake' ? 'fixed inset-0 z-[100]' : 'relative h-full w-full'}`}>
+      <div
+        ref={inner}
+        className={fs === 'off' ? '' : 'absolute top-1/2 left-1/2'}
+        style={fs === 'off' ? undefined : { width: fsFit?.w ?? '100vw', transform: `translate(-50%, -50%) scale(${fsFit?.s ?? 1})`, visibility: fsFit ? 'visible' : 'hidden' }}
+      >
+        {content}
       </div>
     </div>
   )
-  if (!banded) return fsWrap(stage, 0)
+  if (!banded) return fsWrap(stage)
   // News-channel look: red headline band + blue “HEADLINE NEWS” bar on top; under the video a big red band whose lines
   // take turns (BREAKING NEWS · second headline · flash sentences), a “देखें” box with the logo, and a white ticker.
   const cur = lines[li % Math.max(1, nLines)]
@@ -329,6 +367,5 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
         </span>
       </div>
     </div>,
-    230,
   )
 }

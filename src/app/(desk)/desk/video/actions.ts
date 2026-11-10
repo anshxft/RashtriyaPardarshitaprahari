@@ -225,3 +225,20 @@ export async function generateExportAction(videoId: number, kind: 'social' | 've
     return { ok: false, error: msg(e) }
   }
 }
+
+/** Delete a video that has no news story (e.g. an upload that was never turned into news). Stories are deleted via the news buttons (trash, restorable). */
+export async function deleteLooseVideoAction(id: number): Promise<Res> {
+  try {
+    const u = await user()
+    const payload = await db()
+    const v = (await payload.findByID({ collection: 'videos', id, depth: 0, draft: true })) as Video
+    if (!(await mayEdit(u, v))) return { ok: false, error: 'इस वीडियो को हटाने का अधिकार नहीं है' }
+    if (articleOf(v)) return { ok: false, error: 'यह वीडियो एक खबर से जुड़ा है — खबर के “हटाएं” बटन से हटाएं' }
+    await audit(payload, u, { action: 'delete', collectionSlug: 'videos', title: v.title, details: { video: v.id } }, await headers())
+    await payload.delete({ collection: 'videos', id, overrideAccess: true })
+    revalidatePath('/desk/video')
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: msg(e) }
+  }
+}
