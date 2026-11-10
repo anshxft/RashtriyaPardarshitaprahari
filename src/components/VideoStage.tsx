@@ -89,7 +89,16 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
   const box = useRef<HTMLDivElement>(null)
   const [fs, setFs] = useState<'off' | 'real' | 'fake'>('off')
   useEffect(() => {
-    const on = () => setFs(document.fullscreenElement === box.current ? 'real' : (x) => (x === 'real' ? 'off' : x))
+    const on = () => {
+      const el = document.fullscreenElement
+      // Android Chrome puts the bare <video> full screen by itself (its player button, or turning the phone sideways
+      // while it plays): move the full screen to the whole package instead, or cover the page with it.
+      if (el && box.current && el !== box.current && box.current.contains(el)) {
+        box.current.requestFullscreen().catch(() => document.exitFullscreen().catch(() => {}).finally(() => setFs('fake')))
+        return
+      }
+      setFs(el === box.current ? 'real' : (x) => (x === 'real' ? 'off' : x))
+    }
     document.addEventListener('fullscreenchange', on)
     return () => document.removeEventListener('fullscreenchange', on)
   }, [])
