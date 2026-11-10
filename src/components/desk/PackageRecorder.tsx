@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
+import { wordmarkOn } from '@/components/VideoStage'
 
 export type PackageInput = {
   src: string // the website version (with logo), a URL the browser may read (CORS)
@@ -111,6 +112,7 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       await document.fonts.ready
       const family = getComputedStyle(document.body).fontFamily || 'sans-serif'
       const logo = await load('/logo-watermark.png')
+      const wordmark = await load('/wordmark.png')
       const video = document.createElement('video')
       video.crossOrigin = 'anonymous'
       video.playsInline = true
@@ -312,6 +314,20 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
             ctx.fillStyle = '#fff'
             ctx.fillText(input.role, nx + 14, nyy + 68)
           }
+        }
+        // tricolour name-logo, top-right: pops in at the start and every 30 s (same timing as the website player)
+        if (wordmarkOn(t)) {
+          const since = t < 6 ? t - 0.3 : t % 30
+          const k = Math.min(1, since / 0.9)
+          const sc = k < 0.45 ? 0.35 + (k / 0.45) * 0.77 : 1.12 - ((k - 0.45) / 0.55) * 0.12
+          const ww = VID.w * 0.26 * sc
+          const wh = (ww * wordmark.height) / wordmark.width
+          ctx.save()
+          ctx.globalAlpha = Math.min(1, k / 0.45)
+          ctx.shadowColor = k < 0.6 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
+          ctx.shadowBlur = k < 0.6 ? 24 : 8
+          ctx.drawImage(wordmark, VID.x + VID.w - 18 - (VID.w * 0.26 + ww) / 2, VID.y + 14 + (VID.w * 0.26 * (wordmark.height / wordmark.width) - wh) / 2, ww, wh)
+          ctx.restore()
         }
         // logo sting
         const st = t - stingAt

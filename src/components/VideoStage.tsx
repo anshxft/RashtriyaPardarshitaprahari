@@ -76,11 +76,16 @@ function whoosh(volume: number) {
   }
 }
 
+/** Name-logo in the top-right corner: 0.3–6 s, then 5 s every 30 s. */
+export const wordmarkOn = (t: number) => (t >= 0.3 && t < 6) || (t >= 30 && t % 30 < 5)
+
 /** Speaker name strap: from 3 s for 10 s, again every 45 s (like a news channel lower third). */
 const nameOn = (t: number) => t >= 3 && (t - 3) % 45 < 10
 
 export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tags, lang = 'hi' }: { src: string; poster?: string; flash?: FlashProps | null; breaking?: boolean; ads?: NonNullable<Ad>[]; top?: string | null; bottom?: string | null; tags?: VideoTags; lang?: 'hi' | 'en' }) {
   const [nameShow, setNameShow] = useState(false)
+  // tricolour name-logo: flashes in top-right as the video starts, then every 30 s
+  const [wmShow, setWmShow] = useState(false)
   // Logo sting (intro): when the video starts and then once a minute.
   const [sting, setSting] = useState(0)
   const lastSting = useRef(-1)
@@ -152,6 +157,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
             if (tags?.name) setNameShow(nameOn(t))
+            setWmShow(wordmarkOn(t))
             const minute = Math.floor(t / 60)
             if (banded && t % 60 < 0.8 && lastSting.current !== minute && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
               lastSting.current = minute
@@ -214,6 +220,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, top, bottom, tag
             </span>
           </div>
         )}
+        {wmShow && <img src="/wordmark.png" alt="" aria-hidden className="tv-wm pointer-events-none absolute top-2 right-2 z-10 w-[26%] max-w-64 sm:top-3 sm:right-3" />}
         {/* logo sting */}
         {sting > 0 && (
           <div key={sting} className="tv-sting pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
