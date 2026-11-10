@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { currentUser } from '@/lib/auth'
 import { db } from '@/lib/data'
 import { mayPublish } from '@/lib/deskData'
-import { newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
+import { buttonsFor, newsStatus, STATUS_LABEL } from '@/lib/newsStatus'
+import { NewsActionBar } from '@/components/desk/NewsActionBar'
 import { allowed, loadPermissions } from '@/lib/permissions'
 import { formatDate } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
@@ -36,7 +37,7 @@ const MORE: [string, string][] = [
 export default async function DeskHome() {
   const user = (await currentUser())!
   const payload = await db()
-  await loadPermissions(payload)
+  const perms = await loadPermissions(payload)
   const list = await payload.find({
     collection: 'articles',
     sort: '-updatedAt',
@@ -47,7 +48,7 @@ export default async function DeskHome() {
     user,
     locale: 'hi',
     where: { or: [{ lifecycle: { in: ['active', 'archived'] } }, { lifecycle: { exists: false } }] },
-    select: { title: true, _status: true, reviewStatus: true, newsId: true, slug: true, updatedAt: true, format: true, lifecycle: true, publishedAt: true, versionMinor: true, revisions: true },
+    select: { createdBy: true, firstPublishedAt: true, title: true, _status: true, reviewStatus: true, newsId: true, slug: true, updatedAt: true, format: true, lifecycle: true, publishedAt: true, versionMinor: true, revisions: true },
   })
   const failedShares = allowed(user, 'share')
     ? (await payload.find({ collection: 'share-log', where: { and: [{ status: { equals: 'failed' } }, { createdAt: { greater_than: new Date(Date.now() - 7 * 86_400_000).toISOString() } }] }, limit: 1, depth: 0, overrideAccess: true })).totalDocs
@@ -123,14 +124,15 @@ export default async function DeskHome() {
                   <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${cls}`}>{label}</span>
                   <span className="min-w-0 flex-1 basis-56 font-semibold">{a.title}</span>
                   <span className="text-xs text-muted">{formatDate(a.updatedAt, 'hi', true)}</span>
-                  <span className="flex gap-1.5 text-sm">
-                    <Link href={`/desk/news/${a.id}`} className="rounded-full border border-line px-3 py-1 font-semibold hover:bg-surface">✎ संपादित</Link>
-                    {a._status === 'published' && a.slug && (
-                      <Link href={paths.article('hi', a.slug)} target="_blank" className="rounded-full border border-line px-3 py-1 hover:bg-surface">
-                        देखें ↗
-                      </Link>
-                    )}
-                  </span>
+                  <div className="basis-full">
+                    <NewsActionBar
+                      id={a.id}
+                      slug={a.slug}
+                      title={a.title}
+                      buttons={{ main: buttonsFor(newsStatus(a), user, typeof a.createdBy === 'object' ? a.createdBy?.id : a.createdBy, { video: a.format === 'video' }, perms).main.filter((b) => ['edit', 'preview', 'delete', 'publish', 'approve'].includes(b)), more: [] }}
+                      info={{ status: label, firstPublishedAt: a.firstPublishedAt ? formatDate(a.firstPublishedAt, 'hi', true) : '—', lastEditor: '—', lastUpdate: formatDate(a.updatedAt, 'hi', true), newsId: a.newsId || '', live: a._status === 'published' }}
+                    />
+                  </div>
                 </li>
               )
             })}

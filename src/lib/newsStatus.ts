@@ -90,8 +90,8 @@ export function buttonsFor(status: NewsStatus, user: U, ownerId: number | string
       add(main, 'share', can('share'))
       add(main, 'republish', can('republish'))
       add(main, 'archive', can('archive'))
+      add(main, 'delete', mayTrashLive) // visible, not hidden under “More” (phones)
       add(more, 'unpublish', can('publish') && mayEdit)
-      add(more, 'delete', mayTrashLive)
       break
     case 'archived':
       add(main, 'preview', true)

@@ -126,7 +126,7 @@ assert.deepEqual(b('draft', rep, 3).main, ['edit', 'preview', 'delete'], 'report
 assert.deepEqual(b('draft', ed, 3).main, ['edit', 'preview', 'publish'], 'editor cannot trash someone else’s draft by default')
 assert.deepEqual(b('published', ed, 3).main, ['preview', 'edit', 'download', 'share', 'republish', 'archive'], 'editor: re-publish yes, delete no by default')
 assert.ok(!b('published', ed, 3).more.includes('delete'))
-assert.ok(b('published', adm, 3).main.includes('republish') && b('published', adm, 3).more.includes('delete'))
+assert.ok(b('published', adm, 3).main.includes('republish') && b('published', adm, 3).main.includes('delete'))
 assert.deepEqual(b('trashed', ed, 2).main, [], 'only admin restores from trash')
 assert.deepEqual(b('trashed', adm, 2).main, ['restoreTrash', 'purge'])
 assert.ok(b('archived', { id: 5, role: 'senior' }, 3).main.includes('restorePublish'))
