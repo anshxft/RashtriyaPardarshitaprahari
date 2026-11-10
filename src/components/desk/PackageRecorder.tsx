@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
-import { wordmarkOn } from '@/components/VideoStage'
+import { adOn, wordmarkOn } from '@/components/VideoStage'
 
 export type PackageInput = {
   src: string // the website version (with logo), a URL the browser may read (CORS)
@@ -15,6 +15,7 @@ export type PackageInput = {
   name?: string | null
   role?: string | null
   ticker?: string | null // Desk lines for the white ticker (one per line)
+  ads?: { title: string; image: string; win: { x: number; y: number; w: number; h: number } }[] // L-frame ads (same as the website)
 }
 
 const W = 1280
@@ -88,6 +89,7 @@ const load = (src: string) =>
     const i = new Image()
     i.onload = () => res(i)
     i.onerror = rej
+    i.crossOrigin = 'anonymous'
     i.src = src
   })
 
@@ -113,6 +115,8 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       const family = getComputedStyle(document.body).fontFamily || 'sans-serif'
       const logo = await load('/logo-watermark.png')
       const wordmark = await load('/wordmark.png')
+      // L-frame ads: same frames, timing and turn order as the website player (one that fails to load is skipped)
+      const ads = (await Promise.all((input.ads || []).map(async (a) => ({ ...a, img: await load(a.image).catch(() => null) })))).filter((a) => a.img)
       const video = document.createElement('video')
       video.crossOrigin = 'anonymous'
       video.playsInline = true
@@ -232,16 +236,38 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.restore()
           x += cw + spacing
         })
-        // video
+        // video — while an L-frame ad is up, the picture shrinks into the ad's window (0.5 s ease, like the website)
         ctx.fillStyle = '#000'
         ctx.fillRect(VID.x, VID.y, VID.w, VID.h)
+        let S = VID
+        if (ads.length && t >= 10) {
+          const since = (t - 10) % 45
+          const on = adOn(t)
+          const k0 = on ? Math.min(1, since / 0.5) : Math.max(0, 1 - (since - 12) / 0.5)
+          if (k0 > 0) {
+            const k = 1 - (1 - k0) ** 3
+            const ad = ads[Math.floor((t - 10) / 45) % ads.length]
+            ctx.save()
+            ctx.globalAlpha = k
+            ctx.drawImage(ad.img!, VID.x, VID.y, VID.w, VID.h)
+            ctx.restore()
+            const lerp = (a: number, b: number) => a + (b - a) * k
+            S = { x: lerp(VID.x, VID.x + ad.win.x * VID.w), y: lerp(VID.y, VID.y + ad.win.y * VID.h), w: lerp(VID.w, ad.win.w * VID.w), h: lerp(VID.h, ad.win.h * VID.h) }
+            ctx.fillStyle = '#000'
+            ctx.fillRect(S.x, S.y, S.w, S.h)
+          }
+        }
         const vr = video.videoWidth / video.videoHeight || 16 / 9
-        let vw = VID.w
+        let vw = S.w
         let vh = vw / vr
-        if (vh > VID.h) (vh = VID.h), (vw = vh * vr)
-        if (video.readyState >= 2) ctx.drawImage(video, VID.x + (VID.w - vw) / 2, VID.y + (VID.h - vh) / 2, vw, vh)
+        if (vh > S.h) (vh = S.h), (vw = vh * vr)
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(S.x, S.y, S.w, S.h)
+        ctx.clip()
+        if (video.readyState >= 2) ctx.drawImage(video, S.x + (S.w - vw) / 2, S.y + (S.h - vh) / 2, vw, vh)
         // BREAKING label (flips over every 6 s)
-        let ly = VID.y + 18
+        let ly = S.y + 18
         if (input.breaking) {
           const ph = (t % 6) / 6
           const back = ph >= 0.45 && ph < 0.95
@@ -251,7 +277,7 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.font = `800 22px ${family}`
           const lw = ctx.measureText(label).width + 24
           ctx.save()
-          ctx.translate(VID.x + 18, ly + 18)
+          ctx.translate(S.x + 18, ly + 18)
           ctx.scale(1, Math.max(0.05, sy))
           ctx.shadowColor = back ? 'rgba(232,185,49,0.9)' : 'rgba(255,40,30,0.9)'
           ctx.shadowBlur = 14 + 6 * Math.sin(t * 4)
@@ -273,29 +299,29 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.font = `800 22px ${family}`
           const pw = ctx.measureText(input.place).width + 24
           ctx.fillStyle = '#c8102e'
-          ctx.fillRect(VID.x + 18, ly, 34, 34)
+          ctx.fillRect(S.x + 18, ly, 34, 34)
           ctx.fillStyle = 'rgba(0,0,0,0.8)'
-          ctx.fillRect(VID.x + 52, ly, pw, 34)
+          ctx.fillRect(S.x + 52, ly, pw, 34)
           ctx.fillStyle = '#fff'
           ctx.textAlign = 'left'
           // map pin (drawn, so it looks the same on every computer)
           ctx.fillStyle = '#fff'
           ctx.beginPath()
-          ctx.arc(VID.x + 35, ly + 14, 7, Math.PI, 0)
-          ctx.lineTo(VID.x + 35, ly + 28)
+          ctx.arc(S.x + 35, ly + 14, 7, Math.PI, 0)
+          ctx.lineTo(S.x + 35, ly + 28)
           ctx.closePath()
           ctx.fill()
           ctx.fillStyle = '#c8102e'
           ctx.beginPath()
-          ctx.arc(VID.x + 35, ly + 14, 3, 0, Math.PI * 2)
+          ctx.arc(S.x + 35, ly + 14, 3, 0, Math.PI * 2)
           ctx.fill()
           ctx.fillStyle = '#fff'
-          ctx.fillText(input.place, VID.x + 64, ly + 18)
+          ctx.fillText(input.place, S.x + 64, ly + 18)
         }
         // speaker name strap: from 3 s for 10 s, every 45 s
         if (input.name && t >= 3 && (t - 3) % 45 < 10) {
-          const nx = VID.x + 24
-          const nyy = VID.y + VID.h - (input.role ? 110 : 76)
+          const nx = S.x + 24
+          const nyy = S.y + S.h - (input.role ? 110 : 76)
           ctx.font = `900 34px ${family}`
           const nw = ctx.measureText(input.name).width + 32
           ctx.shadowColor = 'rgba(255,255,255,0.7)'
@@ -320,13 +346,13 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           const since = t < 6 ? t - 0.3 : t % 30
           const k = Math.min(1, since / 0.9)
           const sc = k < 0.45 ? 0.35 + (k / 0.45) * 0.77 : 1.12 - ((k - 0.45) / 0.55) * 0.12
-          const ww = VID.w * 0.26 * sc
+          const ww = S.w * 0.26 * sc
           const wh = (ww * wordmark.height) / wordmark.width
           ctx.save()
           ctx.globalAlpha = Math.min(1, k / 0.45)
           ctx.shadowColor = k < 0.6 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
           ctx.shadowBlur = k < 0.6 ? 24 : 8
-          ctx.drawImage(wordmark, VID.x + VID.w - 18 - (VID.w * 0.26 + ww) / 2, VID.y + 14 + (VID.w * 0.26 * (wordmark.height / wordmark.width) - wh) / 2, ww, wh)
+          ctx.drawImage(wordmark, S.x + S.w - 18 - (S.w * 0.26 + ww) / 2, S.y + 14 + (S.w * 0.26 * (wordmark.height / wordmark.width) - wh) / 2, ww, wh)
           ctx.restore()
         }
         // logo sting
@@ -334,22 +360,32 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         if (st >= 0 && st < 2) {
           const k = st / 2
           const flash = k < 0.22 ? k / 0.22 : k > 0.8 ? (1 - k) / 0.2 : 1
-          const rg = ctx.createRadialGradient(VID.x + VID.w / 2, VID.y + VID.h / 2, 10, VID.x + VID.w / 2, VID.y + VID.h / 2, VID.w * 0.6)
+          const rg = ctx.createRadialGradient(S.x + S.w / 2, S.y + S.h / 2, 10, S.x + S.w / 2, S.y + S.h / 2, S.w * 0.6)
           rg.addColorStop(0, `rgba(255,255,255,${0.5 * flash})`)
           rg.addColorStop(0.45, `rgba(200,16,46,${0.5 * flash})`)
           rg.addColorStop(1, `rgba(0,0,0,${0.4 * flash})`)
           ctx.fillStyle = rg
-          ctx.fillRect(VID.x, VID.y, VID.w, VID.h)
+          ctx.fillRect(S.x, S.y, S.w, S.h)
           const sc = k < 0.28 ? 0.15 + (k / 0.28) * 0.95 : k < 0.38 ? 1.1 - ((k - 0.28) / 0.1) * 0.13 : k < 0.78 ? 1 : 1 + ((k - 0.78) / 0.22) * 0.5
           const op = k < 0.28 ? k / 0.28 : k > 0.78 ? 1 - (k - 0.78) / 0.22 : 1
-          const lw2 = VID.w * 0.46 * sc
+          const lw2 = S.w * 0.46 * sc
           const lh2 = (lw2 * logo.height) / logo.width
           ctx.save()
           ctx.globalAlpha = Math.max(0, Math.min(1, op))
           ctx.shadowColor = 'rgba(255,210,63,0.9)'
           ctx.shadowBlur = 30
-          ctx.drawImage(logo, VID.x + VID.w / 2 - lw2 / 2, VID.y + VID.h / 2 - lh2 / 2, lw2, lh2)
+          ctx.drawImage(logo, S.x + S.w / 2 - lw2 / 2, S.y + S.h / 2 - lh2 / 2, lw2, lh2)
           ctx.restore()
+        }
+        ctx.restore()
+        if (S !== VID) {
+          ctx.font = `700 15px ${family}`
+          ctx.textAlign = 'left'
+          const lw = ctx.measureText('विज्ञापन / AD').width + 14
+          ctx.fillStyle = 'rgba(0,0,0,0.6)'
+          ctx.fillRect(VID.x + VID.w - lw - 6, VID.y + 6, lw, 24)
+          ctx.fillStyle = '#fff'
+          ctx.fillText('विज्ञापन / AD', VID.x + VID.w - lw + 1, VID.y + 19)
         }
         // lower band: lines take turns
         const li = Math.floor(t / LINE_SEC) % lines.length

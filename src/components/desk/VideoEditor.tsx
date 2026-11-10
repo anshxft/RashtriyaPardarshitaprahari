@@ -9,6 +9,7 @@ import { publishChecklist } from '@/lib/newsStatus'
 import { uploadVideo, type UploadMode } from '@/lib/resumableUpload'
 import { flashTimes } from '@/lib/videoArgs'
 import { PhotoField, type Photo } from './PhotoField'
+import { PhotoVideoMaker } from './PhotoVideoMaker'
 
 type JobInfo = { status: string; error?: string | null }
 export type VideoForm = {
@@ -103,7 +104,7 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       const s = await startVideoAction({ originalUrl: stored, filename: file.name, size: file.size, replaceId: replacing.current ? f.id : undefined })
       setPct(null)
       if (!s.ok) return setNote({ kind: 'err', text: s.error })
-      setF((x) => ({ ...x, id: s.id, processing: 'queued', previewUrl: '', exports: {}, jobs: {}, fileName: file.name, title: x.title || file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ') }))
+      setF((x) => ({ ...x, id: s.id, processing: 'queued', previewUrl: '', exports: {}, jobs: {}, fileName: file.name, title: x.title || (file.name.startsWith('photo-video-') ? '' : file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')) }))
       if (!replacing.current) window.history.replaceState(null, '', `/desk/video/${s.id}`)
       setNote({ kind: 'ok', text: replacing.current ? 'नया वीडियो लग गया ✔ पुराना संस्करण इतिहास में सुरक्षित है।' : 'अपलोड पूरा ✔ — लोगो और थंबनेल अपने-आप बन रहे हैं। तब तक जानकारी भरें।' })
       replacing.current = false
@@ -232,6 +233,19 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             <span className="text-lg font-bold text-navy-900">वीडियो चुनें / रिकॉर्ड करें</span>
             <span className="text-xs">मोबाइल या लैपटॉप से · लोगो अपने-आप ऊपर दाएं कोने में लगेगा · मूल फ़ाइल अलग सुरक्षित रहेगी</span>
           </button>
+        )}
+        {!f.id && pct === null && (
+          <details className="mt-3 rounded-lg border-2 border-[#c8102e]/40 bg-surface p-3">
+            <summary className="cursor-pointer font-bold text-navy-900">📷 वीडियो नहीं है? फोटो से वीडियो खबर बनाएं (आवाज़ के साथ)</summary>
+            <p className="my-2 text-sm text-muted">फोटो चुनें और खबर का छोटा विवरण लिखें। फोटो फ्लैश के साथ एक-एक कर आएंगी और चुनी हुई आवाज़ (महिला / पुरुष) वही विवरण पढ़ेगी। बना हुआ वीडियो अपने-आप अपलोड होगा, फिर बाकी जानकारी भरकर प्रकाशित करें।</p>
+            <PhotoVideoMaker
+              defaultScript={f.flashScript}
+              onMade={(file, text) => {
+                if (text) setF((x) => ({ ...x, flash: true, flashScript: x.flashScript.trim() ? x.flashScript : text }))
+                void onFile(file)
+              }}
+            />
+          </details>
         )}
       </section>
 

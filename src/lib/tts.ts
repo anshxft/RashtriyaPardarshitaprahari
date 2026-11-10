@@ -7,7 +7,7 @@
  */
 import { createHash } from 'node:crypto'
 
-export type VoiceSettings = { rate?: number | null; volume?: number | null; pauseMs?: number | null }
+export type VoiceSettings = { rate?: number | null; volume?: number | null; pauseMs?: number | null; gender?: 'female' | 'male' | null }
 export type Pronunciation = { word: string; speakAs: string }
 
 export const ttsProvider = (): 'google' | 'azure' | null => {
@@ -16,7 +16,10 @@ export const ttsProvider = (): 'google' | 'azure' | null => {
   if (p === 'azure' && process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION) return 'azure'
   return null
 }
-const voiceName = (p: 'google' | 'azure') => process.env.TTS_VOICE || (p === 'google' ? 'hi-IN-Neural2-A' : 'hi-IN-SwaraNeural')
+const voiceName = (p: 'google' | 'azure', gender?: 'female' | 'male' | null) =>
+  gender === 'male'
+    ? process.env.TTS_VOICE_MALE || (p === 'google' ? 'hi-IN-Neural2-B' : 'hi-IN-MadhurNeural')
+    : process.env.TTS_VOICE || (p === 'google' ? 'hi-IN-Neural2-A' : 'hi-IN-SwaraNeural')
 
 export const QUOTA_NOTE =
   process.env.TTS_QUOTA_NOTE ||
@@ -52,14 +55,14 @@ export function toSsml(script: string, s: VoiceSettings, dict: Pronunciation[], 
   const volume = provider === 'azure' ? `${Math.max(10, Math.min(100, s.volume ?? 100))}` : 'medium'
   const inner = `<prosody rate="${rate}" volume="${volume}">${body}</prosody>`
   return provider === 'azure'
-    ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="hi-IN"><voice name="${voiceName('azure')}">${inner}</voice></speak>`
+    ? `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="hi-IN"><voice name="${voiceName('azure', s.gender)}">${inner}</voice></speak>`
     : `<speak>${inner}</speak>`
 }
 
 /** Cache key: same script + same voice settings + same dictionary = same audio (never regenerated). */
 export function ttsKey(script: string, s: VoiceSettings, dict: Pronunciation[], provider: string | null = ttsProvider()): string {
   return createHash('sha256')
-    .update(JSON.stringify([provider, provider && voiceName(provider as 'google'), script.trim(), s.rate || 1, s.volume ?? 100, s.pauseMs ?? 400, dict.map((d) => [d.word, d.speakAs])]))
+    .update(JSON.stringify([provider, provider && voiceName(provider as 'google', s.gender), script.trim(), s.rate || 1, s.volume ?? 100, s.pauseMs ?? 400, dict.map((d) => [d.word, d.speakAs])]))
     .digest('hex')
     .slice(0, 32)
 }
@@ -75,7 +78,7 @@ export async function synthesize(script: string, s: VoiceSettings, dict: Pronunc
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         input: { ssml: toSsml(script, s, dict, 'google') },
-        voice: { languageCode: 'hi-IN', name: voiceName('google') },
+        voice: { languageCode: 'hi-IN', name: voiceName('google', s.gender) },
         audioConfig: { audioEncoding: 'MP3', volumeGainDb: Math.round(20 * Math.log10(vol / 100) * 10) / 10, sampleRateHertz: 24000 },
       }),
     })

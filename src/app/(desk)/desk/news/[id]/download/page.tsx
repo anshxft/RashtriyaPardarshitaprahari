@@ -6,7 +6,7 @@ import type { Video } from '@/payload-types'
 import { ShareCard } from '@/components/ShareCard'
 import { StoryTools } from '@/components/StoryTools'
 import { currentUser } from '@/lib/auth'
-import { asCat, cardImage, getArticleForPreview, getSettings } from '@/lib/data'
+import { asCat, cardImage, getArticleForPreview, getSettings, getVideoFrameAds } from '@/lib/data'
 import { downloadName } from '@/lib/fileName'
 import { formatDate, t } from '@/lib/i18n'
 import { newsStatus } from '@/lib/newsStatus'
@@ -33,6 +33,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
     const v = (await (await db()).findByID({ collection: 'videos', id: vid, depth: 0, draft: true })) as Video
     const src = await resolveUrl(v.processedUrl)
     const stamp0 = a.firstPublishedAt || a.publishedAt
+    const ads = await getVideoFrameAds()
     return (
       <div className="max-w-3xl space-y-4">
         <h1 className="font-display text-xl font-extrabold text-navy-900">⬇ वीडियो डाउनलोड</h1>
@@ -51,6 +52,7 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
               name: a.videoTag?.name,
               role: a.videoTag?.role,
               ticker: a.videoTag?.ticker,
+              ads: ads.map(({ title, image, win }) => ({ title, image, win })),
             }}
           />
         ) : (

@@ -10,7 +10,7 @@ export type FlashProps = { on: boolean; voice?: boolean; script: string; breakin
 type Ad = { title: string; image: string; link?: string | null; win: { x: number; y: number; w: number; h: number } } | null
 
 /** L-band ad (TV style): first at 10 s, then every 45 s, 12 s each. The video keeps playing, just smaller, inside the frame. */
-const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
+export const adOn = (t: number) => t >= 10 && (t - 10) % 45 < 12
 
 /** The <video> with the red FLASH strip shown over the bottom while it plays (when not already burned in). */
 export type VideoTags = { place?: string | null; name?: string | null; role?: string | null; ticker?: string | null } | null
