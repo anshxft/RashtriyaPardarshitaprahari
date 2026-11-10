@@ -76,6 +76,10 @@ function whoosh(volume: number) {
   }
 }
 
+/** Logo flash in the middle of the picture: 3 times in every video, at ¼, ½ and ¾ of its length. */
+export const stingTimes = (dur: number) => (dur > 0 ? [0.25, 0.5, 0.75].map((f) => dur * f) : [])
+export const stingIndex = (t: number, dur: number) => stingTimes(dur).findIndex((x) => t >= x && t < x + 0.8)
+
 /** The spoken text starts this many seconds into the video (website player and downloaded video alike). */
 export const VOICE_AT = 1
 
@@ -172,7 +176,7 @@ export function VideoStage({ src, poster, flash, breaking, ads, voice, top, bott
   }
   // tricolour name-logo: flashes in top-right as the video starts, then every 30 s
   const [wmShow, setWmShow] = useState(false)
-  // Logo sting (intro): when the video starts and then once a minute.
+  // Logo sting: 3 times in every video (¼, ½, ¾ of its length).
   const [sting, setSting] = useState(0)
   const lastSting = useRef(-1)
   // Lower band: lines take turns (BREAKING NEWS · second headline · each sentence of the approved flash script).
@@ -249,9 +253,9 @@ export function VideoStage({ src, poster, flash, breaking, ads, voice, top, bott
             if (tags?.name) setNameShow(nameOn(t))
             syncVoice(e.currentTarget)
             setWmShow(wordmarkOn(t))
-            const minute = Math.floor(t / 60)
-            if (banded && t % 60 < 0.8 && lastSting.current !== minute && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-              lastSting.current = minute
+            const si = stingIndex(t, e.currentTarget.duration || 0)
+            if (banded && si >= 0 && lastSting.current !== si && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              lastSting.current = si
               setSting(Date.now())
               setTimeout(() => setSting(0), 2000)
               const vid = e.currentTarget

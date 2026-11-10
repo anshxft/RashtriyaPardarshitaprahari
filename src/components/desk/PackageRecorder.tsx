@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
-import { adOn, VOICE_AT, wordmarkOn } from '@/components/VideoStage'
+import { adOn, stingIndex, VOICE_AT, wordmarkOn } from '@/components/VideoStage'
 
 export type PackageInput = {
   src: string // the website version (with logo), a URL the browser may read (CORS)
@@ -172,10 +172,10 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
 
       const frame = () => {
         const t = video.currentTime
-        // sting: start and every 60 s
-        const minute = Math.floor(t / 60)
-        if (t % 60 < 0.8 && minute !== lastSting) {
-          lastSting = minute
+        // sting: 3 times, at ¼, ½ and ¾ of the video (same as the website)
+        const si = stingIndex(t, dur)
+        if (si >= 0 && si !== lastSting) {
+          lastSting = si
           stingAt = t
           whoosh(ac, dest)
         }
