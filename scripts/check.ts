@@ -79,7 +79,7 @@ assert.ok(variantsFor(story('x', 100)).every((v) => v.cols <= 4), 'widening capp
 // video logo: real-pixel size from video width (14% of 1280 = 180), top-right, never wider than 1080p; phone rotation swaps size
 const g = watermarkArgs('i', 'l', 'o', {}, 1280)[watermarkArgs('i', 'l', 'o', {}, 1280).indexOf('-filter_complex') + 1]
 assert.ok(g.includes('scale=180:-2') && g.includes('overlay=W-w-0.0250*W:0.0250*W'), g)
-assert.ok(watermarkArgs('i', 'l', 'o', { sizePercent: 10 }, 4000).join(' ').includes('scale=192:-2'), 'capped at 1920 wide')
+assert.ok(watermarkArgs('i', 'l', 'o', { sizePercent: 10 }, 4000).join(' ').includes('scale=128:-2'), 'capped at 1280 wide')
 assert.deepEqual(videoSize('Stream #0:0: Video: h264, yuv420p, 1920x1080 [SAR 1:1]'), { w: 1920, h: 1080 })
 assert.deepEqual(videoSize('Video: h264, 1920x1080, 30 fps\n rotate          : 90'), { w: 1080, h: 1920 })
 

@@ -7,6 +7,9 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const nextConfig: NextConfig = {
   images: {
+    // Photos already come in ready-made web sizes (thumb / card / hero WebP, made once at upload), so they are sent
+    // straight from storage instead of being re-compressed by a server function on every view.
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: '**.wikimedia.org' },

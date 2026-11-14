@@ -19,14 +19,14 @@ export function watermarkArgs(input: string, logo: string, output: string, wm: W
   const alpha = Math.min(100, Math.max(20, wm.opacity ?? 90)) / 100
   const margin = (Math.min(10, Math.max(0, wm.marginPercent ?? 2.5)) / 100).toFixed(4)
   const pos = (POS[wm.position || 'tr'] || POS.tr).replaceAll('M', `${margin}*W`)
-  const baseW = Math.min(1920, videoWidth) // the picture is never wider than 1920 px (1080p)
+  const baseW = Math.min(1280, videoWidth) // website copy is at most 1280 px wide (720p): far less work to make, lighter to stream
   const logoW = Math.max(24, Math.round((baseW * size) / 2) * 2)
   const graph = [
-    `[0:v]scale='min(1920,iw)':-2,setsar=1[b]`, // even dimensions for H.264
+    `[0:v]scale='min(1280,iw)':-2,setsar=1[b]`, // even dimensions for H.264
     `[1:v]scale=${logoW}:-2,format=rgba,colorchannelmixer=aa=${alpha}[l]`, // logo width = % of the video width, own aspect kept
     `[b][l]overlay=${pos}:format=auto,format=yuv420p[v]`,
   ].join(';')
-  return ['-y', '-i', input, '-i', logo, '-filter_complex', graph, '-map', '[v]', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', output]
+  return ['-y', '-i', input, '-i', logo, '-filter_complex', graph, '-map', '[v]', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'superfast', '-crf', '25', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', output]
 }
 
 

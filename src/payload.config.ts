@@ -115,7 +115,7 @@ export default buildConfig({
     ? [
         // clientUploads: the browser sends files straight to Blob storage, so photos above Vercel's 4.5 MB request limit
         // (normal for phone cameras) upload fine from the admin panel.
-        vercelBlobStorage({ clientUploads: true, collections: { media: true, 'private-files': true }, token: env.BLOB_READ_WRITE_TOKEN }),
+        vercelBlobStorage({ clientUploads: true, collections: { media: { disablePayloadAccessControl: true }, 'private-files': true }, token: env.BLOB_READ_WRITE_TOKEN }),
       ]
     : [],
   upload: { limits: { fileSize: 20_000_000 } },
