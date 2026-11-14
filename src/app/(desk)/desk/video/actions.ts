@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { refreshStory } from '@/lib/refresh'
 import { headers } from 'next/headers'
 import { canPublish } from '@/access'
 import { currentUser } from '@/lib/auth'
@@ -224,7 +225,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
       if (a.flash?.enabled || a.flash?.voice) await enqueue('flash', v.id)
       kick()
     }
-    revalidatePath('/', 'layout')
+    if (a._status === 'published') refreshStory(a.slug)
     const scheduled = a._status === 'published' && a.publishedAt && new Date(a.publishedAt).getTime() > Date.now() + 60_000
     return { ok: true, status: scheduled ? 'scheduled' : a._status === 'published' ? 'published' : input.mode === 'submit' ? 'submitted' : 'draft', articleId: a.id, newsId: a.newsId, url: a.slug ? paths.article('hi', a.slug) : undefined, note: voiceNote }
   } catch (e) {

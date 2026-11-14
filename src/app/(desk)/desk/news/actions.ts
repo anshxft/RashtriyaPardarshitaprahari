@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { refreshStory } from '@/lib/refresh'
 import { headers } from 'next/headers'
 import { currentUser } from '@/lib/auth'
 import { audit } from '@/lib/audit'
@@ -50,7 +50,7 @@ async function setLifecycle(g: Awaited<ReturnType<typeof guard>>, data: Record<s
     user: g.user,
     context: { auditAction, reason },
   })
-  revalidatePath('/', 'layout')
+  refreshStory(g.doc.slug)
 }
 
 export async function archiveNews(id: number): Promise<ActionResult> {
@@ -66,7 +66,7 @@ export async function unpublishNews(id: number): Promise<ActionResult> {
   return run(async () => {
     const g = await guard(id, 'unpublish')
     await g.payload.update({ collection: 'articles', id, data: { _status: 'draft' } as never, overrideAccess: true, user: g.user, context: { auditAction: 'unpublish' } })
-    revalidatePath('/', 'layout')
+    refreshStory(g.doc.slug)
     return { ok: true, message: 'खबर वेबसाइट से हटा दी गई (ड्राफ्ट में)। सुधार के बाद “प्रकाशित” दबाकर वापस ला सकते हैं।' }
   })
 }
@@ -105,7 +105,7 @@ export async function republishNews(id: number, mode: 'original' | 'updated'): P
       user: g.user,
       context: { auditAction: 'republish', republish: mode },
     })
-    revalidatePath('/', 'layout')
+    refreshStory(g.doc.slug)
     return { ok: true, message: mode === 'original' ? 'मूल प्रकाशन तिथि के साथ फिर प्रकाशित।' : '“Updated” खबर के रूप में फिर प्रकाशित।' }
   })
 }
@@ -126,7 +126,7 @@ export async function purgeNews(id: number, password: string): Promise<ActionRes
       await headers(),
     )
     await g.payload.delete({ collection: 'articles', id, overrideAccess: true })
-    revalidatePath('/', 'layout')
+    refreshStory(g.doc.slug)
     return { ok: true, message: 'स्थायी रूप से हटा दिया गया। ऑडिट लॉग में रिकॉर्ड सुरक्षित है।' }
   })
 }

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { refreshStory } from '@/lib/refresh'
 import QRCode from 'qrcode'
 import { canPublish } from '@/access'
 import { currentUser } from '@/lib/auth'
@@ -62,7 +63,7 @@ export async function saveNewsAction(input: NewsInput): Promise<SaveResult> {
     const saved = input.id ? await payload.update({ ...common, id: input.id }) : await payload.create(common)
     const doc = await payload.findByID({ collection: 'articles', id: saved.id, locale: input.locale, depth: 0, draft: !publishing, overrideAccess: false, user })
 
-    revalidatePath('/[lang]', 'layout')
+    if (publishing || doc._status === 'published') refreshStory(doc.slug) // a draft save does not touch the live site
     const scheduled = publishing && doc.publishedAt && new Date(doc.publishedAt).getTime() > Date.now() + 60_000
     const short = doc.newsId ? `${siteUrl()}${paths.newsShort(doc.newsId)}` : undefined
     const web = `${paths.article(input.locale, doc.slug)}`
