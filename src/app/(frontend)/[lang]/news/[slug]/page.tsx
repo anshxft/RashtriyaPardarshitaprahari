@@ -6,7 +6,7 @@ import { asCat, cardImage, getArchivedStub, getArticle } from '@/lib/data'
 import { assertLang, formatDate, looksHindi, other } from '@/lib/i18n'
 import { decodeSlug, paths } from '@/lib/paths'
 
-export const revalidate = 60
+export const revalidate = 600 // every desk save refreshes the site at once
 export const generateStaticParams = async () => []
 
 type Props = { params: Promise<{ lang: string; slug: string }> }

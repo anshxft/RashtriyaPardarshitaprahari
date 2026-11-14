@@ -7,7 +7,7 @@ const AI_BOTS = ['GPTBot', 'ChatGPT-User', 'OAI-SearchBot', 'CCBot', 'ClaudeBot'
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/hi/search', '/en/search'] },
+      { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/hi/search', '/en/search', '/*?page=', '/*&page='] },
       { userAgent: AI_BOTS, disallow: '/' },
     ],
     sitemap: [`${siteUrl()}/sitemap.xml`, `${siteUrl()}/news-sitemap.xml`],

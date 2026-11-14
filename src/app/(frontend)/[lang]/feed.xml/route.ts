@@ -18,5 +18,5 @@ export async function GET(_: Request, { params }: { params: Promise<{ lang: stri
     })
     .join('')
   const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${esc(d.siteName)}</title><link>${base}/${lang}</link><description>${esc(d.tagline)}</description><language>${lang}</language>${items}</channel></rss>`
-  return new Response(xml, { headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' } })
+  return new Response(xml, { headers: { 'Content-Type': 'application/rss+xml; charset=utf-8', 'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600' } })
 }

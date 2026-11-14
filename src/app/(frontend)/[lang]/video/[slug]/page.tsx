@@ -8,7 +8,8 @@ import { getSettings, getVideo, getVideos } from '@/lib/data'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 import { decodeSlug, paths, siteUrl } from '@/lib/paths'
 
-export const dynamic = 'force-dynamic'
+export const generateStaticParams = async () => [] // made on first visit, then cached
+export const revalidate = 600 // nothing per-visitor on this page; desk saves refresh it at once
 type Props = { params: Promise<{ lang: string; slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

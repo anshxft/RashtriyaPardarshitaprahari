@@ -5,7 +5,8 @@ import { getSettings } from '@/lib/data'
 import { getEditionStories, getEpaperAds, getEpaperFillers, getEpaperLayout, listEditions } from '@/lib/epaperData'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 
-export const dynamic = 'force-dynamic' // depends on who is looking (editors get the layout tools)
+export const generateStaticParams = async () => [] // made on first visit, then cached
+export const revalidate = 600 // same for every reader (editing happens in the desk designer, which refreshes it)
 
 type Props = { params: Promise<{ lang: string; date: string }> }
 const label = (date: string, lang: 'hi' | 'en') => formatDate(new Date(`${date}T12:00:00+05:30`).toISOString(), lang)

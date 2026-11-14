@@ -4,7 +4,7 @@ import { getCorrections } from '@/lib/data'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
-export const revalidate = 60
+export const revalidate = 600
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   return { title: t(assertLang((await params).lang)).correctionsLog }

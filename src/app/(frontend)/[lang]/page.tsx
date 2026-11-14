@@ -12,7 +12,7 @@ import { getFlash } from '@/lib/flash'
 import { assertLang, t, timeAgo, type Lang } from '@/lib/i18n'
 import { paths } from '@/lib/paths'
 
-export const revalidate = 60
+export const revalidate = 300 // publishing refreshes it at once; this only bounds scheduled stories (≤ 5 min)
 
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLang((await params).lang)

@@ -5,7 +5,7 @@ import { getBySlug } from '@/lib/data'
 import { assertLang, formatDate, t } from '@/lib/i18n'
 import { decodeSlug, paths } from '@/lib/paths'
 
-export const revalidate = 300
+export const revalidate = 3600
 export const generateStaticParams = async () => []
 type Props = { params: Promise<{ lang: string; slug: string }> }
 
