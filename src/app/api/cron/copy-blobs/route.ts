@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto'
-import { list, put } from '@vercel/blob'
+import { head, list, put } from '@vercel/blob'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +35,8 @@ export async function GET(req: Request) {
       // the untouched camera originals are only needed to re-make a video; they are big, so they come last (?originals=1)
       if (b.pathname.startsWith('videos/original/') && !originals) continue
       if (Date.now() - started > 240_000) break
+      // already copied in an earlier run → skip (so each run moves on instead of starting over)
+      if (await head(b.pathname, { token: to }).then(() => true).catch(() => false)) continue
       try {
         const res = await fetch(b.url, { signal: AbortSignal.timeout(50_000) })
         if (!res.ok || !res.body) throw new Error(String(res.status))
