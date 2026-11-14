@@ -22,22 +22,29 @@ export async function GET(req: Request) {
 
   const started = Date.now()
   let cursor = new URL(req.url).searchParams.get('cursor') || undefined
+  const originals = new URL(req.url).searchParams.get('originals') === '1'
   let copied = 0
   const failed: string[] = []
   let oldBase = ''
   let newBase = ''
-  while (Date.now() - started < 270_000) {
+  while (Date.now() - started < 200_000) {
     const page = await list({ token: from, cursor, limit: 25 })
+    console.log('page', page.blobs.length, 'more', page.hasMore)
     for (const b of page.blobs) {
       oldBase ||= new URL(b.url).origin
+      // the untouched camera originals are only needed to re-make a video; they are big, so they come last (?originals=1)
+      if (b.pathname.startsWith('videos/original/') && !originals) continue
+      if (Date.now() - started > 240_000) break
       try {
-        const res = await fetch(b.url)
+        const res = await fetch(b.url, { signal: AbortSignal.timeout(50_000) })
         if (!res.ok || !res.body) throw new Error(String(res.status))
         const out = await put(b.pathname, res.body, { access: 'public', token: to, addRandomSuffix: false, allowOverwrite: true, contentType: res.headers.get('content-type') || undefined, multipart: b.size > 50_000_000 })
         newBase ||= new URL(out.url).origin
         copied++
+        console.log('copied', b.pathname, b.size)
       } catch (e) {
         failed.push(`${b.pathname}: ${(e as Error).message}`)
+        console.log('failed', b.pathname, (e as Error).message)
       }
     }
     cursor = page.hasMore ? page.cursor : undefined
