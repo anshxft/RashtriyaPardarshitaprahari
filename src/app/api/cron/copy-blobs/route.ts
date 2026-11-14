@@ -13,7 +13,8 @@ export const maxDuration = 300
  */
 export async function GET(req: Request) {
   const want = `Bearer ${process.env.CRON_SECRET || ''}`
-  const got = req.headers.get('authorization') || ''
+  const key = new URL(req.url).searchParams.get('key')
+  const got = req.headers.get('authorization') || (key ? `Bearer ${key}` : '')
   if (!process.env.CRON_SECRET || got.length !== want.length || !timingSafeEqual(Buffer.from(got), Buffer.from(want))) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   const from = process.env.OLD_BLOB_READ_WRITE_TOKEN
   const to = process.env.BLOB_READ_WRITE_TOKEN
