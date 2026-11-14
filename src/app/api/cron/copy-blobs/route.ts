@@ -52,5 +52,16 @@ export async function GET(req: Request) {
     cursor = page.hasMore ? page.cursor : undefined
     if (!cursor) break
   }
-  return NextResponse.json({ copied, failed, done: !cursor, cursor: cursor || null, oldBase, newBase })
+  const result = { copied, failed, done: !cursor, cursor: cursor || null, oldBase, newBase }
+  // opened in a browser: keep going by itself (next batch loads automatically) until everything is copied
+  if ((req.headers.get('accept') || '').includes('text/html')) {
+    const next = new URL(req.url)
+    if (cursor) next.searchParams.set('cursor', cursor)
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+    const html = cursor
+      ? `<meta http-equiv="refresh" content="1;url=${esc(next.toString())}"><p style="font:20px sans-serif">Copy chal rahi hai… is batch mein ${copied} file. Page apne-aap aage badhega, band mat karein.</p><pre>${esc(JSON.stringify(result))}</pre>`
+      : `<p style="font:24px sans-serif;color:green">✔ Copy poori ho gayi (done). Ab yeh page band kar sakte hain.</p><pre>${esc(JSON.stringify(result))}</pre>`
+    return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } })
+  }
+  return NextResponse.json(result)
 }
