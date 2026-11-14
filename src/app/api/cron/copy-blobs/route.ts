@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   const failed: string[] = []
   let oldBase = ''
   let newBase = ''
-  while (Date.now() - started < 240_000) {
+  while (Date.now() - started < 40_000) {
     const page = await list({ token: from, cursor, limit: 25 })
     for (const b of page.blobs) {
       oldBase ||= new URL(b.url).origin
