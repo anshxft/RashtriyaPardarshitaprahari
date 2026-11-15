@@ -18,9 +18,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const payload = await db()
   const staff = Boolean(await currentUser())
   const res = await payload.find({ collection: 'videos', where: staff ? { id: { equals: Number(id) } } : { and: [publicVideoWhere(), { id: { equals: Number(id) } }] }, limit: 1, depth: 1, draft: staff })
-  const v = res.docs[0] as Video | undefined
-  if (!v) return new Response('Not found', { status: 404 })
-  const aId = typeof v.article === 'object' ? v.article?.id : v.article
+  let v = res.docs[0] as Video | undefined
+  let aId = v ? (typeof v.article === 'object' ? v.article?.id : v.article) : undefined
+  if (!v) {
+    // a story's second video is not listed on its own: it plays while the story it belongs to is live
+    const owner = await payload.find({ collection: 'articles', where: { and: [{ video2: { equals: Number(id) } }, liveLifecycle(), { _status: { equals: 'published' } }] }, limit: 1, depth: 0 })
+    if (!owner.docs[0]) return new Response('Not found', { status: 404 })
+    v = (await payload.findByID({ collection: 'videos', id: Number(id), depth: 1, draft: true }).catch(() => null)) as Video | undefined
+    if (!v) return new Response('Not found', { status: 404 })
+    aId = owner.docs[0].id
+  }
   let a: Article | null = null
   if (aId) {
     const r = await payload.find({ collection: 'articles', where: staff ? { id: { equals: aId } } : { and: [{ id: { equals: aId } }, liveLifecycle()] }, limit: 1, depth: 0, draft: staff })

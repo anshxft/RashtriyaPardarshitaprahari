@@ -346,9 +346,12 @@ export const Articles: CollectionConfig = {
         { name: 'name', type: 'text', label: 'बोलने वाले का नाम (नीचे पट्टी में)' },
         { name: 'role', type: 'text', label: 'पद / परिचय (नाम के नीचे, वैकल्पिक)' },
         { name: 'ticker', type: 'textarea', label: 'नीचे चलने वाली पट्टी (हर लाइन अलग खबर/सूचना)' },
+        { name: 'mute', type: 'checkbox', defaultValue: true, label: 'वीडियो की मूल आवाज़ बंद (वेबसाइट और डाउनलोड दोनों में)' },
+        { name: 'ad', type: 'upload', relationTo: 'media', label: 'इस खबर का L-शेप विज्ञापन (वैकल्पिक; न हो तो साइट के वीडियो-विज्ञापन)' },
       ],
     },
     { name: 'video', type: 'relationship', relationTo: 'videos', admin: { position: 'sidebar', condition: (d) => d?.format === 'video', description: 'Video news: the uploaded video (website version, social versions, flash + voice).' } },
+    { name: 'video2', type: 'relationship', relationTo: 'videos', admin: { position: 'sidebar', condition: (d) => d?.format === 'video', description: 'Optional second video, shown below the first in the same news screen.' } },
     {
       name: 'externalImage',
       type: 'group',

@@ -3,13 +3,20 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { generateExportAction, retryVideoAction, saveVideoNewsAction, startVideoAction } from '@/app/(desk)/desk/video/actions'
+import {
+  generateExportAction,
+  retryVideoAction,
+  saveVideoNewsAction,
+  startVideoAction,
+} from '@/app/(desk)/desk/video/actions'
 import type { CategoryOption, TeamOption } from '@/lib/deskTypes'
 import { publishChecklist } from '@/lib/newsStatus'
 import { uploadVideo, type UploadMode } from '@/lib/resumableUpload'
 import { flashTimes } from '@/lib/videoArgs'
 import { PhotoField, type Photo } from './PhotoField'
 import { PhotoVideoMaker } from './PhotoVideoMaker'
+import { GalleryField, type GalleryItem } from './GalleryField'
+import { VideoStage } from '@/components/VideoStage'
 
 type JobInfo = { status: string; error?: string | null }
 export type VideoForm = {
@@ -51,21 +58,52 @@ export type VideoForm = {
   slug?: string | null
   exports: { social?: boolean; vertical?: boolean; flash?: boolean }
   jobs: Record<string, JobInfo>
+  /** studio: second video below the first (optional), photos (optional), original sound off by default, own L-frame ad */
+  video2Id: number | null
+  video2Processing: string
+  video2Preview: string
+  video2Name: string
+  gallery: GalleryItem[]
+  mute: boolean
+  ad: Photo
 }
 
 const input = 'w-full rounded-md border border-line bg-bg px-3 py-3 text-base'
 const card = 'rounded-xl border border-line bg-bg p-4 shadow-sm'
-const chip = 'min-h-11 rounded-full border border-line bg-bg px-4 py-2 text-sm font-semibold hover:bg-surface disabled:opacity-50'
+const chip =
+  'min-h-11 rounded-full border border-line bg-bg px-4 py-2 text-sm font-semibold hover:bg-surface disabled:opacity-50'
 const STATUS: Record<string, [string, string]> = {
   queued: ['कतार में', 'bg-slate-200 text-slate-800'],
-  processing: ['प्रोसेसिंग: लोगो और थंबनेल…', 'bg-saffron-500 text-navy-950 animate-pulse motion-reduce:animate-none'],
+  processing: [
+    'प्रोसेसिंग: लोगो और थंबनेल…',
+    'bg-saffron-500 text-navy-950 animate-pulse motion-reduce:animate-none',
+  ],
   ready: ['✔ तैयार (लोगो के साथ)', 'bg-india-600 text-white'],
   failed: ['प्रोसेसिंग विफल', 'bg-alert-600 text-white'],
 }
-const JOB_HI: Record<string, string> = { queued: 'कतार में', running: 'बन रहा है…', done: 'तैयार', failed: 'विफल' }
+const JOB_HI: Record<string, string> = {
+  queued: 'कतार में',
+  running: 'बन रहा है…',
+  done: 'तैयार',
+  failed: 'विफल',
+}
 
 /** Video news: upload → (logo + thumbnail in the background) → fields + approved Flash script → preview → publish. */
-export function VideoEditor({ initial, uploadMode, categories, team, mayPublish, ttsNote }: { initial: VideoForm; uploadMode: UploadMode; categories: CategoryOption[]; team: TeamOption[]; mayPublish: boolean; ttsNote: string }) {
+export function VideoEditor({
+  initial,
+  uploadMode,
+  categories,
+  team,
+  mayPublish,
+  ttsNote,
+}: {
+  initial: VideoForm
+  uploadMode: UploadMode
+  categories: CategoryOption[]
+  team: TeamOption[]
+  mayPublish: boolean
+  ttsNote: string
+}) {
   const [f, setF] = useState(initial)
   const [busy, start] = useTransition()
   const [pct, setPct] = useState<number | null>(null)
@@ -84,18 +122,40 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
   const pick = useRef<HTMLInputElement>(null)
   const replacing = useRef(false)
   const set = <K extends keyof VideoForm>(k: K, v: VideoForm[K]) => setF((x) => ({ ...x, [k]: v }))
-  const pending = ['queued', 'processing'].includes(f.processing) || Object.values(f.jobs).some((j) => j.status === 'queued' || j.status === 'running')
+  const pending =
+    ['queued', 'processing'].includes(f.processing) ||
+    Object.values(f.jobs).some((j) => j.status === 'queued' || j.status === 'running')
 
   // Poll while the background jobs run (the editor keeps working meanwhile).
   useEffect(() => {
-    if (!f.id || !pending) return
+    if (!f.id || !(pending || ['queued', 'processing'].includes(f.video2Processing))) return
     const t = setInterval(async () => {
-      const r = await fetch(`/api/desk/video/status?ids=${f.id}`).then((x) => x.json()).catch(() => null)
-      const v = r?.[0]
-      if (v) setF((x) => ({ ...x, processing: v.processing, processError: v.processError || '', posterUrl: v.posterUrl || x.posterUrl, previewUrl: v.previewUrl || x.previewUrl, exports: v.exports, jobs: v.jobs }))
+      const r = await fetch(
+        `/api/desk/video/status?ids=${f.id}${f.video2Id ? `,${f.video2Id}` : ''}`,
+      )
+        .then((x) => x.json())
+        .catch(() => null)
+      const v2 = f.video2Id ? r?.find?.((x: { id: number }) => x.id === f.video2Id) : null
+      if (v2)
+        setF((x) => ({
+          ...x,
+          video2Processing: v2.processing,
+          video2Preview: v2.previewUrl || x.video2Preview,
+        }))
+      const v = r?.find?.((x: { id: number }) => x.id === f.id) ?? r?.[0]
+      if (v)
+        setF((x) => ({
+          ...x,
+          processing: v.processing,
+          processError: v.processError || '',
+          posterUrl: v.posterUrl || x.posterUrl,
+          previewUrl: v.previewUrl || x.previewUrl,
+          exports: v.exports,
+          jobs: v.jobs,
+        }))
     }, 4000)
     return () => clearInterval(t)
-  }, [f.id, pending])
+  }, [f.id, pending, f.video2Id, f.video2Processing])
 
   async function onFile(file?: File | null) {
     if (!file) return
@@ -103,16 +163,73 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
     setPct(0)
     try {
       const stored = await uploadVideo(file, uploadMode, setPct)
-      const s = await startVideoAction({ originalUrl: stored, filename: file.name, size: file.size, replaceId: replacing.current ? f.id : undefined })
+      const s = await startVideoAction({
+        originalUrl: stored,
+        filename: file.name,
+        size: file.size,
+        replaceId: replacing.current ? f.id : undefined,
+      })
       setPct(null)
       if (!s.ok) return setNote({ kind: 'err', text: s.error })
-      setF((x) => ({ ...x, id: s.id, processing: 'queued', previewUrl: '', exports: {}, jobs: {}, fileName: file.name, title: x.title || (file.name.startsWith('photo-video-') ? '' : file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')) }))
+      setF((x) => ({
+        ...x,
+        id: s.id,
+        processing: 'queued',
+        previewUrl: '',
+        exports: {},
+        jobs: {},
+        fileName: file.name,
+        title:
+          x.title ||
+          (file.name.startsWith('photo-video-')
+            ? ''
+            : file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')),
+      }))
       if (!replacing.current) window.history.replaceState(null, '', `/desk/video/${s.id}`)
-      setNote({ kind: 'ok', text: replacing.current ? 'नया वीडियो लग गया ✔ पुराना संस्करण इतिहास में सुरक्षित है।' : 'अपलोड पूरा ✔ — लोगो और थंबनेल अपने-आप बन रहे हैं। तब तक जानकारी भरें।' })
+      setNote({
+        kind: 'ok',
+        text: replacing.current
+          ? 'नया वीडियो लग गया ✔ पुराना संस्करण इतिहास में सुरक्षित है।'
+          : 'अपलोड पूरा ✔ — लोगो और थंबनेल अपने-आप बन रहे हैं। तब तक जानकारी भरें।',
+      })
       replacing.current = false
     } catch (e) {
       setPct(null)
-      setNote({ kind: 'err', text: `${(e as Error).message || 'अपलोड नहीं हो पाया'} — वही फ़ाइल दोबारा चुनें, अपलोड वहीं से आगे चलेगा।` })
+      setNote({
+        kind: 'err',
+        text: `${(e as Error).message || 'अपलोड नहीं हो पाया'} — वही फ़ाइल दोबारा चुनें, अपलोड वहीं से आगे चलेगा।`,
+      })
+    }
+  }
+
+  const pick2 = useRef<HTMLInputElement>(null)
+  const [pct2, setPct2] = useState<number | null>(null)
+  async function onFile2(file?: File | null) {
+    if (!file) return
+    setNote(null)
+    setPct2(0)
+    try {
+      const stored = await uploadVideo(file, uploadMode, setPct2)
+      const s = await startVideoAction({
+        originalUrl: stored,
+        filename: file.name,
+        size: file.size,
+      })
+      setPct2(null)
+      if (!s.ok) return setNote({ kind: 'err', text: s.error })
+      setF((x) => ({
+        ...x,
+        video2Id: s.id,
+        video2Processing: 'queued',
+        video2Preview: '',
+        video2Name: file.name,
+      }))
+    } catch (e) {
+      setPct2(null)
+      setNote({
+        kind: 'err',
+        text: `${(e as Error).message || 'दूसरा वीडियो अपलोड नहीं हो पाया'} — दोबारा चुनें।`,
+      })
     }
   }
 
@@ -138,7 +255,10 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         location: f.location,
         categoryId: f.categoryId,
         thumbnailId: f.thumb.id,
-        scheduleAt: mode === 'schedule' && f.scheduleAt ? new Date(`${f.scheduleAt}:00+05:30`).toISOString() : undefined,
+        scheduleAt:
+          mode === 'schedule' && f.scheduleAt
+            ? new Date(`${f.scheduleAt}:00+05:30`).toISOString()
+            : undefined,
         breaking: f.breaking,
         flash: f.flash,
         voice: f.voice,
@@ -148,11 +268,37 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         voiceVolume: f.voiceVolume,
         pauseMs: f.pauseMs,
         vertical: f.vertical,
+        video2Id: f.video2Id,
+        gallery: f.gallery.filter((g) => g.id).map((g) => ({ imageId: g.id!, caption: g.caption })),
+        mute: f.mute,
+        adId: f.ad.id,
       })
       if (!r.ok) return setNote({ kind: 'err', text: r.error })
       const live = r.status === 'published' || r.status === 'scheduled'
-      setF((x) => ({ ...x, articleId: r.articleId, newsId: r.newsId, slug: r.url, published: x.published || live, jobs: live ? { ...x.jobs, social: { status: 'queued' }, ...(x.flash || x.voice ? { flash: { status: 'queued' } } : {}) } : x.jobs }))
-      setNote({ kind: 'ok', text: ({ draft: 'ड्राफ्ट सेव ✔', submitted: 'समीक्षा के लिए भेजी गई ✔', scheduled: 'शेड्यूल हो गई ', published: `प्रकाशित हो गई ${r.newsId ? `News ID: ${r.newsId}` : ''}` }[r.status] || 'सेव ✔') + (r.note || '') })
+      setF((x) => ({
+        ...x,
+        articleId: r.articleId,
+        newsId: r.newsId,
+        slug: r.url,
+        published: x.published || live,
+        jobs: live
+          ? {
+              ...x.jobs,
+              social: { status: 'queued' },
+              ...(x.flash || x.voice ? { flash: { status: 'queued' } } : {}),
+            }
+          : x.jobs,
+      }))
+      setNote({
+        kind: 'ok',
+        text:
+          ({
+            draft: 'ड्राफ्ट सेव ✔',
+            submitted: 'समीक्षा के लिए भेजी गई ✔',
+            scheduled: 'शेड्यूल हो गई ',
+            published: `प्रकाशित हो गई ${r.newsId ? `News ID: ${r.newsId}` : ''}`,
+          }[r.status] || 'सेव ✔') + (r.note || ''),
+      })
     })
   }
 
@@ -165,16 +311,35 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
 
   const st = STATUS[f.processing]
   // Video news goes out with just a headline: everything else is optional (no section = “अन्य”)
-  const items = publishChecklist({ title: f.title, reporterName: f.reporterName, location: f.location, categoryId: f.categoryId, hasMedia: true, hasVideo: true, body: f.description, flashScript: f.flashScript }).map((i) => (i.key === 'title' ? i : { ...i, required: false }))
+  const items = publishChecklist({
+    title: f.title,
+    reporterName: f.reporterName,
+    location: f.location,
+    categoryId: f.categoryId,
+    hasMedia: true,
+    hasVideo: true,
+    body: f.description,
+    flashScript: f.flashScript,
+  }).map((i) => (i.key === 'title' ? i : { ...i, required: false }))
   const spoken = f.voiceScript.trim() || f.flashScript.trim()
-  const textMissing = (f.flash && !f.flashScript.trim()) || (f.voice && !spoken)
+  const textMissing =
+    !f.flashScript.trim() ||
+    !f.ticker.trim() ||
+    (f.voice && !spoken) ||
+    (Boolean(f.video2Id) && f.video2Processing !== 'ready') ||
+    f.gallery.some((g) => g.busy) ||
+    Boolean(f.ad.busy)
   const ready = f.processing === 'ready'
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-28">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-display text-2xl font-extrabold text-navy-900">{f.id ? 'वीडियो खबर' : 'नई वीडियो खबर'}</h1>
+        <h1 className="font-display text-2xl font-extrabold text-navy-900">
+          {f.id ? 'वीडियो खबर' : 'नई वीडियो खबर'}
+        </h1>
         <div className="flex gap-2">
-          {f.newsId && <span className="rounded-full bg-surface px-3 py-1 font-mono text-sm">{f.newsId}</span>}
+          {f.newsId && (
+            <span className="rounded-full bg-surface px-3 py-1 font-mono text-sm">{f.newsId}</span>
+          )}
           {f.slug && f.published && (
             <Link href={f.slug} target="_blank" className={chip}>
               देखें ↗
@@ -182,40 +347,83 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
           )}
         </div>
       </div>
-      {note && <p role="status" className={`rounded-md p-3 text-sm font-semibold ${note.kind === 'ok' ? 'bg-india-600/10 text-india-700' : 'bg-alert-600/10 text-alert-700'}`}>{note.text}</p>}
+      {note && (
+        <p
+          role="status"
+          className={`rounded-md p-3 text-sm font-semibold ${note.kind === 'ok' ? 'bg-india-600/10 text-india-700' : 'bg-alert-600/10 text-alert-700'}`}
+        >
+          {note.text}
+        </p>
+      )}
 
       {!f.id && pct === null && (
-        <Link href="/desk/news/new" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-dashed border-navy-900/40 bg-surface p-3 text-sm font-semibold hover:bg-bg">
+        <Link
+          href="/desk/news/new"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-dashed border-navy-900/40 bg-surface p-3 text-sm font-semibold hover:bg-bg"
+        >
           <span>वीडियो नहीं है? सिर्फ फोटो से खबर डालें (एक या कई फोटो)</span>
-          <span className="rounded-lg bg-navy-900 px-3 py-1.5 font-bold text-white">📷 फोटो खबर →</span>
+          <span className="rounded-lg bg-navy-900 px-3 py-1.5 font-bold text-white">
+            📷 फोटो खबर →
+          </span>
         </Link>
       )}
 
       {/* 1 · file */}
       <section className={card}>
-        <input ref={pick} type="file" accept="video/*" className="hidden" onChange={(e) => (onFile(e.target.files?.[0]), (e.target.value = ''))} />
+        <input
+          ref={pick}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={(e) => (onFile(e.target.files?.[0]), (e.target.value = ''))}
+        />
         {pct !== null ? (
           <div className="space-y-2 py-4 text-center">
             <p className="text-lg font-bold">अपलोड हो रहा है… {pct}%</p>
             <span className="mx-auto block h-3 w-full overflow-hidden rounded bg-line">
-              <span className="block h-full bg-india-600 transition-all" style={{ width: `${pct}%` }} />
+              <span
+                className="block h-full bg-india-600 transition-all"
+                style={{ width: `${pct}%` }}
+              />
             </span>
-            <p className="text-xs text-muted">{uploadMode === 's3' ? 'नेटवर्क टूटे तो चिंता नहीं: वही फ़ाइल दोबारा चुनें, अपलोड वहीं से आगे चलेगा।' : 'अपलोड पूरा होने तक यह पेज खुला रखें।'}</p>
+            <p className="text-xs text-muted">
+              {uploadMode === 's3'
+                ? 'नेटवर्क टूटे तो चिंता नहीं: वही फ़ाइल दोबारा चुनें, अपलोड वहीं से आगे चलेगा।'
+                : 'अपलोड पूरा होने तक यह पेज खुला रखें।'}
+            </p>
           </div>
         ) : f.id ? (
           <div className="space-y-2">
             <p className="font-semibold">{f.fileName || 'अपलोड की गई फ़ाइल'}</p>
-            {st && <p className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${st[1]}`}>{st[0]}</p>}
+            {st && (
+              <p className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${st[1]}`}>
+                {st[0]}
+              </p>
+            )}
             {f.processing === 'failed' && (
               <div className="rounded-md bg-alert-600/10 p-3 text-sm">
-                <p className="font-semibold text-alert-700">{f.processError || 'प्रोसेसिंग विफल'}</p>
-                <button type="button" className={`${chip} mt-2`} onClick={async () => (await retryVideoAction(f.id!), set('processing', 'queued'))}>
+                <p className="font-semibold text-alert-700">
+                  {f.processError || 'प्रोसेसिंग विफल'}
+                </p>
+                <button
+                  type="button"
+                  className={`${chip} mt-2`}
+                  onClick={async () => (await retryVideoAction(f.id!), set('processing', 'queued'))}
+                >
                   दोबारा कोशिश
                 </button>
               </div>
             )}
-            {pending && <p className="text-sm text-muted">यह बैकग्राउंड में चल रहा है; आप जानकारी भरते रहें या दूसरा काम करें।</p>}
-            <button type="button" className={chip} onClick={() => ((replacing.current = true), pick.current?.click())}>
+            {pending && (
+              <p className="text-sm text-muted">
+                यह बैकग्राउंड में चल रहा है; आप जानकारी भरते रहें या दूसरा काम करें।
+              </p>
+            )}
+            <button
+              type="button"
+              className={chip}
+              onClick={() => ((replacing.current = true), pick.current?.click())}
+            >
               वीडियो बदलें (पुराना इतिहास में रहेगा)
             </button>
             {f.processing === 'ready' && (
@@ -224,10 +432,22 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
                 className={`${chip} ml-2`}
                 title="वीडियो दोबारा प्रोसेस होगा और उस पर आज का (नया) लोगो लगेगा; तब तक पुराना वीडियो चलता रहेगा"
                 onClick={async () => {
-                  if (!window.confirm('इस वीडियो पर नया लोगो लगाने के लिए इसे दोबारा प्रोसेस करें? (कुछ मिनट लगेंगे, तब तक पुराना वीडियो चलता रहेगा)')) return
+                  if (
+                    !window.confirm(
+                      'इस वीडियो पर नया लोगो लगाने के लिए इसे दोबारा प्रोसेस करें? (कुछ मिनट लगेंगे, तब तक पुराना वीडियो चलता रहेगा)',
+                    )
+                  )
+                    return
                   const r = await retryVideoAction(f.id!)
                   if (r.ok) set('processing', 'queued')
-                  setNote(r.ok ? { kind: 'ok', text: 'दोबारा प्रोसेसिंग शुरू ✔ — कुछ मिनट में नया लोगो लग जाएगा।' } : { kind: 'err', text: r.error })
+                  setNote(
+                    r.ok
+                      ? {
+                          kind: 'ok',
+                          text: 'दोबारा प्रोसेसिंग शुरू ✔ — कुछ मिनट में नया लोगो लग जाएगा।',
+                        }
+                      : { kind: 'err', text: r.error },
+                  )
                 }}
               >
                 🔄 नया लोगो लगाएं
@@ -235,16 +455,29 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
             )}
           </div>
         ) : (
-          <button type="button" onClick={() => pick.current?.click()} className="flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface text-muted hover:bg-white">
+          <button
+            type="button"
+            onClick={() => pick.current?.click()}
+            className="flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface text-muted hover:bg-white"
+          >
             <span className="text-4xl"></span>
             <span className="text-lg font-bold text-navy-900">वीडियो चुनें / रिकॉर्ड करें</span>
-            <span className="text-xs">मोबाइल या लैपटॉप से · लोगो अपने-आप ऊपर दाएं कोने में लगेगा · मूल फ़ाइल अलग सुरक्षित रहेगी</span>
+            <span className="text-xs">
+              मोबाइल या लैपटॉप से · लोगो अपने-आप ऊपर दाएं कोने में लगेगा · मूल फ़ाइल अलग सुरक्षित
+              रहेगी
+            </span>
           </button>
         )}
         {!f.id && pct === null && (
           <details className="mt-3 rounded-lg border-2 border-[#c8102e]/40 bg-surface p-3">
-            <summary className="cursor-pointer font-bold text-navy-900">📷 वीडियो नहीं है? फोटो से वीडियो खबर बनाएं (आवाज़ के साथ)</summary>
-            <p className="my-2 text-sm text-muted">फोटो चुनें और खबर का छोटा विवरण लिखें। फोटो फ्लैश के साथ एक-एक कर आएंगी और चुनी हुई आवाज़ (महिला / पुरुष) वही विवरण पढ़ेगी। बना हुआ वीडियो अपने-आप अपलोड होगा, फिर बाकी जानकारी भरकर प्रकाशित करें।</p>
+            <summary className="cursor-pointer font-bold text-navy-900">
+              📷 वीडियो नहीं है? फोटो से वीडियो खबर बनाएं (आवाज़ के साथ)
+            </summary>
+            <p className="my-2 text-sm text-muted">
+              फोटो चुनें और खबर का छोटा विवरण लिखें। फोटो फ्लैश के साथ एक-एक कर आएंगी और चुनी हुई
+              आवाज़ (महिला / पुरुष) वही विवरण पढ़ेगी। बना हुआ वीडियो अपने-आप अपलोड होगा, फिर बाकी
+              जानकारी भरकर प्रकाशित करें।
+            </p>
             <PhotoVideoMaker
               defaultScript={f.voiceScript}
               onMade={(file, text) => {
@@ -257,254 +490,637 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
         )}
       </section>
 
-      {/* thumbnail: the cover photo readers see before pressing play */}
-      <section className={`${card} space-y-2`}>
-        <p className="font-display text-lg font-bold">🖼 थंबनेल (कवर फोटो)</p>
-        <p className="text-sm text-muted">वेबसाइट पर वीडियो की लिस्ट, होम पेज और Play दबाने से पहले यही फोटो दिखेगी। न डालें तो वीडियो का एक फ्रेम अपने-आप लगेगा।</p>
-        {!f.thumb.id && f.posterUrl && (
-          <div>
-            <p className="text-xs font-semibold text-muted">अभी अपने-आप बना थंबनेल:</p>
-            <img src={f.posterUrl} alt="" className="mt-1 aspect-video w-56 rounded object-cover ring-1 ring-line" />
-          </div>
-        )}
-        <PhotoField photo={f.thumb} onChange={(p) => set('thumb', p)} alt={f.title} credit="" onCredit={() => {}} />
-      </section>
-
-      {/* 2 · fields */}
+      {/* 2 · the news: only what every video news needs */}
       <section className={`${card} space-y-3`}>
+        <p className="font-display text-lg font-bold">📝 खबर</p>
         <label className="block text-sm font-semibold">
-          खबर का शीर्षक * <span className="font-normal text-muted">— वीडियो के ऊपर लाल पट्टी में दिखेगा</span>
-          <input value={f.title} onChange={(e) => set('title', e.target.value)} className={`${input} mt-1 text-lg font-bold`} />
+          मुख्य शीर्षक *{' '}
+          <span className="font-normal text-muted">— वीडियो के ऊपर बड़ी पट्टी में</span>
+          <input
+            value={f.title}
+            onChange={(e) => set('title', e.target.value)}
+            className={`${input} mt-1 text-lg font-bold`}
+          />
         </label>
         <label className="block text-sm font-semibold">
-          दूसरी हेडलाइन (वैकल्पिक) <span className="font-normal text-muted">— वीडियो के नीचे पीली पट्टी में दिखेगी</span>
-          <input value={f.bottomLine} onChange={(e) => set('bottomLine', e.target.value)} maxLength={160} className={`${input} mt-1 font-bold`} placeholder="जैसे: बोकारो के गरगा डैम में 35 वर्षों से छठ व्रतियों की सेवा" />
-        </label>
-        <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
-          <p className="text-sm font-semibold sm:col-span-3">वीडियो के ऊपर दिखेगा (वैकल्पिक)</p>
-          <label className="block text-sm font-semibold">
-            जगह का नाम <span className="font-normal text-muted">— ऊपर कोने में</span>
-            <input value={f.tagPlace} onChange={(e) => set('tagPlace', e.target.value)} maxLength={40} className={`${input} mt-1`} placeholder="जैसे: बोकारो" />
-          </label>
-          <label className="block text-sm font-semibold">
-            बोलने वाले का नाम <span className="font-normal text-muted">— नीचे पट्टी में</span>
-            <input value={f.tagName} onChange={(e) => set('tagName', e.target.value)} maxLength={60} className={`${input} mt-1`} placeholder="जैसे: रमेश कुमार" />
-          </label>
-          <label className="block text-sm font-semibold">
-            पद / परिचय
-            <input value={f.tagRole} onChange={(e) => set('tagRole', e.target.value)} maxLength={60} className={`${input} mt-1`} placeholder="जैसे: स्थानीय ग्रामीण" />
-          </label>
-          <label className="block text-sm font-semibold sm:col-span-3">
-            नीचे चलने वाली सफेद पट्टी <span className="font-normal text-muted">— हर लाइन अलग सूचना; पहले यह चलेगी, फिर हमेशा वाली अपील (खबरें भेजें / संवाददाता बनें / हेल्पलाइन)</span>
-            <textarea value={f.ticker} onChange={(e) => set('ticker', e.target.value)} rows={3} maxLength={1500} className={`${input} mt-1`} placeholder={'जैसे: कल सुबह 10 बजे जिला मुख्यालय पर धरना\nअपनी समस्या भेजें — व्हाट्सऐप 94319 24522'} />
-          </label>
-        </div>
-        <label className="block text-sm font-semibold">
-          पूरी खबर — वेबसाइट पर लिखी नहीं दिखेगी; पाठक “🔊 पूरी खबर सुनें” दबाकर आवाज़ में सुनेंगे (पेज पर सिर्फ शीर्षक और वीडियो)
-          <textarea value={f.description} onChange={(e) => set('description', e.target.value)} rows={10} className={`${input} mt-1 leading-relaxed`} placeholder="यहाँ पूरी खबर लिखें या पेस्ट करें। हर पैराग्राफ के बीच एक खाली लाइन छोड़ें।" />
-          <span className="text-xs text-muted">{f.description.trim() ? f.description.trim().split(/\s+/).length : 0} शब्द</span>
-        </label>
-        <label className="block text-sm font-semibold">
-          ⚡ ब्रेकिंग / फ्लैश संक्षेप <span className="font-normal text-muted">— वीडियो के नीचे लाल पट्टी में फ्लैश होगा (“फ्लैश पट्टी” ON करें)</span>
-          <textarea value={f.flashScript} onChange={(e) => set('flashScript', e.target.value)} rows={3} maxLength={600} className={`${input} mt-1`} placeholder="ब्रेकिंग न्यूज़ का छोटा, तथ्यात्मक विवरण। सिस्टम इसमें कुछ नहीं जोड़ता।" />
+          फ्लैश न्यूज़ *{' '}
+          <span className="font-normal text-muted">
+            — लाल पट्टी; हर लाइन बारी-बारी से फ्लैश होगी
+          </span>
+          <textarea
+            value={f.flashScript}
+            onChange={(e) => set('flashScript', e.target.value)}
+            rows={3}
+            maxLength={600}
+            className={`${input} mt-1`}
+            placeholder={
+              'छोटी-छोटी लाइनें, हर लाइन नई पंक्ति में\nजैसे: गरगा डैम पर छठ की तैयारी पूरी'
+            }
+          />
           <span className="text-xs text-muted">{f.flashScript.length}/600</span>
         </label>
         <label className="block text-sm font-semibold">
-          🔊 बोलने वाला मैटर <span className="font-normal text-muted">— बिना बयान वाले वीडियो / फोटो के लिए; “आवाज़” ON करने पर यही पढ़ा जाएगा (खाली छोड़ें तो ऊपर का फ्लैश संक्षेप)</span>
-          <textarea value={f.voiceScript} onChange={(e) => set('voiceScript', e.target.value)} rows={4} maxLength={1200} className={`${input} mt-1`} placeholder="जो आवाज़ में बोलना है, वही लिखें। किसी का बयान न लिखें।" />
-          <span className="text-xs text-muted">{f.voiceScript.length}/1200</span>
+          स्क्रॉल न्यूज़ *{' '}
+          <span className="font-normal text-muted">— नीचे पीली पट्टी में लगातार चलेगी</span>
+          <textarea
+            value={f.ticker}
+            onChange={(e) => set('ticker', e.target.value)}
+            rows={3}
+            maxLength={1500}
+            className={`${input} mt-1`}
+            placeholder={
+              'जैसे: कल सुबह 10 बजे जिला मुख्यालय पर धरना\nअपनी समस्या भेजें — व्हाट्सऐप 94319 24522'
+            }
+          />
         </label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm font-semibold">
-            रिपोर्टर / संवाददाता <span className="font-normal text-muted">(वैकल्पिक)</span>
-            <input
-              list="vteam"
-              value={f.reporterName}
-              onChange={(e) => {
-                const m = team.find((t) => t.name === e.target.value)
-                setF((x) => ({ ...x, reporterName: e.target.value, reporterId: m?.id ?? null }))
-              }}
-              className={`${input} mt-1`}
-            />
-            <datalist id="vteam">
-              {team.map((t) => (
-                <option key={t.id} value={t.name} />
-              ))}
-            </datalist>
-          </label>
-          <label className="block text-sm font-semibold">
-            स्थान (जिला / राज्य) <span className="font-normal text-muted">(वैकल्पिक)</span>
-            <input value={f.location} onChange={(e) => set('location', e.target.value)} className={`${input} mt-1`} />
-          </label>
-          <label className="block text-sm font-semibold">
-            श्रेणी <span className="font-normal text-muted">(न चुनें तो “अन्य”)</span>
-            <select value={f.categoryId ?? ''} onChange={(e) => set('categoryId', e.target.value ? Number(e.target.value) : null)} className={`${input} mt-1`}>
-              <option value="">—</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="text-sm">
-            <p className="font-semibold">तारीख और समय</p>
-            <p className="mt-2 text-muted">प्रकाशित करते समय अपने-आप (भारतीय समय)। आगे के लिए नीचे “शेड्यूल” चुनें।</p>
-          </div>
-        </div>
+        <label className="block text-sm font-semibold">
+          संक्षिप्त विवरण{' '}
+          <span className="font-normal text-muted">
+            (वैकल्पिक) — खबर के पेज पर, पाठक “🔊 सुनें” से सुन भी सकते हैं
+          </span>
+          <textarea
+            value={f.description}
+            onChange={(e) => set('description', e.target.value)}
+            rows={4}
+            className={`${input} mt-1 leading-relaxed`}
+            placeholder="यहाँ पूरी खबर लिखें या पेस्ट करें। हर पैराग्राफ के बीच एक खाली लाइन छोड़ें।"
+          />
+          <span className="text-xs text-muted">
+            {f.description.trim() ? f.description.trim().split(/\s+/).length : 0} शब्द
+          </span>
+        </label>
       </section>
 
-      {/* 3 · switches */}
-      <section className={`${card} space-y-3`}>
-        <div className="grid gap-2 sm:grid-cols-3">
+      {/* 3 · second video (optional): shown below the first in the same screen */}
+      <section className={`${card} space-y-2`}>
+        <p className="font-display text-lg font-bold">
+          🎬 दूसरा वीडियो{' '}
+          <span className="text-sm font-normal text-muted">(वैकल्पिक, 1–2 मिनट)</span>
+        </p>
+        <input
+          ref={pick2}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={(e) => (onFile2(e.target.files?.[0]), (e.target.value = ''))}
+        />
+        {pct2 !== null ? (
+          <p className="font-semibold">अपलोड हो रहा है… {pct2}%</p>
+        ) : f.video2Id ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold">{f.video2Name || 'दूसरा वीडियो'}</span>
+            {STATUS[f.video2Processing] && (
+              <span
+                className={`rounded-full px-3 py-1 text-sm font-bold ${STATUS[f.video2Processing][1]}`}
+              >
+                {STATUS[f.video2Processing][0]}
+              </span>
+            )}
+            <button type="button" className={chip} onClick={() => pick2.current?.click()}>
+              बदलें
+            </button>
+            <button
+              type="button"
+              className={`${chip} text-alert-700`}
+              onClick={() =>
+                setF((x) => ({
+                  ...x,
+                  video2Id: null,
+                  video2Processing: '',
+                  video2Preview: '',
+                  video2Name: '',
+                }))
+              }
+            >
+              हटाएं
+            </button>
+          </div>
+        ) : (
+          <button type="button" className={chip} onClick={() => pick2.current?.click()}>
+            + दूसरा वीडियो चुनें
+          </button>
+        )}
+        <p className="text-xs text-muted">
+          दो वीडियो होने पर पहला ऊपर और दूसरा नीचे अपने-आप फिट होगा, दोनों साथ चलेंगे।
+        </p>
+      </section>
+
+      {/* 4 · photos (optional, many at once) */}
+      <section className={`${card} space-y-2`}>
+        <p className="font-display text-lg font-bold">
+          📷 फोटो <span className="text-sm font-normal text-muted">(वैकल्पिक, एक साथ कई)</span>
+        </p>
+        <p className="text-xs text-muted">
+          फोटो वीडियो के नीचे अपने खाने में इसी क्रम से बारी-बारी ({4} सेकंड) दिखेंगी — वेबसाइट और
+          डाउनलोड दोनों में।
+        </p>
+        <GalleryField
+          items={f.gallery}
+          onChange={(fn) => setF((x) => ({ ...x, gallery: fn(x.gallery) }))}
+          alt={f.title}
+        />
+      </section>
+
+      {/* 5 · original sound: off by default */}
+      <section className={`${card} space-y-2`}>
+        <p className="font-display text-lg font-bold">🔇 वीडियो की मूल आवाज़</p>
+        <div className="flex flex-wrap gap-2">
           {(
             [
-              ['breaking', 'ब्रेकिंग न्यूज़'],
-              ['flash', 'फ्लैश पट्टी'],
-              ['voice', 'आवाज़'],
+              [true, 'आवाज़ बंद'],
+              [false, 'आवाज़ चालू'],
             ] as const
           ).map(([k, l]) => (
-            <label key={k} className={`flex min-h-12 items-center gap-3 rounded-lg border px-3 ${f[k] ? 'border-alert-600 bg-alert-600/5' : 'border-line'}`}>
-              <input type="checkbox" className="h-5 w-5" checked={f[k]} onChange={(e) => set(k, e.target.checked)} />
-              <span className="font-semibold">
-                {l} {f[k] ? 'ON' : 'OFF'}
-              </span>
-            </label>
+            <button
+              key={l}
+              type="button"
+              onClick={() => set('mute', k)}
+              className={`${chip} ${f.mute === k ? 'border-navy-900 bg-navy-900 text-white hover:bg-navy-900' : ''}`}
+            >
+              {l}
+            </button>
           ))}
         </div>
-        {(f.flash || f.voice || f.breaking) && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex min-h-11 items-center gap-3">
-              <input type="checkbox" className="h-5 w-5" checked={f.repeat} onChange={(e) => set('repeat', e.target.checked)} />
-              <span className="text-sm font-semibold">दोहराएं (Repeat)</span>
-            </label>
-            <label className="text-sm font-semibold">
-              हर {f.intervalSec} सेकंड
-              <input type="range" min={10} max={120} step={5} value={f.intervalSec} onChange={(e) => set('intervalSec', Number(e.target.value))} className="w-full" disabled={!f.repeat} />
-            </label>
-          </div>
-        )}
-        {f.voice && (
-          <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
-            <div className="flex flex-wrap gap-2 sm:col-span-3">
-              {(
-                [
-                  ['female', 'महिला आवाज़'],
-                  ['male', 'पुरुष आवाज़'],
-                ] as const
-              ).map(([k, l]) => (
-                <button key={k} type="button" onClick={() => set('voiceGender', k)} className={`${chip} ${f.voiceGender === k ? 'border-navy-900 bg-navy-900 text-white hover:bg-navy-900' : ''}`}>
-                  {l}
-                </button>
-              ))}
-            </div>
-            <label className="text-sm font-semibold">
-              गति {f.voiceRate.toFixed(2)}×
-              <input type="range" min={0.7} max={1.4} step={0.05} value={f.voiceRate} onChange={(e) => set('voiceRate', Number(e.target.value))} className="w-full" />
-            </label>
-            <label className="text-sm font-semibold">
-              आवाज़ {f.voiceVolume}%
-              <input type="range" min={10} max={100} step={5} value={f.voiceVolume} onChange={(e) => set('voiceVolume', Number(e.target.value))} className="w-full" />
-            </label>
-            <label className="text-sm font-semibold">
-              वाक्यों के बीच ठहराव {f.pauseMs} ms
-              <input type="range" min={0} max={1500} step={100} value={f.pauseMs} onChange={(e) => set('pauseMs', Number(e.target.value))} className="w-full" />
-            </label>
-            <p className="text-xs text-muted sm:col-span-3">
-              {ttsNote} उच्चारण सुधार:{' '}
-              <a href="/admin/collections/pronunciations" target="_blank" className="underline">
-                उच्चारण शब्दकोश
-              </a>{' '}
-              (सिर्फ़ आवाज़ के लिए, खबर का पाठ नहीं बदलता)।
-            </p>
-          </div>
-        )}
+        <p className="text-xs text-muted">
+          {f.mute
+            ? 'वीडियो की मूल आवाज़ पूरी तरह बंद रहेगी — वेबसाइट और डाउनलोड MP4 दोनों में।'
+            : 'वीडियो की मूल आवाज़ चलेगी (बयान / बाइट वाले वीडियो के लिए)।'}
+        </p>
       </section>
 
-      {/* 4 · one-screen preview: VIDEO → FLASH → VOICE */}
-      {f.id && (
-        <section className={card}>
-          <h2 className="mb-2 font-display text-lg font-bold">प्रीव्यू: वीडियो → फ्लैश → आवाज़</h2>
-          {f.previewUrl ? (
-            <FlashPreview src={f.previewUrl} poster={f.posterUrl} script={f.flashScript} spoken={spoken} gender={f.voiceGender} on={f.flash || f.breaking} breaking={f.breaking} voice={f.voice} repeat={f.repeat} intervalSec={f.intervalSec} rate={f.voiceRate} volume={f.voiceVolume} pauseMs={f.pauseMs} articleId={f.articleId} />
-          ) : (
-            <p className="py-6 text-center text-sm text-muted">प्रोसेसिंग पूरी होते ही यहां प्रीव्यू दिखेगा।</p>
-          )}
-          <p className="mt-2 text-xs text-muted">जांचें: वीडियो, फ्लैश पाठ, आवाज़, नाम और स्थान सही हैं और पाठ व आवाज़ एक जैसे हैं। संपादक की स्वीकृति के बाद ही प्रकाशित करें।</p>
-        </section>
-      )}
+      {/* 6 · this story's own L-frame ad (optional) */}
+      <section className={`${card} space-y-2`}>
+        <p className="font-display text-lg font-bold">
+          🪧 L-शेप विज्ञापन <span className="text-sm font-normal text-muted">(वैकल्पिक)</span>
+        </p>
+        <p className="text-xs text-muted">
+          विज्ञापन की फोटो (बीच का हिस्सा सफ़ेद / काला / पारदर्शी) — 10 सेकंड पर, फिर हर 45 सेकंड पर
+          12 सेकंड के लिए आएगा और हट जाएगा। न डालें तो साइट के वीडियो-विज्ञापन लगेंगे।
+        </p>
+        <PhotoField
+          photo={f.ad}
+          onChange={(p) => set('ad', p)}
+          alt="विज्ञापन"
+          credit=""
+          onCredit={() => {}}
+        />
+      </section>
 
-      {/* 5 · exports (editor only) */}
-      {f.id && f.articleId && (
-        <section className={`${card} space-y-2`}>
-          <h2 className="font-display text-lg font-bold">सोशल वीडियो और डाउनलोड</h2>
-          {(
-            [
-              ['social', 'सोशल वीडियो 1920×1080', true],
-              ['vertical', 'वर्टिकल वीडियो 1080×1920', true],
-              ['flash', 'फ्लैश + आवाज़ वाला फाइनल वीडियो', f.flash || f.voice],
-            ] as const
-          ).map(([k, l, show]) =>
-            show ? (
-              <div key={k} className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-2">
-                <span className="min-w-0 flex-1 text-sm font-semibold">{l}</span>
-                {f.jobs[k] && <span className={`text-xs text-muted ${f.jobs[k].status === 'running' || f.jobs[k].status === 'queued' ? 'animate-pulse motion-reduce:animate-none' : ''}`}>{JOB_HI[f.jobs[k].status] || f.jobs[k].status}</span>}
-                {f.jobs[k]?.status === 'failed' && <span className="w-full text-xs text-alert-700">{f.jobs[k].error}</span>}
-                {f.exports[k] && (
-                  <a href={`/api/desk/download?video=${f.id}&kind=${k}`} className={chip}>
-                    ⬇ डाउनलोड
+      {/* 7 · live preview: the whole screen exactly as it will look (and as it downloads) */}
+      <section className={card}>
+        <h2 className="mb-2 font-display text-lg font-bold">👁 लाइव प्रीव्यू</h2>
+        {f.previewUrl ? (
+          <VideoStage
+            src={f.previewUrl}
+            poster={f.posterUrl || undefined}
+            top={f.title || 'मुख्य शीर्षक यहां'}
+            bottom={f.bottomLine || null}
+            breaking={f.breaking}
+            flash={{ on: true, script: f.flashScript, breaking: f.breaking }}
+            tags={{ place: f.tagPlace, name: f.tagName, role: f.tagRole, ticker: f.ticker }}
+            src2={f.video2Preview || null}
+            photos={f.gallery.map((g) => g.url || '').filter(Boolean)}
+            mute={f.mute}
+            ads={[]}
+          />
+        ) : (
+          <p className="py-6 text-center text-sm text-muted">
+            {f.id
+              ? 'प्रोसेसिंग पूरी होते ही यहां पूरी स्क्रीन का प्रीव्यू दिखेगा।'
+              : 'पहले वीडियो चुनें।'}
+          </p>
+        )}
+        <p className="mt-2 text-xs text-muted">
+          वेबसाइट पर और डाउनलोड MP4 में ठीक यही दिखेगा (L-शेप विज्ञापन प्रकाशित खबर में अपने समय पर
+          आता है)।
+        </p>
+      </section>
+
+      {/* 8 · everything else, folded away */}
+      <details className="rounded-xl border border-line bg-bg p-4 shadow-sm">
+        <summary className="cursor-pointer font-display text-lg font-bold">
+          ⚙ और विकल्प <span className="text-sm font-normal text-muted">(सब वैकल्पिक)</span>
+        </summary>
+        <div className="mt-4 space-y-4">
+          {/* thumbnail: the cover photo readers see before pressing play */}
+          <section className={`${card} space-y-2`}>
+            <p className="font-display text-lg font-bold">🖼 थंबनेल (कवर फोटो)</p>
+            <p className="text-sm text-muted">
+              वेबसाइट पर वीडियो की लिस्ट, होम पेज और Play दबाने से पहले यही फोटो दिखेगी। न डालें तो
+              वीडियो का एक फ्रेम अपने-आप लगेगा।
+            </p>
+            {!f.thumb.id && f.posterUrl && (
+              <div>
+                <p className="text-xs font-semibold text-muted">अभी अपने-आप बना थंबनेल:</p>
+                <img
+                  src={f.posterUrl}
+                  alt=""
+                  className="mt-1 aspect-video w-56 rounded object-cover ring-1 ring-line"
+                />
+              </div>
+            )}
+            <PhotoField
+              photo={f.thumb}
+              onChange={(p) => set('thumb', p)}
+              alt={f.title}
+              credit=""
+              onCredit={() => {}}
+            />
+          </section>
+
+          {/* more: optional details */}
+          <section className={`${card} space-y-3`}>
+            <label className="block text-sm font-semibold">
+              दूसरी हेडलाइन (वैकल्पिक){' '}
+              <span className="font-normal text-muted">— वीडियो के नीचे पीली पट्टी में दिखेगी</span>
+              <input
+                value={f.bottomLine}
+                onChange={(e) => set('bottomLine', e.target.value)}
+                maxLength={160}
+                className={`${input} mt-1 font-bold`}
+                placeholder="जैसे: बोकारो के गरगा डैम में 35 वर्षों से छठ व्रतियों की सेवा"
+              />
+            </label>
+            <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
+              <p className="text-sm font-semibold sm:col-span-3">वीडियो पर नाम / जगह (वैकल्पिक)</p>
+              <label className="block text-sm font-semibold">
+                जगह का नाम <span className="font-normal text-muted">— ऊपर कोने में</span>
+                <input
+                  value={f.tagPlace}
+                  onChange={(e) => set('tagPlace', e.target.value)}
+                  maxLength={40}
+                  className={`${input} mt-1`}
+                  placeholder="जैसे: बोकारो"
+                />
+              </label>
+              <label className="block text-sm font-semibold">
+                बोलने वाले का नाम <span className="font-normal text-muted">— नीचे पट्टी में</span>
+                <input
+                  value={f.tagName}
+                  onChange={(e) => set('tagName', e.target.value)}
+                  maxLength={60}
+                  className={`${input} mt-1`}
+                  placeholder="जैसे: रमेश कुमार"
+                />
+              </label>
+              <label className="block text-sm font-semibold">
+                पद / परिचय
+                <input
+                  value={f.tagRole}
+                  onChange={(e) => set('tagRole', e.target.value)}
+                  maxLength={60}
+                  className={`${input} mt-1`}
+                  placeholder="जैसे: स्थानीय ग्रामीण"
+                />
+              </label>
+            </div>
+            <label className="block text-sm font-semibold">
+              🔊 बोलने वाला मैटर{' '}
+              <span className="font-normal text-muted">
+                — बिना बयान वाले वीडियो / फोटो के लिए; “आवाज़” ON करने पर यही पढ़ा जाएगा (खाली
+                छोड़ें तो ऊपर का फ्लैश संक्षेप)
+              </span>
+              <textarea
+                value={f.voiceScript}
+                onChange={(e) => set('voiceScript', e.target.value)}
+                rows={4}
+                maxLength={1200}
+                className={`${input} mt-1`}
+                placeholder="जो आवाज़ में बोलना है, वही लिखें। किसी का बयान न लिखें।"
+              />
+              <span className="text-xs text-muted">{f.voiceScript.length}/1200</span>
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-semibold">
+                रिपोर्टर / संवाददाता <span className="font-normal text-muted">(वैकल्पिक)</span>
+                <input
+                  list="vteam"
+                  value={f.reporterName}
+                  onChange={(e) => {
+                    const m = team.find((t) => t.name === e.target.value)
+                    setF((x) => ({ ...x, reporterName: e.target.value, reporterId: m?.id ?? null }))
+                  }}
+                  className={`${input} mt-1`}
+                />
+                <datalist id="vteam">
+                  {team.map((t) => (
+                    <option key={t.id} value={t.name} />
+                  ))}
+                </datalist>
+              </label>
+              <label className="block text-sm font-semibold">
+                स्थान (जिला / राज्य) <span className="font-normal text-muted">(वैकल्पिक)</span>
+                <input
+                  value={f.location}
+                  onChange={(e) => set('location', e.target.value)}
+                  className={`${input} mt-1`}
+                />
+              </label>
+              <label className="block text-sm font-semibold">
+                श्रेणी <span className="font-normal text-muted">(न चुनें तो “अन्य”)</span>
+                <select
+                  value={f.categoryId ?? ''}
+                  onChange={(e) =>
+                    set('categoryId', e.target.value ? Number(e.target.value) : null)
+                  }
+                  className={`${input} mt-1`}
+                >
+                  <option value="">—</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="text-sm">
+                <p className="font-semibold">तारीख और समय</p>
+                <p className="mt-2 text-muted">
+                  प्रकाशित करते समय अपने-आप (भारतीय समय)। आगे के लिए नीचे “शेड्यूल” चुनें।
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 3 · switches */}
+          <section className={`${card} space-y-3`}>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  ['breaking', 'ब्रेकिंग न्यूज़'],
+                  ['flash', 'फ्लैश पट्टी'],
+                  ['voice', 'आवाज़'],
+                ] as const
+              ).map(([k, l]) => (
+                <label
+                  key={k}
+                  className={`flex min-h-12 items-center gap-3 rounded-lg border px-3 ${f[k] ? 'border-alert-600 bg-alert-600/5' : 'border-line'}`}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5"
+                    checked={f[k]}
+                    onChange={(e) => set(k, e.target.checked)}
+                  />
+                  <span className="font-semibold">
+                    {l} {f[k] ? 'ON' : 'OFF'}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {(f.flash || f.voice || f.breaking) && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex min-h-11 items-center gap-3">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5"
+                    checked={f.repeat}
+                    onChange={(e) => set('repeat', e.target.checked)}
+                  />
+                  <span className="text-sm font-semibold">दोहराएं (Repeat)</span>
+                </label>
+                <label className="text-sm font-semibold">
+                  हर {f.intervalSec} सेकंड
+                  <input
+                    type="range"
+                    min={10}
+                    max={120}
+                    step={5}
+                    value={f.intervalSec}
+                    onChange={(e) => set('intervalSec', Number(e.target.value))}
+                    className="w-full"
+                    disabled={!f.repeat}
+                  />
+                </label>
+              </div>
+            )}
+            {f.voice && (
+              <div className="grid gap-3 rounded-lg bg-surface p-3 sm:grid-cols-3">
+                <div className="flex flex-wrap gap-2 sm:col-span-3">
+                  {(
+                    [
+                      ['female', 'महिला आवाज़'],
+                      ['male', 'पुरुष आवाज़'],
+                    ] as const
+                  ).map(([k, l]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => set('voiceGender', k)}
+                      className={`${chip} ${f.voiceGender === k ? 'border-navy-900 bg-navy-900 text-white hover:bg-navy-900' : ''}`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                <label className="text-sm font-semibold">
+                  गति {f.voiceRate.toFixed(2)}×
+                  <input
+                    type="range"
+                    min={0.7}
+                    max={1.4}
+                    step={0.05}
+                    value={f.voiceRate}
+                    onChange={(e) => set('voiceRate', Number(e.target.value))}
+                    className="w-full"
+                  />
+                </label>
+                <label className="text-sm font-semibold">
+                  आवाज़ {f.voiceVolume}%
+                  <input
+                    type="range"
+                    min={10}
+                    max={100}
+                    step={5}
+                    value={f.voiceVolume}
+                    onChange={(e) => set('voiceVolume', Number(e.target.value))}
+                    className="w-full"
+                  />
+                </label>
+                <label className="text-sm font-semibold">
+                  वाक्यों के बीच ठहराव {f.pauseMs} ms
+                  <input
+                    type="range"
+                    min={0}
+                    max={1500}
+                    step={100}
+                    value={f.pauseMs}
+                    onChange={(e) => set('pauseMs', Number(e.target.value))}
+                    className="w-full"
+                  />
+                </label>
+                <p className="text-xs text-muted sm:col-span-3">
+                  {ttsNote} उच्चारण सुधार:{' '}
+                  <a href="/admin/collections/pronunciations" target="_blank" className="underline">
+                    उच्चारण शब्दकोश
+                  </a>{' '}
+                  (सिर्फ़ आवाज़ के लिए, खबर का पाठ नहीं बदलता)।
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* 4 · one-screen preview: VIDEO → FLASH → VOICE */}
+          {f.id && (
+            <section className={card}>
+              <h2 className="mb-2 font-display text-lg font-bold">
+                प्रीव्यू: वीडियो → फ्लैश → आवाज़
+              </h2>
+              {f.previewUrl ? (
+                <FlashPreview
+                  src={f.previewUrl}
+                  poster={f.posterUrl}
+                  script={f.flashScript}
+                  spoken={spoken}
+                  gender={f.voiceGender}
+                  on={f.flash || f.breaking}
+                  breaking={f.breaking}
+                  voice={f.voice}
+                  repeat={f.repeat}
+                  intervalSec={f.intervalSec}
+                  rate={f.voiceRate}
+                  volume={f.voiceVolume}
+                  pauseMs={f.pauseMs}
+                  articleId={f.articleId}
+                />
+              ) : (
+                <p className="py-6 text-center text-sm text-muted">
+                  प्रोसेसिंग पूरी होते ही यहां प्रीव्यू दिखेगा।
+                </p>
+              )}
+              <p className="mt-2 text-xs text-muted">
+                जांचें: वीडियो, फ्लैश पाठ, आवाज़, नाम और स्थान सही हैं और पाठ व आवाज़ एक जैसे हैं।
+                संपादक की स्वीकृति के बाद ही प्रकाशित करें।
+              </p>
+            </section>
+          )}
+
+          {/* 5 · exports (editor only) */}
+          {f.id && f.articleId && (
+            <section className={`${card} space-y-2`}>
+              <h2 className="font-display text-lg font-bold">सोशल वीडियो और डाउनलोड</h2>
+              {(
+                [
+                  ['social', 'सोशल वीडियो 1920×1080', true],
+                  ['vertical', 'वर्टिकल वीडियो 1080×1920', true],
+                  ['flash', 'फ्लैश + आवाज़ वाला फाइनल वीडियो', f.flash || f.voice],
+                ] as const
+              ).map(([k, l, show]) =>
+                show ? (
+                  <div
+                    key={k}
+                    className="flex flex-wrap items-center gap-2 rounded-lg border border-line p-2"
+                  >
+                    <span className="min-w-0 flex-1 text-sm font-semibold">{l}</span>
+                    {f.jobs[k] && (
+                      <span
+                        className={`text-xs text-muted ${f.jobs[k].status === 'running' || f.jobs[k].status === 'queued' ? 'animate-pulse motion-reduce:animate-none' : ''}`}
+                      >
+                        {JOB_HI[f.jobs[k].status] || f.jobs[k].status}
+                      </span>
+                    )}
+                    {f.jobs[k]?.status === 'failed' && (
+                      <span className="w-full text-xs text-alert-700">{f.jobs[k].error}</span>
+                    )}
+                    {f.exports[k] && (
+                      <a href={`/api/desk/download?video=${f.id}&kind=${k}`} className={chip}>
+                        ⬇ डाउनलोड
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      disabled={busy || !ready || !f.published}
+                      onClick={() => gen(k)}
+                      className={chip}
+                    >
+                      {f.exports[k] ? 'फिर बनाएं' : 'बनाएं'}
+                    </button>
+                  </div>
+                ) : null,
+              )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a href={`/api/desk/download?video=${f.id}&kind=original`} className={chip}>
+                  ⬇ मूल वीडियो
+                </a>
+                {ready && (
+                  <a href={`/api/desk/download?video=${f.id}&kind=published`} className={chip}>
+                    ⬇ प्रकाशित वीडियो
                   </a>
                 )}
-                <button type="button" disabled={busy || !ready || !f.published} onClick={() => gen(k)} className={chip}>
-                  {f.exports[k] ? 'फिर बनाएं' : 'बनाएं'}
-                </button>
+                {f.posterUrl && (
+                  <a href={`/api/desk/download?video=${f.id}&kind=thumbnail`} className={chip}>
+                    ⬇ थंबनेल
+                  </a>
+                )}
               </div>
-            ) : null,
+              {!f.published && (
+                <p className="text-xs text-muted">
+                  सोशल वीडियो में News ID और प्रकाशन तिथि आती है, इसलिए ये प्रकाशन के बाद बनते हैं
+                  (अपने-आप)।
+                </p>
+              )}
+              <label className="flex min-h-11 items-center gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5"
+                  checked={f.vertical}
+                  onChange={(e) => set('vertical', e.target.checked)}
+                />
+                प्रकाशन पर वर्टिकल (रील/शॉर्ट्स) वीडियो भी अपने-आप बनाएं
+              </label>
+            </section>
           )}
-          <div className="flex flex-wrap gap-2 pt-1">
-            <a href={`/api/desk/download?video=${f.id}&kind=original`} className={chip}>
-              ⬇ मूल वीडियो
-            </a>
-            {ready && (
-              <a href={`/api/desk/download?video=${f.id}&kind=published`} className={chip}>
-                ⬇ प्रकाशित वीडियो
-              </a>
-            )}
-            {f.posterUrl && (
-              <a href={`/api/desk/download?video=${f.id}&kind=thumbnail`} className={chip}>
-                ⬇ थंबनेल
-              </a>
-            )}
-          </div>
-          {!f.published && <p className="text-xs text-muted">सोशल वीडियो में News ID और प्रकाशन तिथि आती है, इसलिए ये प्रकाशन के बाद बनते हैं (अपने-आप)।</p>}
-          <label className="flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" className="h-5 w-5" checked={f.vertical} onChange={(e) => set('vertical', e.target.checked)} />
-            प्रकाशन पर वर्टिकल (रील/शॉर्ट्स) वीडियो भी अपने-आप बनाएं
-          </label>
-        </section>
-      )}
 
-      {mayPublish && (
-        <section className={card}>
-          <label className="flex min-h-11 items-center gap-3">
-            <input type="checkbox" className="h-5 w-5" checked={schedule} onChange={(e) => setSchedule(e.target.checked)} />
-            <span className="text-sm font-semibold">शेड्यूल करें</span>
-          </label>
-          {schedule && <input type="datetime-local" value={f.scheduleAt} onChange={(e) => set('scheduleAt', e.target.value)} className={`${input} mt-2`} />}
-        </section>
-      )}
+          {mayPublish && (
+            <section className={card}>
+              <label className="flex min-h-11 items-center gap-3">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5"
+                  checked={schedule}
+                  onChange={(e) => setSchedule(e.target.checked)}
+                />
+                <span className="text-sm font-semibold">शेड्यूल करें</span>
+              </label>
+              {schedule && (
+                <input
+                  type="datetime-local"
+                  value={f.scheduleAt}
+                  onChange={(e) => set('scheduleAt', e.target.value)}
+                  className={`${input} mt-2`}
+                />
+              )}
+            </section>
+          )}
+        </div>
+      </details>
 
       <div className="fixed inset-x-0 bottom-14 z-20 border-t border-line bg-bg/95 p-3 backdrop-blur md:sticky md:bottom-0 md:rounded-xl md:border">
         <div className="mx-auto flex max-w-3xl flex-wrap gap-2">
-          <button type="button" disabled={busy || !f.id} onClick={() => save('draft')} className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none">
+          <button
+            type="button"
+            disabled={busy || !f.id}
+            onClick={() => save('draft')}
+            className="min-h-12 flex-1 rounded-lg border-2 border-navy-900 px-4 font-bold text-navy-900 disabled:opacity-60 sm:flex-none"
+          >
             ड्राफ्ट
           </button>
           {mayPublish ? (
-            <button type="button" disabled={busy || !f.id || (schedule && !f.scheduleAt)} onClick={() => setConfirm(schedule ? 'schedule' : 'publish')} className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none">
+            <button
+              type="button"
+              disabled={busy || !f.id || (schedule && !f.scheduleAt)}
+              onClick={() => setConfirm(schedule ? 'schedule' : 'publish')}
+              className="min-h-12 flex-[2] rounded-lg bg-india-600 px-6 text-lg font-extrabold text-white disabled:opacity-60 sm:flex-none"
+            >
               {schedule ? 'शेड्यूल' : f.published ? '✔ अपडेट प्रकाशित करें' : 'प्रकाशित करें'}
             </button>
           ) : (
-            <button type="button" disabled={busy || !f.id} onClick={() => save('submit')} className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none">
+            <button
+              type="button"
+              disabled={busy || !f.id}
+              onClick={() => save('submit')}
+              className="min-h-12 flex-[2] rounded-lg bg-saffron-500 px-6 font-extrabold text-navy-950 disabled:opacity-60 sm:flex-none"
+            >
               समीक्षा के लिए भेजें
             </button>
           )}
@@ -512,20 +1128,85 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
       </div>
 
       {confirm && (
-        <div role="dialog" aria-modal className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center" onClick={() => setConfirm(null)}>
-          <div className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          role="dialog"
+          aria-modal
+          className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center"
+          onClick={() => setConfirm(null)}
+        >
+          <div
+            className="anim-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-bg p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="mb-3 font-display text-lg font-bold">प्रकाशन से पहले जांच</p>
             <ul className="space-y-1.5 text-sm">
-              {[...items, { key: 'ready', label: 'वीडियो प्रोसेसिंग पूरी', ok: ready, required: true, note: undefined }, ...(f.flash ? [{ key: 'script', label: 'फ्लैश संक्षेप', ok: Boolean(f.flashScript.trim()), required: true, note: undefined }] : []), ...(f.voice ? [{ key: 'spoken', label: 'बोलने वाला मैटर', ok: Boolean(spoken), required: true, note: undefined }] : [])].map((i) => (
+              {[
+                ...items,
+                {
+                  key: 'ready',
+                  label: 'वीडियो प्रोसेसिंग पूरी',
+                  ok: ready,
+                  required: true,
+                  note: undefined,
+                },
+                {
+                  key: 'script',
+                  label: 'लाल पट्टी (फ्लैश न्यूज़)',
+                  ok: Boolean(f.flashScript.trim()),
+                  required: true,
+                  note: undefined,
+                },
+                {
+                  key: 'ticker',
+                  label: 'स्क्रॉल न्यूज़',
+                  ok: Boolean(f.ticker.trim()),
+                  required: true,
+                  note: undefined,
+                },
+                ...(f.video2Id
+                  ? [
+                      {
+                        key: 'v2',
+                        label: 'दूसरा वीडियो तैयार',
+                        ok: f.video2Processing === 'ready',
+                        required: true,
+                        note: undefined,
+                      },
+                    ]
+                  : []),
+                ...(f.voice
+                  ? [
+                      {
+                        key: 'spoken',
+                        label: 'बोलने वाला मैटर',
+                        ok: Boolean(spoken),
+                        required: true,
+                        note: undefined,
+                      },
+                    ]
+                  : []),
+              ].map((i) => (
                 <li key={i.key} className="flex gap-2">
-                  <span className={i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'}>{i.ok ? '✔' : i.required ? '✘' : ''}</span>
+                  <span
+                    className={
+                      i.ok ? 'text-india-600' : i.required ? 'text-alert-600' : 'text-saffron-600'
+                    }
+                  >
+                    {i.ok ? '✔' : i.required ? '✘' : ''}
+                  </span>
                   <span>{i.label}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-4 font-semibold">क्या आप इस समाचार को आधिकारिक रूप से प्रकाशित करना चाहते हैं?</p>
+            <p className="mt-4 font-semibold">
+              क्या आप इस समाचार को आधिकारिक रूप से प्रकाशित करना चाहते हैं?
+            </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => setConfirm(null)} className="min-h-12 rounded-lg border border-line font-bold">
+              <button
+                type="button"
+                onClick={() => setConfirm(null)}
+                className="min-h-12 rounded-lg border border-line font-bold"
+              >
                 Cancel
               </button>
               <button
@@ -549,7 +1230,22 @@ export function VideoEditor({ initial, uploadMode, categories, team, mayPublish,
 }
 
 /** One screen: the video plays, the red strip appears at the chosen times, and the voice reads the same script. */
-function FlashPreview(p: { src: string; poster?: string; script: string; spoken: string; gender: 'female' | 'male'; on: boolean; breaking: boolean; voice: boolean; repeat: boolean; intervalSec: number; rate: number; volume: number; pauseMs: number; articleId?: number | null }) {
+function FlashPreview(p: {
+  src: string
+  poster?: string
+  script: string
+  spoken: string
+  gender: 'female' | 'male'
+  on: boolean
+  breaking: boolean
+  voice: boolean
+  repeat: boolean
+  intervalSec: number
+  rate: number
+  volume: number
+  pauseMs: number
+  articleId?: number | null
+}) {
   const video = useRef<HTMLVideoElement>(null)
   const audio = useRef<HTMLAudioElement>(null)
   const [show, setShow] = useState(false)
@@ -561,14 +1257,29 @@ function FlashPreview(p: { src: string; poster?: string; script: string; spoken:
 
   async function loadVoice() {
     setVoiceNote('आवाज़ बन रही है…')
-    const r = await fetch('/api/desk/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ articleId: p.articleId, script: p.spoken, gender: p.gender, rate: p.rate, volume: p.volume, pauseMs: p.pauseMs }) })
+    const r = await fetch('/api/desk/tts', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        articleId: p.articleId,
+        script: p.spoken,
+        gender: p.gender,
+        rate: p.rate,
+        volume: p.volume,
+        pauseMs: p.pauseMs,
+      }),
+    })
     const j = await r.json().catch(() => ({}))
     if (r.ok && j.url) {
       setVoiceUrl(j.url)
       setVoiceNote('')
       return j.url as string
     }
-    setVoiceNote(r.status === 501 ? 'आवाज़ सेवा (TTS) अभी जुड़ी नहीं है — प्रीव्यू में फ़ोन/ब्राउज़र की हिंदी आवाज़ है; फाइनल वीडियो के लिए TTS सेटअप ज़रूरी।' : `आवाज़ नहीं बनी: ${j.error || r.status}`)
+    setVoiceNote(
+      r.status === 501
+        ? 'आवाज़ सेवा (TTS) अभी जुड़ी नहीं है — प्रीव्यू में फ़ोन/ब्राउज़र की हिंदी आवाज़ है; फाइनल वीडियो के लिए TTS सेटअप ज़रूरी।'
+        : `आवाज़ नहीं बनी: ${j.error || r.status}`,
+    )
     return null
   }
   function speak(url: string | null = voiceUrl) {
@@ -584,7 +1295,11 @@ function FlashPreview(p: { src: string; poster?: string; script: string; spoken:
       u.lang = 'hi-IN'
       u.rate = p.rate
       u.volume = p.volume / 100
-      const v = speechSynthesis.getVoices().find((x) => x.lang === 'hi-IN' && /female|lekha|swara|kalpana/i.test(x.name)) || speechSynthesis.getVoices().find((x) => x.lang === 'hi-IN')
+      const v =
+        speechSynthesis
+          .getVoices()
+          .find((x) => x.lang === 'hi-IN' && /female|lekha|swara|kalpana/i.test(x.name)) ||
+        speechSynthesis.getVoices().find((x) => x.lang === 'hi-IN')
       if (v) u.voice = v
       speechSynthesis.cancel()
       speechSynthesis.speak(u)
@@ -600,7 +1315,14 @@ function FlashPreview(p: { src: string; poster?: string; script: string; spoken:
           controls
           playsInline
           className="aspect-video w-full"
-          onLoadedMetadata={(e) => (times.current = flashTimes(e.currentTarget.duration || 0, showSec, p.repeat, p.intervalSec))}
+          onLoadedMetadata={(e) =>
+            (times.current = flashTimes(
+              e.currentTarget.duration || 0,
+              showSec,
+              p.repeat,
+              p.intervalSec,
+            ))
+          }
           onTimeUpdate={(e) => {
             const t = e.currentTarget.currentTime
             const i = times.current.findIndex((s) => t >= s && t < s + showSec)
@@ -611,11 +1333,16 @@ function FlashPreview(p: { src: string; poster?: string; script: string; spoken:
             }
             if (i < 0) shown.current = -1
           }}
-          onPause={() => (audio.current?.pause(), 'speechSynthesis' in window && speechSynthesis.cancel())}
+          onPause={() => (
+            audio.current?.pause(),
+            'speechSynthesis' in window && speechSynthesis.cancel()
+          )}
         />
         {show && p.script.trim() && (
           <div className="anim-strip pointer-events-none absolute inset-x-0 bottom-10 flex items-center gap-2 bg-[#c8102e]/95 px-3 py-2 text-sm font-bold text-white sm:text-base">
-            <span className="shrink-0 rounded bg-white px-1.5 py-0.5 text-xs text-[#c8102e]">● {p.breaking ? 'BREAKING NEWS' : 'FLASH NEWS'}</span>
+            <span className="shrink-0 rounded bg-white px-1.5 py-0.5 text-xs text-[#c8102e]">
+              ● {p.breaking ? 'BREAKING NEWS' : 'FLASH NEWS'}
+            </span>
             <span>{p.script}</span>
           </div>
         )}
@@ -623,7 +1350,12 @@ function FlashPreview(p: { src: string; poster?: string; script: string; spoken:
       </div>
       {p.voice && (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" className={chip} disabled={!p.spoken.trim()} onClick={async () => speak(await loadVoice())}>
+          <button
+            type="button"
+            className={chip}
+            disabled={!p.spoken.trim()}
+            onClick={async () => speak(await loadVoice())}
+          >
             आवाज़ सुनें
           </button>
           {voiceNote && <span className="text-xs text-muted">{voiceNote}</span>}

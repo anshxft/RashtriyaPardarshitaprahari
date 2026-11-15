@@ -101,8 +101,9 @@ export async function getAd(placement: string): Promise<{ title: string; image: 
  */
 // undefined = picture could not be read this time (tried again next request); null = not a frame
 const frameCache = new Map<string, Promise<import('./videoFrame').FrameWindow | null | undefined>>()
-export async function getVideoFrameAds(): Promise<{ title: string; image: string; link?: string | null; win: import('./videoFrame').FrameWindow }[]> {
-  const ads = await getAds('video')
+export async function getVideoFrameAds(own?: { title: string; image: string } | null): Promise<{ title: string; image: string; link?: string | null; win: import('./videoFrame').FrameWindow }[]> {
+  // a story's own L-frame ad replaces the site's video ads for that story
+  const ads: { title: string; image: string; link?: string | null }[] = own?.image ? [own] : await getAds('video')
   const found = await Promise.all(
     ads.map(async (ad) => {
       if (!frameCache.has(ad.image))

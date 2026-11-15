@@ -116,6 +116,11 @@ export type VideoNewsInput = {
   /** spoken text (बोलने वाला मैटर); empty = the flash text */
   voiceScript?: string
   voiceGender?: 'female' | 'male'
+  /** studio: optional second video (shown below the first), photos, original-sound switch, this story's own L-frame ad */
+  video2Id?: number | null
+  gallery?: { imageId: number; caption?: string }[]
+  mute?: boolean
+  adId?: number | null
   pauseMs?: number
   vertical?: boolean
 }
@@ -143,7 +148,13 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     if (publishing) {
       if (!canPublish({ user: u } as never)) return { ok: false, error: 'प्रकाशित करने का अधिकार आपकी भूमिका में नहीं है। “समीक्षा के लिए भेजें” दबाएं।' }
       if (v.processing !== 'ready') return { ok: false, error: 'वीडियो की प्रोसेसिंग पूरी होने (✔ तैयार) के बाद ही प्रकाशित कर सकते हैं' }
-      if (input.flash && !input.flashScript.trim()) return { ok: false, error: 'फ्लैश पट्टी के लिए फ्लैश संक्षेप लिखें (या फ्लैश पट्टी OFF करें)' }
+      if (!input.flashScript.trim()) return { ok: false, error: 'लाल पट्टी (फ्लैश न्यूज़) की कम से कम एक लाइन लिखें' }
+      if (!(input.ticker || '').trim()) return { ok: false, error: 'नीचे चलने वाली स्क्रॉल न्यूज़ लिखें' }
+      if (input.video2Id) {
+        const v2 = (await payload.findByID({ collection: 'videos', id: input.video2Id, depth: 0, draft: true }).catch(() => null)) as Video | null
+        if (!v2) return { ok: false, error: 'दूसरा वीडियो नहीं मिला — दोबारा अपलोड करें' }
+        if (v2.processing !== 'ready') return { ok: false, error: 'दूसरे वीडियो की प्रोसेसिंग पूरी होने के बाद प्रकाशित करें' }
+      }
       if (input.voice && !spoken) return { ok: false, error: 'आवाज़ के लिए बोलने वाला मैटर लिखें (या आवाज़ OFF करें)' }
     }
 
@@ -164,7 +175,9 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     const data: Record<string, unknown> = {
       title: input.title.trim(),
       subheadline: clean(input.bottomLine),
-      videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole), ticker: clean(input.ticker?.slice(0, 1500)) },
+      videoTag: { place: clean(input.tagPlace), name: clean(input.tagName), role: clean(input.tagRole), ticker: clean(input.ticker?.slice(0, 1500)), mute: input.mute !== false, ad: input.adId ?? null },
+      video2: input.video2Id ?? null,
+      ...(input.gallery ? { gallery: input.gallery.filter((g) => g.imageId).map((g) => ({ image: g.imageId, caption: g.caption?.trim() || null })) } : {}),
       excerpt: clean(input.flashScript) || clean(input.description) || clean(input.voiceScript),
       content: paragraphsToLexical(text),
       format: 'video',
@@ -175,7 +188,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
       location: clean(input.location),
       heroImage: input.thumbnailId ?? null,
       flash: {
-        enabled: Boolean(input.flash),
+        enabled: Boolean(input.flash) || Boolean(input.flashScript.trim()), // the red flash band is part of every video news
         script: input.flashScript.trim(),
         breaking: Boolean(input.breaking),
         repeat: input.repeat !== false,
@@ -256,6 +269,8 @@ export async function deleteLooseVideoAction(id: number): Promise<Res> {
     const v = (await payload.findByID({ collection: 'videos', id, depth: 0, draft: true })) as Video
     if (!(await mayEdit(u, v))) return { ok: false, error: 'इस वीडियो को हटाने का अधिकार नहीं है' }
     if (articleOf(v)) return { ok: false, error: 'यह वीडियो एक खबर से जुड़ा है — खबर के “हटाएं” बटन से हटाएं' }
+    const asSecond = await payload.count({ collection: 'articles', where: { video2: { equals: id } }, overrideAccess: true })
+    if (asSecond.totalDocs) return { ok: false, error: 'यह किसी खबर का दूसरा वीडियो है — उस खबर में “दूसरा वीडियो → हटाएं” करें' }
     await audit(payload, u, { action: 'delete', collectionSlug: 'videos', title: v.title, details: { video: v.id } }, await headers())
     await payload.delete({ collection: 'videos', id, overrideAccess: true })
     revalidatePath('/desk/video')

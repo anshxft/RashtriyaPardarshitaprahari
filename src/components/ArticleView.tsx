@@ -204,6 +204,10 @@ export async function ArticleView({ a, lang, preview }: { a: Article; lang: Lang
             top={a.title}
             bottom={a.subheadline}
             tags={a.videoTag}
+            v2={typeof a.video2 === 'object' ? a.video2 : null}
+            mute={Boolean(a.videoTag?.mute)}
+            photos={(a.gallery || []).map((g) => { const m = asMedia(g.image); return m?.sizes?.hero?.url || m?.url || '' }).filter(Boolean)}
+            own={(() => { const m = asMedia(a.videoTag?.ad); return m?.url ? { title: m.alt || a.title, image: m.url } : null })()}
             flash={a.flash ? { on: Boolean(a.flash.enabled), voice: Boolean(a.flash.voice), audio: Boolean(a.flash.voice && a.flash.audioUrl), script: a.flash.script || '', breaking: Boolean(a.flash.breaking), repeat: a.flash.repeat !== false, intervalSec: a.flash.intervalSec || 20 } : null}
           />
           {text.paragraphs.length > 0 && (

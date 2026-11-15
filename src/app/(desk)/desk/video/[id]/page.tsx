@@ -23,10 +23,15 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
   const v = (await payload.findByID({ collection: 'videos', id, locale: 'hi', depth: 1, draft: true, overrideAccess: false, user }).catch(() => null)) as Video | null
   if (!v) notFound()
   const aId = typeof v.article === 'object' ? v.article?.id : v.article
-  const a = aId ? ((await payload.findByID({ collection: 'articles', id: aId, locale: 'hi', depth: 0, draft: true }).catch(() => null)) as Article | null) : null
+  const a = aId ? ((await payload.findByID({ collection: 'articles', id: aId, locale: 'hi', depth: 1, draft: true }).catch(() => null)) as Article | null) : null
   const thumb = asMedia(v.thumbnail)
   const s = await videoState(v)
   const fl = a?.flash
+  // studio extras: second video (and its processing state), photos, sound switch, own L-frame ad
+  const v2id = a?.video2 ? (typeof a.video2 === 'object' ? a.video2.id : a.video2) : null
+  const v2 = v2id ? ((await payload.findByID({ collection: 'videos', id: v2id, depth: 0, draft: true }).catch(() => null)) as Video | null) : null
+  const s2 = v2 ? await videoState(v2) : null
+  const adM = asMedia(a?.videoTag?.ad)
   const form: VideoForm = {
     ...emptyVideo(),
     id: v.id,
@@ -61,6 +66,16 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
     previewUrl: s.previewUrl,
     exports: s.exports,
     jobs: s.jobs,
+    video2Id: v2?.id ?? null,
+    video2Processing: s2?.processing || '',
+    video2Preview: s2?.previewUrl || '',
+    video2Name: v2?.originalUrl ? decodeURIComponent(v2.originalUrl.split('/').pop() || '').replace(/^\d+-[0-9a-f]{8}-/, '') : '',
+    gallery: (a?.gallery || []).map((g, i) => {
+      const m = asMedia(g.image)
+      return { id: m?.id ?? null, url: m ? m.sizes?.card?.url || m.url || null : null, caption: g.caption || '', key: `g${i}` }
+    }).filter((g) => g.id),
+    mute: a ? Boolean(a.videoTag?.mute) : true,
+    ad: { id: adM?.id ?? null, url: adM ? adM.sizes?.card?.url || adM.url || null : null },
     fileName: v.originalUrl ? decodeURIComponent(v.originalUrl.split('/').pop() || '').replace(/^\d+-[0-9a-f]{8}-/, '') : '',
     published: a?._status === 'published',
     slug: a?._status === 'published' && a.slug ? paths.article('hi', a.slug) : null,

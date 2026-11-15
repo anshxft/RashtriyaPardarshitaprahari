@@ -22,6 +22,7 @@ import * as migration_20261107_120000_ad_lakwa_center from './20261107_120000_ad
 import * as migration_20261110_120000_ad_jila_furniture from './20261110_120000_ad_jila_furniture';
 import * as migration_20261111_120000_voice_script from './20261111_120000_voice_script';
 import * as migration_20261111_130000_reprocess_videos_new_logo from './20261111_130000_reprocess_videos_new_logo';
+import * as migration_20261115_120000_video_studio from './20261115_120000_video_studio';
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20261111_130000_reprocess_videos_new_logo.up,
     down: migration_20261111_130000_reprocess_videos_new_logo.down,
     name: '20261111_130000_reprocess_videos_new_logo'
+  },
+  {
+    up: migration_20261115_120000_video_studio.up,
+    down: migration_20261115_120000_video_studio.down,
+    name: '20261115_120000_video_studio'
   },
 ];

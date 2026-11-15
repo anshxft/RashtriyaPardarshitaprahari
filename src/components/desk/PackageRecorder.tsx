@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { VIDEO_TICKER_DEFAULT } from '@/content/brand'
-import { adOn, stingIndex, VOICE_AT, wordmarkOn } from '@/components/VideoStage'
+import { adOn, PHOTO_SEC, stingIndex, VOICE_AT, wordmarkOn } from '@/components/VideoStage'
 
 export type PackageInput = {
   src: string // the website version (with logo), a URL the browser may read (CORS)
@@ -16,24 +16,41 @@ export type PackageInput = {
   role?: string | null
   ticker?: string | null // Desk lines for the white ticker (one per line)
   voice?: string | null // the spoken text (TTS audio), played over the video from VOICE_AT s, as on the website
+  src2?: string | null // optional second video, below the first (same as the website)
+  photos?: string[] // photos taking turns in their own panel
+  mute?: boolean // the videos' own sound left out, as on the website
   ads?: { title: string; image: string; win: { x: number; y: number; w: number; h: number } }[] // L-frame ads (same as the website)
 }
 
 const W = 1280
-const H = 1080
+let H = 1080 // grows with the second video / photo panels (set when a recording starts)
 const PAD = 12
 const TOP_H = 112
 const BAR_H = 70
-const VID = { x: PAD, y: PAD + TOP_H + BAR_H, w: W - PAD * 2, h: Math.round(((W - PAD * 2) * 9) / 16) }
-const LOW_Y = VID.y + VID.h + 6
+const VID = {
+  x: PAD,
+  y: PAD + TOP_H + BAR_H,
+  w: W - PAD * 2,
+  h: Math.round(((W - PAD * 2) * 9) / 16),
+}
+let LOW_Y = VID.y + VID.h + 6
 const LOW_H = 118
-const TICK_Y = LOW_Y + LOW_H + 6
-const TICK_H = H - PAD - TICK_Y
+let TICK_Y = LOW_Y + LOW_H + 6
+const TICK_H = 44
+const panelY = (k: number) => VID.y + k * (VID.h + 6) // panel 0 = first video, then second video, then photos
 const LINE_SEC = 4.5
 const BUMP = '\u0000B'
 
 /** Pick the size that fits `text` into `maxLines` lines of `maxW`, largest first. */
-function fitLines(ctx: CanvasRenderingContext2D, text: string, family: string, weight: number, sizes: number[], maxW: number, maxLines: number) {
+function fitLines(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  family: string,
+  weight: number,
+  sizes: number[],
+  maxW: number,
+  maxLines: number,
+) {
   for (const size of sizes) {
     ctx.font = `${weight} ${size}px ${family}`
     const words = text.split(/\s+/)
@@ -45,7 +62,8 @@ function fitLines(ctx: CanvasRenderingContext2D, text: string, family: string, w
       else (lines.push(cur), (cur = w))
     }
     if (cur) lines.push(cur)
-    if (lines.length <= maxLines || size === sizes[sizes.length - 1]) return { size, lines: lines.slice(0, maxLines) }
+    if (lines.length <= maxLines || size === sizes[sizes.length - 1])
+      return { size, lines: lines.slice(0, maxLines) }
   }
   return { size: sizes[0], lines: [text] }
 }
@@ -99,11 +117,17 @@ const load = (src: string) =>
  * (headline band, HEADLINE NEWS bar, BREAKING label, place / name tags, turning lower band, logo box, ticker, logo
  * sting with its sound). Runs in real time; the result is saved as one video file.
  */
-export function PackageRecorder({ input, onDownload }: { input: PackageInput; onDownload?: (kind: string) => Promise<unknown> }) {
+export function PackageRecorder({
+  input,
+  onDownload,
+}: {
+  input: PackageInput
+  onDownload?: (kind: string) => Promise<unknown>
+}) {
   const [state, setState] = useState<'idle' | 'rec' | 'done' | 'err'>('idle')
   const [pct, setPct] = useState(0)
   const [msg, setMsg] = useState('')
-  const [file, setFile] = useState<{ url: string; name: string } | null>(null)
+  const [file, setFile] = useState<{ url: string; name: string; blob: Blob } | null>(null)
   const stop = useRef<() => void>(() => {})
   const preview = useRef<HTMLCanvasElement>(null)
 
@@ -117,14 +141,22 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       const wordmark = await load('/wordmark.png')
       const logo = wordmark // sting and the “देखें वेबसाइट” box use the tricolour name-logo too
       // L-frame ads: same frames, timing and turn order as the website player (one that fails to load is skipped)
-      const ads = (await Promise.all((input.ads || []).map(async (a) => ({ ...a, img: await load(a.image).catch(() => null) })))).filter((a) => a.img)
+      const ads = (
+        await Promise.all(
+          (input.ads || []).map(async (a) => ({
+            ...a,
+            img: await load(a.image).catch(() => null),
+          })),
+        )
+      ).filter((a) => a.img)
       const video = document.createElement('video')
       video.crossOrigin = 'anonymous'
       video.playsInline = true
       video.preload = 'auto'
       // kept in the page (tiny, invisible): phones (iPhone especially) don't decode frames of a video outside the page
       video.setAttribute('playsinline', '')
-      video.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none'
+      video.style.cssText =
+        'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none'
       document.body.appendChild(video)
       video.src = input.src
       await new Promise<void>((res, rej) => {
@@ -133,6 +165,31 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         video.load()
       })
       const dur = video.duration || 1
+      // second video and photos, each in its own panel under the first video (same order as the website)
+      let video2: HTMLVideoElement | null = null
+      if (input.src2) {
+        const v2 = document.createElement('video')
+        v2.crossOrigin = 'anonymous'
+        v2.playsInline = true
+        v2.preload = 'auto'
+        v2.setAttribute('playsinline', '')
+        v2.style.cssText = video.style.cssText
+        document.body.appendChild(v2)
+        v2.src = input.src2
+        video2 = await new Promise<HTMLVideoElement | null>((res) => {
+          v2.oncanplay = () => res(v2)
+          v2.onerror = () => res(null)
+          v2.load()
+          setTimeout(() => res(null), 20000)
+        })
+      }
+      const photos = (
+        await Promise.all((input.photos || []).map((p) => load(p).catch(() => null)))
+      ).filter((x): x is HTMLImageElement => Boolean(x))
+      const extra = (video2 ? 1 : 0) + (photos.length ? 1 : 0)
+      LOW_Y = panelY(1 + extra)
+      TICK_Y = LOW_Y + LOW_H + 6
+      H = Math.ceil((TICK_Y + TICK_H + PAD) / 2) * 2
 
       const canvas = preview.current!
       canvas.width = W
@@ -143,7 +200,13 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       const ac = new AudioContext()
       const dest = ac.createMediaStreamDestination()
       const videoGain = ac.createGain()
-      ac.createMediaElementSource(video).connect(videoGain).connect(dest)
+      // original sound switched off → it is not put in the file at all (exactly like the website)
+      if (input.mute) video.muted = true
+      else ac.createMediaElementSource(video).connect(videoGain).connect(dest)
+      if (video2) {
+        if (input.mute) video2.muted = true
+        else ac.createMediaElementSource(video2).connect(videoGain)
+      }
       const voiceBuf = input.voice
         ? await fetch(input.voice)
             .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('voice'))))
@@ -153,20 +216,49 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
 
       const stream = canvas.captureStream(30)
       dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t))
-      const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+      const types = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm',
+      ]
       const mime = types.find((t) => MediaRecorder.isTypeSupported(t)) || ''
-      const rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: 6_000_000, audioBitsPerSecond: 160_000 })
+      const rec = new MediaRecorder(stream, {
+        mimeType: mime || undefined,
+        videoBitsPerSecond: 6_000_000,
+        audioBitsPerSecond: 160_000,
+      })
       const chunks: Blob[] = []
       rec.ondataavailable = (e) => e.data.size && chunks.push(e.data)
 
-      const script = (input.script || '').split(/[।!?\n]+/).map((x) => x.trim()).filter(Boolean).slice(0, 6)
-      const lines = [...(input.breaking ? [BUMP] : []), ...(input.bottom ? [input.bottom] : []), ...script]
+      const script = (input.script || '')
+        .split(/[।!?\n]+/)
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .slice(0, 6)
+      const lines = [
+        ...(input.breaking ? [BUMP] : []),
+        ...(input.bottom ? [input.bottom] : []),
+        ...script,
+      ]
       if (!lines.length) lines.push(input.top)
-      const own = (input.ticker || '').split(/\n+/).map((x) => x.trim()).filter(Boolean)
+      const own = (input.ticker || '')
+        .split(/\n+/)
+        .map((x) => x.trim())
+        .filter(Boolean)
       const tickText = [...own, ...VIDEO_TICKER_DEFAULT].join('   ✦   ') + '   ✦   '
-      ctx.font = `700 22px ${family}`
+      ctx.font = `800 26px ${family}`
       const tickW = ctx.measureText(tickText).width
-      const topFit = fitLines(ctx, input.top, family, 800, [44, 40, 36, 32, 28], W - PAD * 2 - 40, 2)
+      const topFit = fitLines(
+        ctx,
+        input.top,
+        family,
+        800,
+        [44, 40, 36, 32, 28],
+        W - PAD * 2 - 40,
+        2,
+      )
       let lastSting = -1
       let stingAt = -10
 
@@ -260,7 +352,12 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
             ctx.drawImage(ad.img!, VID.x, VID.y, VID.w, VID.h)
             ctx.restore()
             const lerp = (a: number, b: number) => a + (b - a) * k
-            S = { x: lerp(VID.x, VID.x + ad.win.x * VID.w), y: lerp(VID.y, VID.y + ad.win.y * VID.h), w: lerp(VID.w, ad.win.w * VID.w), h: lerp(VID.h, ad.win.h * VID.h) }
+            S = {
+              x: lerp(VID.x, VID.x + ad.win.x * VID.w),
+              y: lerp(VID.y, VID.y + ad.win.y * VID.h),
+              w: lerp(VID.w, ad.win.w * VID.w),
+              h: lerp(VID.h, ad.win.h * VID.h),
+            }
             ctx.fillStyle = '#000'
             ctx.fillRect(S.x, S.y, S.w, S.h)
           }
@@ -268,12 +365,13 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         const vr = video.videoWidth / video.videoHeight || 16 / 9
         let vw = S.w
         let vh = vw / vr
-        if (vh > S.h) (vh = S.h), (vw = vh * vr)
+        if (vh > S.h) ((vh = S.h), (vw = vh * vr))
         ctx.save()
         ctx.beginPath()
         ctx.rect(S.x, S.y, S.w, S.h)
         ctx.clip()
-        if (video.readyState >= 2) ctx.drawImage(video, S.x + (S.w - vw) / 2, S.y + (S.h - vh) / 2, vw, vh)
+        if (video.readyState >= 2)
+          ctx.drawImage(video, S.x + (S.w - vw) / 2, S.y + (S.h - vh) / 2, vw, vh)
         // BREAKING label (flips over every 6 s)
         let ly = S.y + 18
         if (input.breaking) {
@@ -360,7 +458,13 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.globalAlpha = Math.min(1, k / 0.45)
           ctx.shadowColor = k < 0.6 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)'
           ctx.shadowBlur = k < 0.6 ? 24 : 8
-          ctx.drawImage(wordmark, S.x + S.w - 18 - (S.w * 0.26 + ww) / 2, S.y + 14 + (S.w * 0.26 * (wordmark.height / wordmark.width) - wh) / 2, ww, wh)
+          ctx.drawImage(
+            wordmark,
+            S.x + S.w - 18 - (S.w * 0.26 + ww) / 2,
+            S.y + 14 + (S.w * 0.26 * (wordmark.height / wordmark.width) - wh) / 2,
+            ww,
+            wh,
+          )
           ctx.restore()
         }
         // logo sting
@@ -368,13 +472,27 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         if (st >= 0 && st < 2) {
           const k = st / 2
           const flash = k < 0.22 ? k / 0.22 : k > 0.8 ? (1 - k) / 0.2 : 1
-          const rg = ctx.createRadialGradient(S.x + S.w / 2, S.y + S.h / 2, 10, S.x + S.w / 2, S.y + S.h / 2, S.w * 0.6)
+          const rg = ctx.createRadialGradient(
+            S.x + S.w / 2,
+            S.y + S.h / 2,
+            10,
+            S.x + S.w / 2,
+            S.y + S.h / 2,
+            S.w * 0.6,
+          )
           rg.addColorStop(0, `rgba(255,255,255,${0.5 * flash})`)
           rg.addColorStop(0.45, `rgba(200,16,46,${0.5 * flash})`)
           rg.addColorStop(1, `rgba(0,0,0,${0.4 * flash})`)
           ctx.fillStyle = rg
           ctx.fillRect(S.x, S.y, S.w, S.h)
-          const sc = k < 0.28 ? 0.15 + (k / 0.28) * 0.95 : k < 0.38 ? 1.1 - ((k - 0.28) / 0.1) * 0.13 : k < 0.78 ? 1 : 1 + ((k - 0.78) / 0.22) * 0.5
+          const sc =
+            k < 0.28
+              ? 0.15 + (k / 0.28) * 0.95
+              : k < 0.38
+                ? 1.1 - ((k - 0.28) / 0.1) * 0.13
+                : k < 0.78
+                  ? 1
+                  : 1 + ((k - 0.78) / 0.22) * 0.5
           const op = k < 0.28 ? k / 0.28 : k > 0.78 ? 1 - (k - 0.78) / 0.22 : 1
           const lw2 = S.w * 0.52 * sc
           const lh2 = (lw2 * logo.height) / logo.width
@@ -395,6 +513,36 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           ctx.fillStyle = '#fff'
           ctx.fillText('विज्ञापन / AD', VID.x + VID.w - lw + 1, VID.y + 19)
         }
+        // second video / photo panels
+        let k = 1
+        const contain = (src: CanvasImageSource, sw: number, sh: number, y: number, alpha = 1) => {
+          const r0 = sw / sh || 16 / 9
+          let w = VID.w
+          let h = w / r0
+          if (h > VID.h) ((h = VID.h), (w = h * r0))
+          ctx.save()
+          ctx.globalAlpha = alpha
+          ctx.drawImage(src, VID.x + (VID.w - w) / 2, y + (VID.h - h) / 2, w, h)
+          ctx.restore()
+        }
+        if (video2) {
+          const y = panelY(k++)
+          ctx.fillStyle = '#000'
+          ctx.fillRect(VID.x, y, VID.w, VID.h)
+          if (video2.readyState >= 2) contain(video2, video2.videoWidth, video2.videoHeight, y)
+        }
+        if (photos.length) {
+          const y = panelY(k++)
+          ctx.fillStyle = '#000'
+          ctx.fillRect(VID.x, y, VID.w, VID.h)
+          const i = Math.floor(t / PHOTO_SEC) % photos.length
+          const into = (t % PHOTO_SEC) / 0.7
+          if (into < 1 && photos.length > 1) {
+            const prev = photos[(i - 1 + photos.length) % photos.length]
+            contain(prev, prev.width, prev.height, y)
+          }
+          contain(photos[i], photos[i].width, photos[i].height, y, Math.min(1, into))
+        }
         // lower band: lines take turns
         const li = Math.floor(t / LINE_SEC) % lines.length
         const into = (t % LINE_SEC) / LINE_SEC
@@ -413,7 +561,12 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         const cur = lines[li]
         ctx.textAlign = 'center'
         if (cur === BUMP) {
-          const s = into < 0.12 ? 2.2 - (into / 0.12) * 1.25 : into < 0.18 ? 0.95 + ((into - 0.12) / 0.06) * 0.09 : 1
+          const s =
+            into < 0.12
+              ? 2.2 - (into / 0.12) * 1.25
+              : into < 0.18
+                ? 0.95 + ((into - 0.12) / 0.06) * 0.09
+                : 1
           ctx.save()
           ctx.translate(PAD + mainW / 2, LOW_Y + LOW_H / 2)
           ctx.scale(s, s)
@@ -453,14 +606,14 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
         ctx.textAlign = 'center'
         ctx.fillText('देखें वेबसाइट', bx + boxW / 2, LOW_Y + LOW_H - 16)
         // ticker
-        ctx.fillStyle = '#fff'
+        ctx.fillStyle = '#ffd23f'
         ctx.fillRect(PAD, TICK_Y, W - PAD * 2, TICK_H)
         ctx.save()
         ctx.beginPath()
         ctx.rect(PAD, TICK_Y, W - PAD * 2, TICK_H)
         ctx.clip()
-        ctx.font = `700 22px ${family}`
-        ctx.fillStyle = '#7a0000'
+        ctx.font = `800 26px ${family}`
+        ctx.fillStyle = '#5c0003'
         ctx.textAlign = 'left'
         const tx = W - PAD - ((t * 110) % (tickW + W))
         ctx.fillText(tickText, tx, TICK_Y + TICK_H / 2 + 1)
@@ -482,8 +635,11 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       await ac.resume()
       // start the recording only once the video really shows a picture (no black opening frame / thumbnail)
       await video.play()
+      if (video2) void video2.play().catch(() => {})
       await new Promise<void>((res) => {
-        const v = video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number }
+        const v = video as HTMLVideoElement & {
+          requestVideoFrameCallback?: (cb: () => void) => number
+        }
         if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => res())
         else video.addEventListener('timeupdate', () => res(), { once: true })
         setTimeout(res, 3000)
@@ -503,13 +659,14 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       frame() // draws now and keeps itself going every frame until the video ends
       await finished
       video.remove()
+      video2?.remove()
       cancelAnimationFrame(raf)
       ac.close().catch(() => {})
       if (cancelled) return setState('idle')
       const ext = (rec.mimeType || mime).includes('mp4') ? 'mp4' : 'webm'
       const blob = new Blob(chunks, { type: rec.mimeType || mime || 'video/webm' })
       const url = URL.createObjectURL(blob)
-      setFile({ url, name: `${input.fileName}_news.${ext}` })
+      setFile({ url, name: `${input.fileName}_news.${ext}`, blob })
       setPct(100)
       setState('done')
       onDownload?.('video-package').catch(() => {})
@@ -518,7 +675,10 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
       a.download = `${input.fileName}_news.${ext}`
       a.click()
     } catch (e) {
-      const m = (e as Error).name === 'SecurityError' ? 'ब्राउज़र ने वीडियो फ़ाइल को रिकॉर्ड करने की अनुमति नहीं दी (फ़ाइल-सर्वर की CORS सेटिंग)। “सिर्फ वीडियो” वाला डाउनलोड लें और हमें बताएं।' : (e as Error).message || 'कुछ गड़बड़ हुई'
+      const m =
+        (e as Error).name === 'SecurityError'
+          ? 'ब्राउज़र ने वीडियो फ़ाइल को रिकॉर्ड करने की अनुमति नहीं दी (फ़ाइल-सर्वर की CORS सेटिंग)। “सिर्फ वीडियो” वाला डाउनलोड लें और हमें बताएं।'
+          : (e as Error).message || 'कुछ गड़बड़ हुई'
       setMsg(m)
       setState('err')
     }
@@ -527,9 +687,17 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
   return (
     <div className="space-y-3 rounded-xl border-2 border-[#c8102e] bg-bg p-4">
       <p className="font-display text-lg font-bold">🎬 पूरे डिज़ाइन के साथ वीडियो</p>
-      <p className="text-sm text-muted">ऊपर की हेडलाइन, HEADLINE NEWS पट्टी, BREAKING, जगह / नाम, नीचे की बदलती लाल पट्टी, लोगो बॉक्स, चलती पट्टी और लोगो-इंट्रो (आवाज़ के साथ) — सब वीडियो में छपकर डाउनलोड होगा। जितना लंबा वीडियो, उतना समय लगेगा (3 मिनट का वीडियो ≈ 3 मिनट)। इस दौरान यह टैब खुला और सामने रखें।</p>
+      <p className="text-sm text-muted">
+        ऊपर की हेडलाइन, HEADLINE NEWS पट्टी, BREAKING, जगह / नाम, नीचे की बदलती लाल पट्टी, लोगो
+        बॉक्स, चलती पट्टी और लोगो-इंट्रो (आवाज़ के साथ) — सब वीडियो में छपकर डाउनलोड होगा। जितना
+        लंबा वीडियो, उतना समय लगेगा (3 मिनट का वीडियो ≈ 3 मिनट)। इस दौरान यह टैब खुला और सामने रखें।
+      </p>
       {state === 'idle' || state === 'err' ? (
-        <button type="button" onClick={start} className="min-h-12 w-full rounded-lg bg-[#c8102e] px-5 font-extrabold text-white sm:w-auto">
+        <button
+          type="button"
+          onClick={start}
+          className="min-h-12 w-full rounded-lg bg-[#c8102e] px-5 font-extrabold text-white sm:w-auto"
+        >
           🎬 पूरे डिज़ाइन के साथ वीडियो बनाएं और डाउनलोड करें
         </button>
       ) : state === 'rec' ? (
@@ -540,19 +708,54 @@ export function PackageRecorder({ input, onDownload }: { input: PackageInput; on
           <p className="text-sm font-semibold">
             {pct}% · {msg}
           </p>
-          <button type="button" onClick={() => stop.current()} className="rounded-md border border-line px-3 py-1.5 text-sm font-bold">
+          <button
+            type="button"
+            onClick={() => stop.current()}
+            className="rounded-md border border-line px-3 py-1.5 text-sm font-bold"
+          >
             रोकें
           </button>
         </div>
       ) : (
         file && (
-          <a href={file.url} download={file.name} className="inline-block rounded-lg bg-india-600 px-5 py-3 font-extrabold text-white">
-            ⬇ फिर से सेव करें ({file.name})
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={file.url}
+              download={file.name}
+              className="inline-block rounded-lg bg-india-600 px-5 py-3 font-extrabold text-white"
+            >
+              ⬇ फिर से सेव करें ({file.name})
+            </a>
+            {/* phones: the share sheet has “Save video” (iPhone) / “Save to gallery / Files” (Android) */}
+            {typeof navigator !== 'undefined' && 'canShare' in navigator && (
+              <button
+                type="button"
+                className="ml-2 inline-block rounded-lg bg-navy-900 px-5 py-3 font-extrabold text-white"
+                onClick={async () => {
+                  const f = new File([file.blob], file.name, {
+                    type: file.blob.type.split(';')[0] || 'video/mp4',
+                  })
+                  if (navigator.canShare?.({ files: [f] }))
+                    await navigator.share({ files: [f], title: input.top }).catch(() => {})
+                  else
+                    window.alert(
+                      'इस फ़ोन में सीधे गैलरी में सेव का विकल्प नहीं है — “फिर से सेव करें” दबाकर Downloads से गैलरी में डालें।',
+                    )
+                }}
+              >
+                📱 गैलरी में सेव / शेयर
+              </button>
+            )}
+          </div>
         )
       )}
-      {state === 'err' && <p className="rounded bg-alert-600/10 p-2 text-sm font-semibold text-alert-700">{msg}</p>}
-      <canvas ref={preview} className={`w-full rounded ring-1 ring-line ${state === 'idle' ? 'hidden' : ''}`} />
+      {state === 'err' && (
+        <p className="rounded bg-alert-600/10 p-2 text-sm font-semibold text-alert-700">{msg}</p>
+      )}
+      <canvas
+        ref={preview}
+        className={`w-full rounded ring-1 ring-line ${state === 'idle' ? 'hidden' : ''}`}
+      />
     </div>
   )
 }

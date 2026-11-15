@@ -6,7 +6,7 @@ import type { Video } from '@/payload-types'
 import { ShareCard } from '@/components/ShareCard'
 import { StoryTools } from '@/components/StoryTools'
 import { currentUser } from '@/lib/auth'
-import { asCat, cardImage, getArticleForPreview, getSettings, getVideoFrameAds } from '@/lib/data'
+import { asCat, asMedia, cardImage, getArticleForPreview, getSettings, getVideoFrameAds } from '@/lib/data'
 import { downloadName } from '@/lib/fileName'
 import { formatDate, t } from '@/lib/i18n'
 import { newsStatus } from '@/lib/newsStatus'
@@ -33,7 +33,12 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
     const v = (await (await db()).findByID({ collection: 'videos', id: vid, depth: 0, draft: true })) as Video
     const src = await resolveUrl(v.processedUrl)
     const stamp0 = a.firstPublishedAt || a.publishedAt
-    const ads = await getVideoFrameAds()
+    const ownAd = asMedia(a.videoTag?.ad)
+    const ads = await getVideoFrameAds(ownAd?.url ? { title: ownAd.alt || a.title, image: ownAd.url } : null)
+    const v2id = a.video2 ? (typeof a.video2 === 'object' ? a.video2.id : a.video2) : null
+    const v2 = v2id ? ((await (await db()).findByID({ collection: 'videos', id: v2id, depth: 0, draft: true }).catch(() => null)) as Video | null) : null
+    const src2 = v2?.processedUrl ? await resolveUrl(v2.processedUrl) : null
+    const photos = (a.gallery || []).map((g) => { const m = asMedia(g.image); return m?.sizes?.hero?.url || m?.url || '' }).filter(Boolean)
     return (
       <div className="max-w-3xl space-y-4">
         <h1 className="font-display text-xl font-extrabold text-navy-900">⬇ वीडियो डाउनलोड</h1>
@@ -53,6 +58,9 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
               role: a.videoTag?.role,
               ticker: a.videoTag?.ticker,
               voice: a.flash?.voice && a.flash.audioUrl ? `/api/v/${vid}/voice` : null,
+              src2,
+              photos,
+              mute: Boolean(a.videoTag?.mute),
               ads: ads.map(({ title, image, win }) => ({ title, image, win })),
             }}
           />

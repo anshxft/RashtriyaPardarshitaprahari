@@ -546,11 +546,14 @@ export interface Article {
     name?: string | null;
     role?: string | null;
     ticker?: string | null;
+    mute?: boolean | null;
+    ad?: (number | null) | Media;
   };
   /**
    * Video news: the uploaded video (website version, social versions, flash + voice).
    */
   video?: (number | null) | Video;
+  video2?: (number | null) | Video;
   /**
    * Only for freely-licensed hotlinked images (Wikimedia/Unsplash). Credit is required.
    */
@@ -1612,8 +1615,11 @@ export interface ArticlesSelect<T extends boolean = true> {
         name?: T;
         role?: T;
         ticker?: T;
+        mute?: T;
+        ad?: T;
       };
   video?: T;
+  video2?: T;
   externalImage?:
     | T
     | {
