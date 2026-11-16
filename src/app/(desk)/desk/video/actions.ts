@@ -148,6 +148,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     if (publishing) {
       if (!canPublish({ user: u } as never)) return { ok: false, error: 'प्रकाशित करने का अधिकार आपकी भूमिका में नहीं है। “समीक्षा के लिए भेजें” दबाएं।' }
       if (v.processing !== 'ready') return { ok: false, error: 'वीडियो की प्रोसेसिंग पूरी होने (✔ तैयार) के बाद ही प्रकाशित कर सकते हैं' }
+      if (!v.originalUrl && !input.gallery?.length) return { ok: false, error: 'वीडियो या कम से कम एक फोटो डालें' }
       if (!input.flashScript.trim()) return { ok: false, error: 'लाल पट्टी (फ्लैश न्यूज़) की कम से कम एक लाइन लिखें' }
       if (!(input.ticker || '').trim()) return { ok: false, error: 'नीचे चलने वाली स्क्रॉल न्यूज़ लिखें' }
       if (input.video2Id) {
@@ -162,7 +163,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
       collection: 'videos',
       id: v.id,
       locale: 'hi',
-      data: { title: input.title.trim(), description: clean(input.description) || clean(input.flashScript), location: clean(input.location), reporterName: clean(input.reporterName), reporter: input.reporterId ?? null, category: input.categoryId, thumbnail: input.thumbnailId ?? null, _status: v._status } as never,
+      data: { title: input.title.trim(), description: clean(input.description) || clean(input.flashScript), location: clean(input.location), reporterName: clean(input.reporterName), reporter: input.reporterId ?? null, category: input.categoryId, thumbnail: input.thumbnailId ?? (!v.originalUrl ? (input.gallery?.[0]?.imageId ?? null) : null), _status: v._status } as never,
       draft: v._status !== 'published',
       overrideAccess: true,
     })
@@ -186,7 +187,7 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
       reporterName: clean(input.reporterName),
       reporter: input.reporterId ?? null,
       location: clean(input.location),
-      heroImage: input.thumbnailId ?? null,
+      heroImage: input.thumbnailId ?? (!v.originalUrl ? (input.gallery?.[0]?.imageId ?? null) : null),
       flash: {
         enabled: Boolean(input.flash) || Boolean(input.flashScript.trim()), // the red flash band is part of every video news
         script: input.flashScript.trim(),
@@ -241,6 +242,17 @@ export async function saveVideoNewsAction(input: VideoNewsInput): Promise<Res<{ 
     if (a._status === 'published') refreshStory(a.slug)
     const scheduled = a._status === 'published' && a.publishedAt && new Date(a.publishedAt).getTime() > Date.now() + 60_000
     return { ok: true, status: scheduled ? 'scheduled' : a._status === 'published' ? 'published' : input.mode === 'submit' ? 'submitted' : 'draft', articleId: a.id, newsId: a.newsId, url: a.slug ? paths.article('hi', a.slug) : undefined, note: voiceNote }
+  } catch (e) {
+    return { ok: false, error: msg(e) }
+  }
+}
+
+/** Video news with photos only (no footage): an empty video record holds the story together like any other video news. */
+export async function startPhotoOnlyAction(): Promise<Res<{ id: number }>> {
+  try {
+    const u = await user()
+    const doc = await (await db()).create({ collection: 'videos', locale: 'hi', data: { title: 'फोटो वीडियो खबर', processing: 'ready', _status: 'draft' } as never, draft: true, overrideAccess: false, user: u })
+    return { ok: true, id: doc.id }
   } catch (e) {
     return { ok: false, error: msg(e) }
   }

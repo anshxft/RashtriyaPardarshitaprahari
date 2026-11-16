@@ -8,6 +8,7 @@ import {
   retryVideoAction,
   saveVideoNewsAction,
   startVideoAction,
+  startPhotoOnlyAction,
 } from '@/app/(desk)/desk/video/actions'
 import type { CategoryOption, TeamOption } from '@/lib/deskTypes'
 import { publishChecklist } from '@/lib/newsStatus'
@@ -330,6 +331,8 @@ export function VideoEditor({
     f.gallery.some((g) => g.busy) ||
     Boolean(f.ad.busy)
   const ready = f.processing === 'ready'
+  // a photos-only video news (no footage): the photos are the main picture
+  const noVideo = Boolean(f.id) && ready && !f.previewUrl && !f.fileName
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-28">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -394,7 +397,11 @@ export function VideoEditor({
           </div>
         ) : f.id ? (
           <div className="space-y-2">
-            <p className="font-semibold">{f.fileName || 'अपलोड की गई फ़ाइल'}</p>
+            <p className="font-semibold">
+              {noVideo
+                ? '📷 बिना वीडियो — फोटो ही मुख्य स्क्रीन पर चलेंगी (नीचे “फोटो” में डालें)'
+                : f.fileName || 'अपलोड की गई फ़ाइल'}
+            </p>
             {st && (
               <p className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${st[1]}`}>
                 {st[0]}
@@ -461,11 +468,35 @@ export function VideoEditor({
             className="flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-surface text-muted hover:bg-white"
           >
             <span className="text-4xl"></span>
-            <span className="text-lg font-bold text-navy-900">वीडियो चुनें / रिकॉर्ड करें</span>
+            <span className="text-lg font-bold text-navy-900">वीडियो 1 चुनें / रिकॉर्ड करें</span>
+            <span className="text-xs font-semibold">
+              (वैकल्पिक — नीचे “सिर्फ फोटो” भी चुन सकते हैं)
+            </span>
             <span className="text-xs">
               मोबाइल या लैपटॉप से · लोगो अपने-आप ऊपर दाएं कोने में लगेगा · मूल फ़ाइल अलग सुरक्षित
               रहेगी
             </span>
+          </button>
+        )}
+        {!f.id && pct === null && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() =>
+              start(async () => {
+                const s = await startPhotoOnlyAction()
+                if (!s.ok) return setNote({ kind: 'err', text: s.error })
+                setF((x) => ({ ...x, id: s.id, processing: 'ready', fileName: '' }))
+                window.history.replaceState(null, '', `/desk/video/${s.id}`)
+                setNote({
+                  kind: 'ok',
+                  text: 'बिना वीडियो की खबर ✔ — नीचे “फोटो” में तस्वीरें डालें, वही मुख्य स्क्रीन पर चलेंगी।',
+                })
+              })
+            }
+            className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-lg border-2 border-navy-900 bg-bg px-4 font-bold text-navy-900 hover:bg-surface"
+          >
+            📷 बिना वीडियो — सिर्फ फोटो से वीडियो खबर
           </button>
         )}
         {!f.id && pct === null && (
@@ -669,7 +700,7 @@ export function VideoEditor({
       {/* 7 · live preview: the whole screen exactly as it will look (and as it downloads) */}
       <section className={card}>
         <h2 className="mb-2 font-display text-lg font-bold">👁 लाइव प्रीव्यू</h2>
-        {f.previewUrl ? (
+        {f.previewUrl || (noVideo && f.gallery.some((g) => g.url)) ? (
           <VideoStage
             src={f.previewUrl}
             poster={f.posterUrl || undefined}
@@ -686,7 +717,9 @@ export function VideoEditor({
         ) : (
           <p className="py-6 text-center text-sm text-muted">
             {f.id
-              ? 'प्रोसेसिंग पूरी होते ही यहां पूरी स्क्रीन का प्रीव्यू दिखेगा।'
+              ? noVideo
+                ? 'फोटो डालते ही यहां पूरी स्क्रीन का प्रीव्यू दिखेगा।'
+                : 'प्रोसेसिंग पूरी होते ही यहां पूरी स्क्रीन का प्रीव्यू दिखेगा।'
               : 'पहले वीडियो चुनें।'}
           </p>
         )}
@@ -1211,7 +1244,12 @@ export function VideoEditor({
               </button>
               <button
                 type="button"
-                disabled={!ready || items.some((i) => i.required && !i.ok) || textMissing}
+                disabled={
+                  !ready ||
+                  items.some((i) => i.required && !i.ok) ||
+                  textMissing ||
+                  (noVideo && !f.gallery.some((g) => g.id))
+                }
                 onClick={() => {
                   const m = confirm
                   setConfirm(null)

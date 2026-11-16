@@ -43,11 +43,11 @@ export default async function DownloadPage({ params }: { params: Promise<{ id: s
       <div className="max-w-3xl space-y-4">
         <h1 className="font-display text-xl font-extrabold text-navy-900">⬇ वीडियो डाउनलोड</h1>
         <p className="rounded-xl bg-bg p-4 font-semibold">{a.title}</p>
-        {src ? (
+        {src || (!v.originalUrl && photos.length) ? (
           <PackageRecorder
             onDownload={logDownload.bind(null, a.id)}
             input={{
-              src,
+              src: src || '',
               fileName: downloadName(a.newsId, a.title, stamp0, 'mp4').replace(/\.mp4$/, ''),
               top: a.title,
               bottom: a.subheadline,

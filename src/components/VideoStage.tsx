@@ -146,6 +146,21 @@ export function VideoStage({
   const vid2 = useRef<HTMLVideoElement>(null)
   const [photoIdx, setPhotoIdx] = useState(0)
   const pics = photos?.filter(Boolean) ?? []
+  // no video, only photos: the photos are the main picture and a clock drives the same timings (logo, ads, flash…)
+  const photoMode = !src && pics.length > 0
+  const [clockOn, setClockOn] = useState(false)
+  const clockT0 = useRef(0)
+  const clockRef = useRef<(t: number, dur: number) => void>(() => {})
+  useEffect(() => {
+    if (!photoMode || !clockOn) return
+    const total = Math.max(12, pics.length * PHOTO_SEC)
+    clockT0.current = performance.now() - 0
+    const id = setInterval(() => {
+      const t = ((performance.now() - clockT0.current) / 1000) % total
+      clockRef.current(t, total)
+    }, 200)
+    return () => clearInterval(id)
+  }, [photoMode, clockOn, pics.length])
   const [nameShow, setNameShow] = useState(false)
   // Full screen keeps the whole package (bands, name-logo, ads, ticker), not just the bare video. Browsers that cannot
   // put a page element full screen (iPhone) get a fixed black layer over the page instead.
@@ -226,6 +241,32 @@ export function VideoStage({
     } else {
       if (!a.paused) a.pause()
       if (v.volume === 0.3) v.volume = 1
+    }
+  }
+  clockRef.current = (t: number, dur: number) => {
+    if (tags?.name) setNameShow(nameOn(t))
+    setPhotoIdx(Math.floor(t / PHOTO_SEC) % Math.max(1, pics.length))
+    setWmShow(wordmarkOn(t))
+    const si = stingIndex(t, dur)
+    if (
+      banded &&
+      si >= 0 &&
+      lastSting.current !== si &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      lastSting.current = si
+      setSting(Date.now())
+      setTimeout(() => setSting(0), 2000)
+      whoosh(1)
+    }
+    if (si < 0 && t < 1) lastSting.current = -1
+    if (strip && !times.current.length)
+      times.current = flashTimes(dur, showSec, flash?.repeat !== false, flash?.intervalSec || 20)
+    if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
+    if (ad) {
+      const on = adOn(t)
+      if (t >= 10) setAdIdx(Math.floor((t - 10) / 45))
+      setAdShow(on)
     }
   }
   function toggleFs() {
@@ -330,70 +371,96 @@ export function VideoStage({
         className="absolute overflow-hidden bg-black transition-all duration-500 ease-out"
         style={screen}
       >
-        <video
-          ref={vid}
-          controls
-          playsInline
-          preload="metadata"
-          poster={poster}
-          className="h-full w-full object-contain"
-          src={src}
-          controlsList="nodownload noremoteplayback nofullscreen"
-          disablePictureInPicture
-          onDoubleClick={toggleFs}
-          muted={mute || undefined}
-          onVolumeChange={(e) => mute && !e.currentTarget.muted && (e.currentTarget.muted = true)}
-          onPlay={() => void vid2.current?.play().catch(() => {})}
-          onPause={() => (voiceEl.current?.pause(), vid2.current?.pause())}
-          onSeeked={(e) => syncVoice(e.currentTarget)}
-          onContextMenu={(e) => e.preventDefault()}
-          onLoadedMetadata={(e) =>
-            (times.current = flashTimes(
-              e.currentTarget.duration || 0,
-              showSec,
-              flash?.repeat !== false,
-              flash?.intervalSec || 20,
-            ))
-          }
-          onTimeUpdate={(e) => {
-            const t = e.currentTarget.currentTime
-            if (tags?.name) setNameShow(nameOn(t))
-            if (pics.length) setPhotoIdx(Math.floor(t / PHOTO_SEC) % pics.length)
-            const v2 = vid2.current
-            if (v2 && v2.duration && Math.abs(v2.currentTime - Math.min(t, v2.duration)) > 0.6)
-              v2.currentTime = Math.min(t, v2.duration - 0.05)
-            syncVoice(e.currentTarget)
-            setWmShow(wordmarkOn(t))
-            const si = stingIndex(t, e.currentTarget.duration || 0)
-            if (
-              banded &&
-              si >= 0 &&
-              lastSting.current !== si &&
-              !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            ) {
-              lastSting.current = si
-              setSting(Date.now())
-              setTimeout(() => setSting(0), 2000)
-              const vid = e.currentTarget
-              if (mute || (!vid.muted && vid.volume > 0)) whoosh(mute ? 1 : vid.volume)
-            }
-            // The video's details can load before the page wakes up (then onLoadedMetadata is missed): work the times out here.
-            if (strip && !times.current.length && e.currentTarget.duration)
-              times.current = flashTimes(
-                e.currentTarget.duration,
+        {photoMode ? (
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full"
+            onClick={() => setClockOn((x) => !x)}
+            onDoubleClick={toggleFs}
+            aria-label={clockOn ? 'रोकें' : 'चलाएं'}
+          >
+            {pics.map((p, i) => (
+              <img
+                key={p + i}
+                src={p}
+                alt=""
+                className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ${i === photoIdx ? 'opacity-100' : 'opacity-0'}`}
+              />
+            ))}
+            {!clockOn && (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/60 text-3xl text-white">
+                  ▶
+                </span>
+              </span>
+            )}
+          </button>
+        ) : (
+          <video
+            ref={vid}
+            controls
+            playsInline
+            preload="metadata"
+            poster={poster}
+            className="h-full w-full object-contain"
+            src={src}
+            controlsList="nodownload noremoteplayback nofullscreen"
+            disablePictureInPicture
+            onDoubleClick={toggleFs}
+            muted={mute || undefined}
+            onVolumeChange={(e) => mute && !e.currentTarget.muted && (e.currentTarget.muted = true)}
+            onPlay={() => void vid2.current?.play().catch(() => {})}
+            onPause={() => (voiceEl.current?.pause(), vid2.current?.pause())}
+            onSeeked={(e) => syncVoice(e.currentTarget)}
+            onContextMenu={(e) => e.preventDefault()}
+            onLoadedMetadata={(e) =>
+              (times.current = flashTimes(
+                e.currentTarget.duration || 0,
                 showSec,
                 flash?.repeat !== false,
                 flash?.intervalSec || 20,
-              )
-            if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
-            if (ad) {
-              const on = adOn(t)
-              if (t >= 10) setAdIdx(Math.floor((t - 10) / 45))
-              if (!on && adClosed) setAdClosed(false)
-              setAdShow(on)
+              ))
             }
-          }}
-        />
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime
+              if (tags?.name) setNameShow(nameOn(t))
+              if (pics.length) setPhotoIdx(Math.floor(t / PHOTO_SEC) % pics.length)
+              const v2 = vid2.current
+              if (v2 && v2.duration && Math.abs(v2.currentTime - Math.min(t, v2.duration)) > 0.6)
+                v2.currentTime = Math.min(t, v2.duration - 0.05)
+              syncVoice(e.currentTarget)
+              setWmShow(wordmarkOn(t))
+              const si = stingIndex(t, e.currentTarget.duration || 0)
+              if (
+                banded &&
+                si >= 0 &&
+                lastSting.current !== si &&
+                !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+              ) {
+                lastSting.current = si
+                setSting(Date.now())
+                setTimeout(() => setSting(0), 2000)
+                const vid = e.currentTarget
+                if (mute || (!vid.muted && vid.volume > 0)) whoosh(mute ? 1 : vid.volume)
+              }
+              // The video's details can load before the page wakes up (then onLoadedMetadata is missed): work the times out here.
+              if (strip && !times.current.length && e.currentTarget.duration)
+                times.current = flashTimes(
+                  e.currentTarget.duration,
+                  showSec,
+                  flash?.repeat !== false,
+                  flash?.intervalSec || 20,
+                )
+              if (strip) setShow(times.current.some((x) => t >= x && t < x + showSec))
+              if (ad) {
+                const on = adOn(t)
+                if (t >= 10) setAdIdx(Math.floor((t - 10) / 45))
+                if (!on && adClosed) setAdClosed(false)
+                setAdShow(on)
+              }
+            }}
+          />
+        )}
         {/* place tag (top-left, under BREAKING when that is on) */}
         {tags?.place && (
           <span
@@ -571,7 +638,7 @@ export function VideoStage({
           />
         </div>
       )}
-      {pics.length > 0 && (
+      {pics.length > 0 && !photoMode && (
         <div className="relative mt-1 aspect-video overflow-hidden bg-black">
           {pics.map((p, i) => (
             <img

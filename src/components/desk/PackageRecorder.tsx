@@ -149,21 +149,71 @@ export function PackageRecorder({
           })),
         )
       ).filter((a) => a.img)
-      const video = document.createElement('video')
-      video.crossOrigin = 'anonymous'
-      video.playsInline = true
-      video.preload = 'auto'
-      // kept in the page (tiny, invisible): phones (iPhone especially) don't decode frames of a video outside the page
-      video.setAttribute('playsinline', '')
-      video.style.cssText =
-        'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none'
-      document.body.appendChild(video)
-      video.src = input.src
-      await new Promise<void>((res, rej) => {
-        video.oncanplay = () => res()
-        video.onerror = () => rej(new Error('वीडियो फ़ाइल खुल नहीं पाई'))
-        video.load()
-      })
+      // photos first: with no video they are the main picture (a clock then drives the timing)
+      const photos = (
+        await Promise.all((input.photos || []).map((p) => load(p).catch(() => null)))
+      ).filter((x): x is HTMLImageElement => Boolean(x))
+      const photoMode = !input.src
+      if (photoMode && !photos.length) throw new Error('न वीडियो है न फोटो')
+      let video: HTMLVideoElement
+      if (photoMode) {
+        const total = Math.max(12, photos.length * PHOTO_SEC)
+        let startMs = 0
+        let playing = false
+        let ended = false
+        const clock = {
+          get currentTime() {
+            return playing || ended ? Math.min(total, (performance.now() - startMs) / 1000) : 0
+          },
+          duration: total,
+          readyState: 0,
+          videoWidth: 16,
+          videoHeight: 9,
+          muted: true,
+          get ended() {
+            return ended
+          },
+          get paused() {
+            return !playing
+          },
+          onended: null as null | (() => void),
+          play() {
+            startMs = performance.now()
+            playing = true
+            setTimeout(() => {
+              playing = false
+              ended = true
+              clock.onended?.()
+            }, total * 1000)
+            return Promise.resolve()
+          },
+          pause() {
+            playing = false
+          },
+          remove() {},
+          addEventListener(_: string, cb: () => void) {
+            cb()
+          },
+          style: { cssText: '' },
+        }
+        video = clock as unknown as HTMLVideoElement
+      } else {
+        video = document.createElement('video')
+        video.crossOrigin = 'anonymous'
+        video.playsInline = true
+        video.preload = 'auto'
+        // kept in the page (tiny, invisible): phones (iPhone especially) don't decode frames of a video outside the page
+        video.setAttribute('playsinline', '')
+        video.style.cssText =
+          'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none'
+        document.body.appendChild(video)
+        video.src = input.src
+        await new Promise<void>((res, rej) => {
+          video.oncanplay = () => res()
+          video.onerror = () => rej(new Error('वीडियो फ़ाइल खुल नहीं पाई'))
+          video.load()
+        })
+      }
       const dur = video.duration || 1
       // second video and photos, each in its own panel under the first video (same order as the website)
       let video2: HTMLVideoElement | null = null
@@ -183,10 +233,8 @@ export function PackageRecorder({
           setTimeout(() => res(null), 20000)
         })
       }
-      const photos = (
-        await Promise.all((input.photos || []).map((p) => load(p).catch(() => null)))
-      ).filter((x): x is HTMLImageElement => Boolean(x))
-      const extra = (video2 ? 1 : 0) + (photos.length ? 1 : 0)
+      const panelPhotos = photoMode ? [] : photos // with no video the photos are already the main picture
+      const extra = (video2 ? 1 : 0) + (panelPhotos.length ? 1 : 0)
       LOW_Y = panelY(1 + extra)
       TICK_Y = LOW_Y + LOW_H + 6
       H = Math.ceil((TICK_Y + TICK_H + PAD) / 2) * 2
@@ -201,7 +249,7 @@ export function PackageRecorder({
       const dest = ac.createMediaStreamDestination()
       const videoGain = ac.createGain()
       // original sound switched off → it is not put in the file at all (exactly like the website)
-      if (input.mute) video.muted = true
+      if (input.mute || photoMode) video.muted = true
       else ac.createMediaElementSource(video).connect(videoGain).connect(dest)
       if (video2) {
         if (input.mute) video2.muted = true
@@ -372,6 +420,22 @@ export function PackageRecorder({
         ctx.clip()
         if (video.readyState >= 2)
           ctx.drawImage(video, S.x + (S.w - vw) / 2, S.y + (S.h - vh) / 2, vw, vh)
+        if (photoMode) {
+          // photos take turns in the main picture (same timing and fade as the website)
+          const i = Math.floor(t / PHOTO_SEC) % photos.length
+          const into = (t % PHOTO_SEC) / 0.7
+          const fit = (img: HTMLImageElement, a: number) => {
+            const rr = img.width / img.height || 16 / 9
+            let w = S.w
+            let h = w / rr
+            if (h > S.h) ((h = S.h), (w = h * rr))
+            ctx.globalAlpha = a
+            ctx.drawImage(img, S.x + (S.w - w) / 2, S.y + (S.h - h) / 2, w, h)
+            ctx.globalAlpha = 1
+          }
+          if (into < 1 && photos.length > 1) fit(photos[(i - 1 + photos.length) % photos.length], 1)
+          fit(photos[i], Math.min(1, into))
+        }
         // BREAKING label (flips over every 6 s)
         let ly = S.y + 18
         if (input.breaking) {
@@ -531,17 +595,17 @@ export function PackageRecorder({
           ctx.fillRect(VID.x, y, VID.w, VID.h)
           if (video2.readyState >= 2) contain(video2, video2.videoWidth, video2.videoHeight, y)
         }
-        if (photos.length) {
+        if (panelPhotos.length) {
           const y = panelY(k++)
           ctx.fillStyle = '#000'
           ctx.fillRect(VID.x, y, VID.w, VID.h)
-          const i = Math.floor(t / PHOTO_SEC) % photos.length
+          const i = Math.floor(t / PHOTO_SEC) % panelPhotos.length
           const into = (t % PHOTO_SEC) / 0.7
-          if (into < 1 && photos.length > 1) {
-            const prev = photos[(i - 1 + photos.length) % photos.length]
+          if (into < 1 && panelPhotos.length > 1) {
+            const prev = panelPhotos[(i - 1 + panelPhotos.length) % panelPhotos.length]
             contain(prev, prev.width, prev.height, y)
           }
-          contain(photos[i], photos[i].width, photos[i].height, y, Math.min(1, into))
+          contain(panelPhotos[i], panelPhotos[i].width, panelPhotos[i].height, y, Math.min(1, into))
         }
         // lower band: lines take turns
         const li = Math.floor(t / LINE_SEC) % lines.length
