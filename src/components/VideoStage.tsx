@@ -578,19 +578,6 @@ export function VideoStage({
           )}
         </svg>
       </button>
-      {framed && (
-        <div className="absolute top-1 right-1 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 text-[10px] font-bold text-white">
-          विज्ञापन / AD
-          <button
-            type="button"
-            onClick={() => setAdClosed(true)}
-            aria-label="विज्ञापन बंद करें"
-            className="px-1 text-sm leading-none"
-          >
-            ×
-          </button>
-        </div>
-      )}
     </div>
   )
   // full screen: the package is scaled to fit the screen (bands ≈ 230 px tall at large sizes), centred on black
@@ -706,12 +693,6 @@ export function VideoStage({
                 {cur}
               </span>
             )}
-          </div>
-          <div className="tv-see flex w-16 shrink-0 flex-col items-center justify-center border-2 border-white/90 bg-[#c8102e] px-1 text-center text-white sm:w-28">
-            <img src="/wordmark.png" alt="" className="w-14 sm:w-24" />
-            <span className="text-[9px] leading-tight font-bold sm:text-xs">
-              {lang === 'hi' ? 'देखें वेबसाइट' : 'Visit website'}
-            </span>
           </div>
         </div>
       )}

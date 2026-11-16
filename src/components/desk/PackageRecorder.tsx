@@ -568,15 +568,6 @@ export function PackageRecorder({
           ctx.restore()
         }
         ctx.restore()
-        if (S !== VID) {
-          ctx.font = `700 15px ${family}`
-          ctx.textAlign = 'left'
-          const lw = ctx.measureText('विज्ञापन / AD').width + 14
-          ctx.fillStyle = 'rgba(0,0,0,0.6)'
-          ctx.fillRect(VID.x + VID.w - lw - 6, VID.y + 6, lw, 24)
-          ctx.fillStyle = '#fff'
-          ctx.fillText('विज्ञापन / AD', VID.x + VID.w - lw + 1, VID.y + 19)
-        }
         // second video / photo panels
         let k = 1
         const contain = (src: CanvasImageSource, sw: number, sh: number, y: number, alpha = 1) => {
@@ -610,8 +601,7 @@ export function PackageRecorder({
         // lower band: lines take turns
         const li = Math.floor(t / LINE_SEC) % lines.length
         const into = (t % LINE_SEC) / LINE_SEC
-        const boxW = 170
-        const mainW = W - PAD * 2 - boxW - 6
+        const mainW = W - PAD * 2 // the whole width is the flash band (no logo box)
         g = ctx.createLinearGradient(0, LOW_Y, 0, LOW_Y + LOW_H)
         g.addColorStop(0, '#ff2b1f')
         g.addColorStop(0.55, '#d40c0c')
@@ -656,19 +646,6 @@ export function PackageRecorder({
           })
         }
         ctx.restore()
-        // logo box
-        const bx = PAD + mainW + 6
-        ctx.fillStyle = '#c8102e'
-        ctx.fillRect(bx, LOW_Y, boxW, LOW_H)
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-        ctx.lineWidth = 3
-        ctx.strokeRect(bx + 1.5, LOW_Y + 1.5, boxW - 3, LOW_H - 3)
-        const lgw = 140
-        ctx.drawImage(logo, bx + (boxW - lgw) / 2, LOW_Y + 8, lgw, (lgw * logo.height) / logo.width)
-        ctx.font = `700 18px ${family}`
-        ctx.fillStyle = '#fff'
-        ctx.textAlign = 'center'
-        ctx.fillText('देखें वेबसाइट', bx + boxW / 2, LOW_Y + LOW_H - 16)
         // ticker
         ctx.fillStyle = '#ffd23f'
         ctx.fillRect(PAD, TICK_Y, W - PAD * 2, TICK_H)
